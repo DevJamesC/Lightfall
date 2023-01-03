@@ -1,0 +1,3 @@
+[submodule "Assets/Scripts/TGB-Modules-SCRIPT-ONLY"]
+	path = Assets/Scripts/TGB-Modules-SCRIPT-ONLY
+	url = https://github.com/DevJamesC/TGB-Modules-SCRIPT-ONLY.git
