@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace MBS.ModifierSystem
 {
-    [CreateAssetMenu(fileName = "DetonationsList", menuName = "Detonations/ new Detonations List")]
+    [CreateAssetMenu(fileName = "DetonationsList", menuName = "MBS/Detonations/ new Detonations List")]
     public class DetonationsSO : ScriptableObject
     {
         [SerializeField]

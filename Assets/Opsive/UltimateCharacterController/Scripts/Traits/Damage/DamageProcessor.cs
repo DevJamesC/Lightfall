@@ -52,7 +52,7 @@ namespace Opsive.UltimateCharacterController.Traits.Damage
         public object UserData { get => m_UserData; set => m_UserData = value; }
 
         private DefaultDamageSource m_CachedDamageSource = new DefaultDamageSource();
-        
+
         /// <summary>
         /// Initializes the DamageData to the spciefied parameters.
         /// </summary>
@@ -62,13 +62,18 @@ namespace Opsive.UltimateCharacterController.Traits.Damage
             {
                 m_CachedDamageSource.OwnerDamageSource = null;
                 m_CachedDamageSource.SourceOwner = attacker;
-                if (attackerObject is Component component) {
+                if (attackerObject is Component component)
+                {
                     m_CachedDamageSource.SourceGameObject = component.gameObject;
                     m_CachedDamageSource.SourceComponent = component;
-                }else if (attackerObject is GameObject attackerGO) {
+                }
+                else if (attackerObject is GameObject attackerGO)
+                {
                     m_CachedDamageSource.SourceGameObject = attackerGO;
                     m_CachedDamageSource.SourceComponent = null;
-                } else {
+                }
+                else
+                {
                     m_CachedDamageSource.SourceGameObject = null;
                     m_CachedDamageSource.SourceComponent = null;
                 }
@@ -99,7 +104,7 @@ namespace Opsive.UltimateCharacterController.Traits.Damage
             m_Radius = radius;
             m_HitCollider = hitCollider;
         }
-        
+
         /// <summary>
         /// Initializes the DamageData to the parameters.
         /// </summary>
@@ -133,6 +138,19 @@ namespace Opsive.UltimateCharacterController.Traits.Damage
             m_HitCollider = damageData.HitCollider;
             m_UserData = damageData.UserData;
         }
+
+        public virtual T GetUserData<T>() where T : class, new()
+        {
+            T returnVal = UserData as T;
+
+            if (returnVal == null)
+            {
+                returnVal = new T();
+                UserData = returnVal;
+            }
+
+            return returnVal;
+        }
     }
 
     /// <summary>
@@ -164,17 +182,19 @@ namespace Opsive.UltimateCharacterController.Traits.Damage
         public static bool TryGetCharacterLocomotion(this IDamageSource damageSource, out CharacterLocomotion characterLocomotion)
         {
             characterLocomotion = damageSource.SourceOwner.GetCachedComponent<CharacterLocomotion>();
-            if (characterLocomotion != null) {
+            if (characterLocomotion != null)
+            {
                 return true;
             }
 
-            if (damageSource.OwnerDamageSource == null || damageSource.OwnerDamageSource == damageSource) {
+            if (damageSource.OwnerDamageSource == null || damageSource.OwnerDamageSource == damageSource)
+            {
                 return false;
             }
 
             return TryGetCharacterLocomotion(damageSource.OwnerDamageSource, out characterLocomotion);
         }
-        
+
         /// <summary>
         /// Get the root Damage Source.
         /// </summary>
@@ -183,9 +203,12 @@ namespace Opsive.UltimateCharacterController.Traits.Damage
         public static IDamageSource GetRootDamageSource(this IDamageSource damageSource)
         {
             var ownerSource = damageSource.OwnerDamageSource;
-            if (ownerSource == null) {
+            if (ownerSource == null)
+            {
                 return damageSource;
-            } else {
+            }
+            else
+            {
                 return GetRootDamageSource(ownerSource);
             }
         }
@@ -209,11 +232,11 @@ namespace Opsive.UltimateCharacterController.Traits.Damage
         // The Damage Source of the owner, when it is nested. Example Character -> ItemAction -> Projectile -> Explosion.
         public IDamageSource OwnerDamageSource { get; set; }
         // The owner of the damage source. Example Turret for Projectiles OR ItemAction for HitBox
-        public GameObject SourceOwner  { get; set; }
+        public GameObject SourceOwner { get; set; }
         // The Source GameObject of the damage. Example Projectile or Explosion GameObject.
-        public GameObject SourceGameObject  { get; set; }
+        public GameObject SourceGameObject { get; set; }
         // The Source Component of the damage. Example Projectile or Explosion Component.
-        public Component SourceComponent  { get; set; }
+        public Component SourceComponent { get; set; }
 
         /// <summary>
         /// Reset the values to default.
@@ -256,10 +279,12 @@ namespace Opsive.UltimateCharacterController.Traits.Damage
     public class DamageProcessor : ScriptableObject
     {
         private static DamageProcessor m_Default;
-        public static DamageProcessor Default {
+        public static DamageProcessor Default
+        {
             get
             {
-                if (m_Default == null) {
+                if (m_Default == null)
+                {
                     m_Default = CreateInstance<DamageProcessor>();
                 }
 
@@ -291,19 +316,21 @@ namespace Opsive.UltimateCharacterController.Traits.Damage
         public static IDamageTarget GetDamageTarget(GameObject gameObject)
         {
             var damageTarget = gameObject.GetCachedParentComponent<IDamageTarget>();
-            if (damageTarget != null) {
+            if (damageTarget != null)
+            {
                 return damageTarget;
             }
             damageTarget = gameObject.GetCachedComponent<IDamageTarget>();
-            
+
             // The hit object could be a collider in the first person hands.
 #if FIRST_PERSON_CONTROLLER
             var firstpersonObjects = gameObject.GetCachedParentComponent<FirstPersonController.Character.FirstPersonObjects>();
-            if (firstpersonObjects != null) {
+            if (firstpersonObjects != null)
+            {
                 return firstpersonObjects.Character.GetCachedComponent<IDamageTarget>();
             }
 #endif
-            
+
             return damageTarget;
         }
     }

@@ -2,6 +2,7 @@ using MBS.DamageSystem;
 using MBS.ForceSystem;
 using MBS.ModifierSystem;
 using MBS.StatsAndTags;
+using Opsive.UltimateCharacterController.Traits.Damage;
 using Sirenix.OdinInspector;
 using System;
 using System.Collections;
@@ -55,7 +56,7 @@ namespace MBS.HealthSystem
             colliderModifiers.Add(colliderMod.Collider, colliderMod);
         }
 
-        public override void TakeDamage(DamageData damageData, Collider colliderHit = null)
+        public override void TakeDamage(MBS.DamageSystem.DamageData damageData, Collider colliderHit = null)
         {
             if (!IsAlive)
             {
@@ -104,7 +105,7 @@ namespace MBS.HealthSystem
 
         }
 
-        private bool HandleFriendlyFire(DamageData damageData)
+        private bool HandleFriendlyFire(MBS.DamageSystem.DamageData damageData)
         {
             //check if the damage is from a friendly
             bool isFreindlyDamage = false;
@@ -129,7 +130,7 @@ namespace MBS.HealthSystem
             return false;
         }
 
-        private void HandleDamageReduction(DamageData damageData)
+        private void HandleDamageReduction(MBS.DamageSystem.DamageData damageData)
         {
             if (modifierHandler == null)
                 return;
@@ -138,7 +139,7 @@ namespace MBS.HealthSystem
             damageData.SetDamage(damageData.Damage - (damageData.Damage * modifierValue));
         }
 
-        private void HandleShield(DamageData damageData)
+        private void HandleShield(MBS.DamageSystem.DamageData damageData)
         {
             if (shield != null && !damageData.IgnoreShield)
             {
@@ -146,7 +147,7 @@ namespace MBS.HealthSystem
             }
         }
 
-        private void ModifyDamageByArmor(DamageData damageData)
+        private void ModifyDamageByArmor(MBS.DamageSystem.DamageData damageData)
         {
 
             if (HasArmor && !damageData.IgnoreArmor)
@@ -154,7 +155,7 @@ namespace MBS.HealthSystem
 
         }
 
-        private void HandleColliderModifiers(DamageData damageData, Collider collider = null)
+        private void HandleColliderModifiers(MBS.DamageSystem.DamageData damageData, Collider collider = null)
         {
             if (collider == null)
                 return;

@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace MBS.ModifierSystem
 {
-    [CreateAssetMenu(fileName = "Mod_base new", menuName = "Modifier System/ Create Modifier")]
+    [CreateAssetMenu(fileName = "Mod_base new", menuName = "MBS/Modifier System/ Create Modifier")]
     public class ModifierBase : ScriptableObject
     {
         [SerializeReference]

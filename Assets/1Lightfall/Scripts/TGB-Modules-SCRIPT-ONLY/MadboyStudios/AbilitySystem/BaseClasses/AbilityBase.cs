@@ -9,7 +9,7 @@ using UnityEngine;
 
 namespace MBS.AbilitySystem
 {
-    [CreateAssetMenu(menuName = "AbilitySystem/ Create New Ability", fileName = "New Ability")]
+    [CreateAssetMenu(menuName = "MBS/AbilitySystem/ Create New Ability", fileName = "New Ability")]
     public class AbilityBase : ScriptableObject
     {
         [SerializeField]
