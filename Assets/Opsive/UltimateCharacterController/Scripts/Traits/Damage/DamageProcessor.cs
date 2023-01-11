@@ -138,19 +138,7 @@ namespace Opsive.UltimateCharacterController.Traits.Damage
             m_HitCollider = damageData.HitCollider;
             m_UserData = damageData.UserData;
         }
-
-        public virtual T GetUserData<T>() where T : class, new()
-        {
-            T returnVal = UserData as T;
-
-            if (returnVal == null)
-            {
-                returnVal = new T();
-                UserData = returnVal;
-            }
-
-            return returnVal;
-        }
+      
     }
 
     /// <summary>
