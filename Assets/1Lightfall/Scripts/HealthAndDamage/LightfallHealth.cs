@@ -1,5 +1,6 @@
 namespace MBS.Lightfall
 {
+    using MBS.DamageSystem;
     using Opsive.Shared.Audio;
     using Opsive.Shared.Game;
     using Opsive.Shared.StateSystem;
@@ -22,7 +23,7 @@ namespace MBS.Lightfall
     /// <summary>
     /// Adds health and a shield to the object.
     /// </summary>
-    public class LightfallHealth : StateBehavior, IDamageTarget
+    public class LightfallHealth : StateBehavior, Opsive.UltimateCharacterController.Traits.Damage.IDamageTarget
     {
         [Tooltip("Is the object invincible?")]
         [SerializeField] protected bool m_Invincible;
@@ -298,7 +299,7 @@ namespace MBS.Lightfall
         /// <param name="hitCollider">The Collider that was hit.</param>
         public void Damage(float amount, Vector3 position, Vector3 direction, float forceMagnitude, int frames, float radius, GameObject attacker, object attackerObject, Collider hitCollider)
         {
-            var pooledDamageData = GenericObjectPool.Get<DamageData>();
+            var pooledDamageData = GenericObjectPool.Get<Opsive.UltimateCharacterController.Traits.Damage.DamageData>();
             pooledDamageData.SetDamage(amount, position, direction, forceMagnitude, frames, radius, attacker, attackerObject, hitCollider);
             Damage(pooledDamageData);
             GenericObjectPool.Return(pooledDamageData);
@@ -308,7 +309,7 @@ namespace MBS.Lightfall
         /// The object has been damaged.
         /// </summary>
         /// <param name="damageData">The data associated with the damage.</param>
-        public virtual void Damage(DamageData damageData)
+        public virtual void Damage(Opsive.UltimateCharacterController.Traits.Damage.DamageData damageData)
         {
             // Don't take any damage if the object is invincible, already dead, or just spawned and is invincible for a small amount of time.
             if (m_Invincible || !IsAlive() || m_SpawnTime + m_TimeInvincibleAfterSpawn > Time.time || damageData.Amount == 0)
@@ -332,7 +333,7 @@ namespace MBS.Lightfall
         /// The object has taken been damaged.
         /// </summary>
         /// <param name="damageData">The data associated with the damage.</param>
-        public virtual void OnDamage(DamageData damageData)
+        public virtual void OnDamage(Opsive.UltimateCharacterController.Traits.Damage.DamageData damageData)
         {
             if (damageData == null) { return; }
 
@@ -345,8 +346,9 @@ namespace MBS.Lightfall
                     Hitbox hitbox;
                     if (m_ColliderHitboxMap.TryGetValue(damageData.HitCollider, out hitbox))
                     {
-                        if (damageData.GetUserData<LightfallDamageData>().UseColliderDamageMultiplier)
-                            damageData.Amount *= hitbox.DamageMultiplier;
+                        //if (damageData.GetUserData<MBSExtraDamageData>().UseColliderDamageMultiplier)
+                        //damageData.Amount *= hitbox.DamageMultiplier;
+                        Debug.Log("You hit a collider which may be a weakpoint, or may be hardened... at any rate, it is not handled");
                     }
                     else
                     {
@@ -375,8 +377,9 @@ namespace MBS.Lightfall
                             // A new collider has been found - stop iterating if the hitbox map exists and use the hitbox multiplier.
                             if (m_ColliderHitboxMap.TryGetValue(closestRaycastHit.collider, out hitbox))
                             {
-                                if (damageData.GetUserData<LightfallDamageData>().UseColliderDamageMultiplier)
-                                    damageData.Amount *= hitbox.DamageMultiplier;
+                                //if (damageData.GetUserData<MBSExtraDamageData>().UseColliderDamageMultiplier)
+                                //damageData.Amount *= hitbox.DamageMultiplier;
+                                Debug.Log("You hit a collider which may be a weakpoint, or may be hardened... at any rate, it is not handled");
                                 damageData.HitCollider = hitbox.Collider;
                                 break;
                             }
@@ -427,7 +430,7 @@ namespace MBS.Lightfall
             var attacker = damageData.DamageSource?.SourceOwner;
             // Let other interested objects know that the object took damage.
             EventHandler.ExecuteEvent<float, Vector3, Vector3, GameObject, Collider>(m_GameObject, "OnHealthDamage", damageData.Amount, damageData.Position, force, attacker, damageData.HitCollider);
-            EventHandler.ExecuteEvent<DamageData>(m_GameObject, "OnHealthDamageWithData", damageData);
+            EventHandler.ExecuteEvent<Opsive.UltimateCharacterController.Traits.Damage.DamageData>(m_GameObject, "OnHealthDamageWithData", damageData);
             if (m_OnDamageEvent != null)
             {
                 m_OnDamageEvent.Invoke(damageData.Amount, damageData.Position, force, attacker);
@@ -671,7 +674,7 @@ namespace MBS.Lightfall
             EventHandler.UnregisterEvent(m_GameObject, "OnRespawn", OnRespawn);
         }
 
-        public float GetColliderMultiplier(DamageData damageData)
+        public float GetColliderMultiplier(Opsive.UltimateCharacterController.Traits.Damage.DamageData damageData)
         {
             if (Hitboxes == null) return 1;
 

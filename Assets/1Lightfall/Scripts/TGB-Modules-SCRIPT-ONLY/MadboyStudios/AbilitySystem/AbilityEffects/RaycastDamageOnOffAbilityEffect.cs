@@ -92,8 +92,8 @@ namespace MBS.AbilitySystem
             if (damageable == null)
                 return;
 
-            DamageData damageData = new DamageData(abilityWrapper, new ForceData(abilityWrapper, abilityWrapper.Force, hit.point), null, abilityWrapper.OriginTags);
-            damageData.SetDamage(Damage);
+            DamageData damageData = new DamageData();//abilityWrapper, new ForceData(abilityWrapper, abilityWrapper.Force, hit.point), null, abilityWrapper.OriginTags);
+            damageData.SetDamage(Damage, ray.origin, ray.direction, abilityWrapper.Force, 1, 0, abilityWrapper.Origin, abilityWrapper.Origin, hit.collider);
             abilityWrapper.ModifierHandler.ApplyPreDamageProcessors(damageData, damageable);
 
             damageable.TakeDamage(damageData, hit.collider);

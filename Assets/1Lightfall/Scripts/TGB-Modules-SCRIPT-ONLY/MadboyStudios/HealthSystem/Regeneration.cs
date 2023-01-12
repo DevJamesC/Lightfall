@@ -71,7 +71,7 @@ namespace MBS.HealthSystem
 
         private void InterruptRegen(DamageData damageData)
         {
-            if (damageData.Damage > 0)
+            if (damageData.Amount > 0)
             {
                 regenDelayCount = regenDelay;
                 regenRateCount = regenRate;

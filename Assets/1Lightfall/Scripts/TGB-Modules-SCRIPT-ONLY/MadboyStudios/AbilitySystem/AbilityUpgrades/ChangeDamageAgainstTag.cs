@@ -36,25 +36,25 @@ namespace MBS.AbilitySystem
                         switch (item.stat)
                         {
                             case ModifiableStats.WeakpointMultiplier:
-                                damageData.SetWeakpointMultiplier(damageData.WeakpointMultiplier + item.PercentStatChange);// + item.FlatStatChange);
+                                damageData.GetUserData<MBSExtraDamageData>().WeakpointMultiplier+= item.PercentStatChange;// + item.FlatStatChange);
                             break;
 
                             case ModifiableStats.WeaponDamage:
-                                baseVal = damageData.Damage;
+                                baseVal = damageData.Amount;
                                 if (wrapperAbility.DamageSourceType == DamageSourceType.WeaponDamage)
-                                    damageData.SetDamage(damageData.Damage + (baseVal * item.PercentStatChange / 100));// + item.FlatStatChange);
+                                    damageData.Amount=damageData.Amount + (baseVal * item.PercentStatChange / 100);// + item.FlatStatChange);
                             break;
 
                             case ModifiableStats.AbilityDamage:
-                                baseVal = damageData.Damage;
+                                baseVal = damageData.Amount;
                                 if (wrapperAbility.DamageSourceType == DamageSourceType.AbilityDamage)
-                                    damageData.SetDamage(damageData.Damage + (baseVal * item.PercentStatChange / 100));// + item.FlatStatChange);
+                                    damageData.Amount=damageData.Amount + (baseVal * item.PercentStatChange / 100);// + item.FlatStatChange);
                             break;
 
                             case ModifiableStats.MeleeDamage:
-                                baseVal = damageData.Damage;
+                                baseVal = damageData.Amount;
                                 if (wrapperAbility.DamageSourceType == DamageSourceType.MeleeDamage)
-                                    damageData.SetDamage(damageData.Damage + (baseVal * item.PercentStatChange / 100));// + item.FlatStatChange);
+                                    damageData.Amount=damageData.Amount + (baseVal * item.PercentStatChange / 100);// + item.FlatStatChange);
                             break;
 
                         }

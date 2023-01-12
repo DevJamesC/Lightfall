@@ -54,7 +54,7 @@ namespace MBS.ModifierSystem
         private void OnDamagerHit(ModifierEntry targetEntry, IDamageable damageable, DamageData damageData)
         {
             //calculate chance to apply
-            float percent = ChanceToApplyBasedOnDamage ? ChanceToApplyAnimCurve.Evaluate(damageData.Damage) : ChanceToApply;
+            float percent = ChanceToApplyBasedOnDamage ? ChanceToApplyAnimCurve.Evaluate(damageData.Amount) : ChanceToApply;
 
             if (ChanceToApply < 100)
             {

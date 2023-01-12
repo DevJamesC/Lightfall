@@ -6,6 +6,7 @@
 
 namespace MBS.Lightfall
 {
+    using MBS.DamageSystem;
     using Opsive.Shared.Game;
     using Opsive.Shared.Utility;
     using Opsive.UltimateCharacterController.Items.Actions.Impact;
@@ -22,28 +23,13 @@ namespace MBS.Lightfall
     [Serializable]
     public class LightfallDamage : ImpactAction
     {
-        [Tooltip("Use the impact damage data from the context if it is possible?")]
-        [SerializeField] protected bool m_UseContextData;
-        [Tooltip("Use the impact damage data from the context if it is possible?")]
-        [SerializeField] protected bool m_SetDamageImpactData = true;
-        [Tooltip("Use the impact damage data from the context if it is possible?")]
-        [SerializeField] protected bool m_InvokeOnObjectImpact;
-        [Tooltip("Processes the damage dealt to a Damage Target.")]
-        [SerializeField] protected DamageProcessor m_DamageProcessor;
-        [Tooltip("The amount of damage to apply to the hit object.")]
-        [SerializeField] protected float m_DamageAmount = 10;
-        [Tooltip("The amount of force to apply to the hit object.")]
-        [SerializeField] protected float m_ImpactForce = 2;
-        [Tooltip("The number of frames to add the impact force to.")]
-        [SerializeField] protected int m_ImpactForceFrames = 15;
-        [Tooltip("The impact radius.")]
-        [SerializeField] protected float m_ImpactRadius;
+        [SerializeField] protected MBSDamageForInspector damageFields;
 
-        public bool UseContextData { get => m_UseContextData; set => m_UseContextData = value; }
-        public DamageProcessor DamageProcessor { get { return m_DamageProcessor; } set { m_DamageProcessor = value; } }
-        public float DamageAmount { get { return m_DamageAmount; } set { m_DamageAmount = value; } }
-        public float ImpactForce { get { return m_ImpactForce; } set { m_ImpactForce = value; } }
-        public int ImpactForceFrames { get { return m_ImpactForceFrames; } set { m_ImpactForceFrames = value; } }
+        public bool UseContextData { get => damageFields.UseContextData; set => damageFields.UseContextData = value; }
+        public DamageProcessor DamageProcessor { get { return damageFields.DamageProcessor; } set { damageFields.DamageProcessor = value; } }
+        public float DamageAmount { get { return damageFields.DamageAmount; } set { damageFields.DamageAmount = value; } }
+        public float ImpactForce { get { return damageFields.ImpactForce; } set { damageFields.ImpactForce = value; } }
+        public int ImpactForceFrames { get { return damageFields.ImpactForceFrames; } set { damageFields.ImpactForceFrames = value; } }
 
         protected ImpactDamageData m_CachedImpactDamageData;
 
@@ -56,7 +42,7 @@ namespace MBS.Lightfall
         /// Overloaded constructor with use context data.
         /// </summary>
         /// <param name="useContextData">Use the context data rather than the local data?</param>
-        public LightfallDamage(bool useContextData) { m_UseContextData = useContextData; }
+        public LightfallDamage(bool useContextData) { damageFields.UseContextData = useContextData; }
 
         /// <summary>
         /// Internal method which performs the impact action.
@@ -66,12 +52,12 @@ namespace MBS.Lightfall
         {
             var impactData = ctx.ImpactCollisionData;
 
-            var damageAmount = m_DamageAmount;
-            var damageProcessor = m_DamageProcessor;
-            var impactForce = m_ImpactForce;
-            var impactforceframes = m_ImpactForceFrames;
-            var radius = m_ImpactRadius;
-            if (m_UseContextData && ctx.ImpactDamageData != null)
+            var damageAmount = damageFields.DamageAmount;
+            var damageProcessor = damageFields.DamageProcessor;
+            var impactForce = damageFields.ImpactForce;
+            var impactforceframes = damageFields.ImpactForceFrames;
+            var radius = damageFields.ImpactRadius;
+            if (damageFields.UseContextData && ctx.ImpactDamageData != null)
             {
                 damageAmount = ctx.ImpactDamageData.DamageAmount;
                 damageProcessor = ctx.ImpactDamageData.DamageProcessor;
@@ -80,7 +66,7 @@ namespace MBS.Lightfall
                 radius = ctx.ImpactDamageData.ImpactRadius;
             }
 
-            // The shield can absorb some (or none) of the damage from the hitscan.
+            // The shield can absorb some (or none) of the damage from the hitscan. (I belvie this is a handheld shield, not sci-fy force shield)
             var shieldCollider = impactData.ImpactCollider.gameObject.GetCachedComponent<ShieldCollider>();
             if (shieldCollider != null)
             {
@@ -101,10 +87,12 @@ namespace MBS.Lightfall
                 if (damageAmount > 0)
                 {
                     // First get the damage data and initialize it.
-                    var pooledDamageData = GenericObjectPool.Get<DamageData>();
+                    var pooledDamageData = GenericObjectPool.Get<MBS.DamageSystem.DamageData>();
                     pooledDamageData.SetDamage(ctx, damageAmount, impactData.ImpactPosition,
                         impactData.ImpactDirection, impactForceMagnitude, impactforceframes,
                         radius, impactData.ImpactCollider);
+                    //Initalize UserData
+                    pooledDamageData.UserData = damageFields.UserData.Copy();
 
                     // Then find how to apply this damage data, through a damage processor or processor module.
                     var damageProcessorModule = impactData.SourceRootOwner?.GetCachedComponent<DamageProcessorModule>();
@@ -147,7 +135,7 @@ namespace MBS.Lightfall
             }
 
             // Set the Damage Impact data to the context.
-            if (m_SetDamageImpactData)
+            if (damageFields.SetDamageImpactData)
             {
                 var ctxImpactData = ctx.ImpactDamageData;
                 if (ctxImpactData == null)
@@ -171,7 +159,7 @@ namespace MBS.Lightfall
             }
 
             //Send the event to the , the collider and its rigidbody, target.
-            if (m_InvokeOnObjectImpact)
+            if (damageFields.InvokeOnObjectImpact)
             {
                 target = ctx.ImpactCollisionData.ImpactGameObject;
 

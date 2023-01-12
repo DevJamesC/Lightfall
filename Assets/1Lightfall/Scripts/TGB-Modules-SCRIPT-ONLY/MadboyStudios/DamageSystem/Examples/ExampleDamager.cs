@@ -11,7 +11,7 @@ namespace MBS.DamageSystem
 {
     public class ExampleDamager : MonoBehaviour, IDamager, IForcer
     {
-        public float Damage { get => damage.Damage; }
+        public float Damage { get => damage.Amount; }
 
         public DamageSourceType DamageSourceType { get; set; }
         public int Force { get; set; }
@@ -100,14 +100,15 @@ namespace MBS.DamageSystem
 
         public void DealDamage(IDamageable damageableHit, Vector3 hitPoint, Collider colliderHit = null)
         {
-            DamageData damageData = damage.GetShallowCopy();
-            damageData.ChangeSource(this, tagHandler.Tags);
-            damageData.SetForceData(damageData.ForceData.GetShallowCopy(this, hitPoint));
+            DamageData damageData = damage.Copy();
+            Debug.Log("Need to rework ExampleDamager to work with Opsive Damage...");
+            //damageData.ChangeSource(this, tagHandler.Tags);
+            //damageData.SetForceData(damageData.ForceData.GetShallowCopy(this, hitPoint));
 
 
             if (modifierHandler != null)
             {
-                damageData.SetDamage(damageData.Damage * modifierHandler.GetStatModifierValue(StatName.WeaponDamage));
+                damageData.Amount = damageData.Amount * modifierHandler.GetStatModifierValue(StatName.WeaponDamage);
                 modifierHandler.ApplyPreDamageProcessors(damageData, damageableHit);
             }
 
@@ -118,7 +119,7 @@ namespace MBS.DamageSystem
 
             if (debugStats)
             {
-                Debug.Log($"{name} Damage: {damageData.DamageWithForce}");
+                //Debug.Log($"{name} Damage: {damageData.DamageWithForce}");
             }
 
         }

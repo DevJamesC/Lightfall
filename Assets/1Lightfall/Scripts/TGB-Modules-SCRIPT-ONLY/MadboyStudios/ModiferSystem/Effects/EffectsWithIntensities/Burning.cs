@@ -27,7 +27,7 @@ namespace MBS.ModifierSystem
         private bool tickOnEnd;
         [InfoBox("$infoMessageString", InfoMessageType.None)]
         [SerializeField]
-        private DamageData damageData = new DamageData(null, null);
+        private DamageData damageData = new DamageData();
 
 
         private float totalDamage;
@@ -45,7 +45,7 @@ namespace MBS.ModifierSystem
                 sizeModifier = originHandler.GetStatModifierValue(StatName.DetonationSize) - 1;
 
             BurningEffectData effectData = new BurningEffectData(1 / ticksPerSecond,
-                new DoTDamager(targetEntry.Origin.gameObject, damageData.GetShallowCopy()),
+                new DoTDamager(targetEntry.Origin.gameObject, damageData.Copy()),
                 targetEntry.Target.GetComponent<IDamageable>(),
                 intensity,
                 sizeModifier
@@ -159,7 +159,7 @@ namespace MBS.ModifierSystem
         {
 
             float totalTicks = Mathf.Floor((ticksPerSecond * duration) - (tickOnActivation ? 0 : (1 / ticksPerSecond)));
-            float totalDamage = totalTicks * damageData.Damage;
+            float totalDamage = totalTicks * damageData.Amount;
 
             return totalDamage;
         }
@@ -167,7 +167,7 @@ namespace MBS.ModifierSystem
         public float RemainingDamage(float remainingDuration)
         {
             float remainingTicks = Mathf.Floor((ticksPerSecond * remainingDuration) - (tickOnActivation ? 0 : (1 / ticksPerSecond)));
-            float remainingDamage = remainingTicks * damageData.Damage;
+            float remainingDamage = remainingTicks * damageData.Amount;
 
             return remainingDamage;
         }

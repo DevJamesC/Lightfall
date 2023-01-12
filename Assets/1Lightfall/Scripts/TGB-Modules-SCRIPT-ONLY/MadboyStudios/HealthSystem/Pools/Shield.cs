@@ -27,13 +27,14 @@ namespace MBS.HealthSystem
 
             InvokePreDamageEvent(damageData);
 
-            int damageToShields = Mathf.RoundToInt(damageData.Damage * damageData.SheildEffectiveness);
-            int overflow = Mathf.RoundToInt(((damageToShields - currentValue) / damageData.SheildEffectiveness) * OverbleedMultiplier);
-            DecreaseCurrentValue(damageData.Damage);
+            MBSExtraDamageData extraDamageData = damageData.GetUserData<MBSExtraDamageData>();
+            int damageToShields = Mathf.RoundToInt(damageData.Amount * extraDamageData.SheildEffectiveness);
+            int overflow = Mathf.RoundToInt(((damageToShields - currentValue) / extraDamageData.SheildEffectiveness) * OverbleedMultiplier);
+            DecreaseCurrentValue(damageData.Amount);
 
             InvokePostDamageEvent(damageData);
 
-            damageData.SetDamage(overflow);
+            damageData.Amount = overflow;
         }
 
         protected override void ResetValuePoolComponent()

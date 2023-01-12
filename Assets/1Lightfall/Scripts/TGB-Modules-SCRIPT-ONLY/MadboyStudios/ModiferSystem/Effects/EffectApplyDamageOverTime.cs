@@ -24,7 +24,7 @@ namespace MBS.ModifierSystem
         [SerializeField]
         private bool tickOnActivation;
         [SerializeField]
-        private DamageData damageData = new DamageData(null, null);
+        private DamageData damageData = new DamageData();
         [InfoBox("$infoMessageString", InfoMessageType.None)]
         [SerializeReference]
         private EffectAlreadyExistsDoTImplimentation effectAlreadyExistsLogic;
@@ -119,7 +119,7 @@ namespace MBS.ModifierSystem
         {
 
             float totalTicks = Mathf.Floor((ticksPerSecond * duration) - (tickOnActivation ? 0 : (1 / ticksPerSecond)));
-            float totalDamage = totalTicks * damageData.Damage;
+            float totalDamage = totalTicks * damageData.Amount;
 
             return totalDamage;
         }
@@ -127,7 +127,7 @@ namespace MBS.ModifierSystem
         public float RemainingDamage(float remainingDuration)
         {
             float remainingTicks = Mathf.Floor((ticksPerSecond * remainingDuration) - (tickOnActivation ? 0 : (1 / ticksPerSecond)));
-            float remainingDamage = remainingTicks * damageData.Damage;
+            float remainingDamage = remainingTicks * damageData.Amount;
 
             return remainingDamage;
         }
@@ -169,7 +169,7 @@ namespace MBS.ModifierSystem
     {
         public GameObject gameObject => sourceObj;
 
-        public float Damage => damageData.Damage;
+        public float Damage => damageData.Amount;
         public DamageSourceType DamageSourceType { get; set; }
 
         public event Action<IDamageable, DamageData> OnDealDamage = delegate { };
@@ -180,7 +180,7 @@ namespace MBS.ModifierSystem
 
         public void DealDamage(IDamageable damageableHit, Vector3 hitPoint, Collider collider = null)
         {
-            DamageData damageDataInstance = damageData.GetShallowCopy();
+            DamageData damageDataInstance = damageData.Copy();
             damageableHit.TakeDamage(damageDataInstance);
             OnDealDamage.Invoke(damageableHit, damageDataInstance);
         }
@@ -189,12 +189,12 @@ namespace MBS.ModifierSystem
         {
             sourceObj = damageSourceObj;
             this.damageData = damageData;
-            this.damageData.ChangeSource(this);
+            //this.damageData.DamageSource = this;
         }
 
         public void SetDamage(float newDamage)
         {
-            damageData.SetDamage(newDamage);
+            damageData.Amount = newDamage;
         }
     }
 

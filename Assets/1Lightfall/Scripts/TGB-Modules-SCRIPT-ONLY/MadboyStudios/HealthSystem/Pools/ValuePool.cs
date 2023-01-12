@@ -37,7 +37,7 @@ namespace MBS.HealthSystem
 
             PreTakeDamage.Invoke(damageData);
 
-            DecreaseCurrentValue(damageData.Damage);
+            DecreaseCurrentValue(damageData.Amount);
 
             PostTakeDamage.Invoke(damageData);
         }

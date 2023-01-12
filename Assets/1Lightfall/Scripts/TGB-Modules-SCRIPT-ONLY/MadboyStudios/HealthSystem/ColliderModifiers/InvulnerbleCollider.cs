@@ -32,9 +32,8 @@ namespace MBS.HealthSystem
             float remainingDamage = 0;
 
             if (health.shield.IsAlive)
-                remainingDamage = damageData.Damage * shieldModifier;
-
-            damageData.SetDamage(Mathf.RoundToInt(remainingDamage));
+                remainingDamage = damageData.Amount * shieldModifier;
+            damageData.Amount = Mathf.RoundToInt(remainingDamage);
         }
 
     }

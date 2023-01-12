@@ -28,12 +28,12 @@ namespace MBS.HealthSystem
 
         private void IncreaseDamage(DamageData damageData)
         {
-            float extraDamage = Mathf.Clamp((damageData.Damage * damageData.WeakpointMultiplier) - damageData.Damage, 0, int.MaxValue);
+            float extraDamage = Mathf.Clamp((damageData.Amount * damageData.GetUserData<MBSExtraDamageData>().WeakpointMultiplier) - damageData.Amount, 0, int.MaxValue);
 
             if (health.shield.IsAlive)
                 extraDamage *= shieldModifier;
 
-            damageData.SetDamage(Mathf.RoundToInt(damageData.Damage + extraDamage));
+            damageData.Amount = Mathf.RoundToInt(damageData.Amount + extraDamage);
         }
     }
 }

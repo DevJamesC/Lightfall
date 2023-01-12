@@ -60,21 +60,22 @@ namespace MBS.HealthSystem
         {
             if (!IsAlive)
             {
-                TakeForce(damageData.ForceData);
+                Debug.Log("force was applied to health... but it is unahndled.");
+                //TakeForce(damageData.ForceData);
                 return;
             }
 
             bool damagerIsSelf = false;
             //check self damage (only handle this if the incoming damage is from self, and not intended to be self inflicted damage
-            if (damageData.Source != null && !damageData.IsSelfDamage)
+            if (damageData.DamageSource != null && !damageData.GetUserData<MBSExtraDamageData>().IsSelfDamage)
             {
-                if (damageData.Source.gameObject.transform.root.gameObject == gameObject.transform.root.gameObject)
+                if (damageData.DamageSource.SourceGameObject.transform.root.gameObject == gameObject.transform.root.gameObject)
                     if (damageReductionFromSelfDamage >= 100)
                         return;
                     else
                     {
-                        damageData.SetDamage(damageData.Damage * (1 - (damageReductionFromSelfDamage / 100)));
-                        damageData.ForceData.SetForce(damageData.ForceData.Force * (1 - (damageReductionFromSelfDamage / 100)));
+                        damageData.Amount = damageData.Amount * (1 - (damageReductionFromSelfDamage / 100));
+                        //damageData.ForceData.SetForce(damageData.ForceData.Force * (1 - (damageReductionFromSelfDamage / 100)));
                         damagerIsSelf = true;
                     }
 
@@ -97,9 +98,10 @@ namespace MBS.HealthSystem
 
             ModifyDamageByArmor(damageData);
 
-            TakeForce(damageData.ForceData);
+            //TakeForce(damageData.ForceData);
+            Debug.Log("force was applied to health... but it is unahndled.");
 
-            DecreaseCurrentValue(damageData.DamageWithForce);
+            DecreaseCurrentValue(damageData.Amount);
 
             InvokePostDamageEvent(damageData);
 
@@ -112,7 +114,7 @@ namespace MBS.HealthSystem
             foreach (var freindlyTag in FreindlyTags)
             {
 
-                if (damageData.SourceTags.Contains(freindlyTag))
+                if (damageData.GetUserData<MBSExtraDamageData>().SourceTags.Contains(freindlyTag))
                 {
                     isFreindlyDamage = true;
                     break;
@@ -125,8 +127,8 @@ namespace MBS.HealthSystem
             if (damageReductionFromFreindlyFire >= 100)
                 return true;
 
-            damageData.SetDamage(damageData.Damage * (damageReductionFromFreindlyFire / 100));
-            damageData.ForceData.SetForce(damageData.ForceData.Force * (1 - (damageReductionFromFreindlyFire / 100)));
+            damageData.Amount = damageData.Amount * (damageReductionFromFreindlyFire / 100);
+            damageData.ForceMagnitude = damageData.ForceMagnitude * (1 - (damageReductionFromFreindlyFire / 100));
             return false;
         }
 
@@ -136,12 +138,12 @@ namespace MBS.HealthSystem
                 return;
 
             float modifierValue = modifierHandler.GetStatModifierValue(StatName.DamageReduction) - 1;
-            damageData.SetDamage(damageData.Damage - (damageData.Damage * modifierValue));
+            damageData.Amount = damageData.Amount - (damageData.Amount * modifierValue);
         }
 
         private void HandleShield(MBS.DamageSystem.DamageData damageData)
         {
-            if (shield != null && !damageData.IgnoreShield)
+            if (shield != null && !damageData.GetUserData<MBSExtraDamageData>().IgnoreShield)
             {
                 shield.TakeDamage(damageData);
             }
@@ -150,8 +152,8 @@ namespace MBS.HealthSystem
         private void ModifyDamageByArmor(MBS.DamageSystem.DamageData damageData)
         {
 
-            if (HasArmor && !damageData.IgnoreArmor)
-                damageData.SetDamage((Mathf.RoundToInt(damageData.Damage * damageData.ArmorEffectiveness)) - ArmorValue);
+            if (HasArmor && !damageData.GetUserData<MBSExtraDamageData>().IgnoreArmor)
+                damageData.Amount = (Mathf.RoundToInt(damageData.Amount * damageData.GetUserData<MBSExtraDamageData>().ArmorEffectiveness)) - ArmorValue;
 
         }
 

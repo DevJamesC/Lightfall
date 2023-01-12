@@ -928,6 +928,7 @@ MonoBehaviour:
     - Name: 
       Entry: 8
       Data: 
+  unusedAbilityPoints: 0
 --- !u!1001 &569591012
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1184,6 +1185,7 @@ GameObject:
   - component: {fileID: 954429864}
   - component: {fileID: 954429863}
   - component: {fileID: 954429862}
+  - component: {fileID: 954429865}
   m_Layer: 0
   m_Name: InteractButton
   m_TagString: Untagged
@@ -1663,6 +1665,24 @@ MonoBehaviour:
   m_ToggleBoolInteractValue: 1
   m_TriggerParameter: Press
   m_InteractAudioClips: []
+--- !u!114 &954429865
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 946995811}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6612c7f2b50a26a4ab56add3926388f4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  refireRate: 0
+  hitableLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  refireCountdown: 0
+  debugStats: 0
 --- !u!1 &1285562215
 GameObject:
   m_ObjectHideFlags: 0

@@ -13,7 +13,7 @@ namespace MBS.AoeSystem
         public new GameObject gameObject { get; private set; }
         public List<Tag> OriginTags { get; private set; }
 
-        float IDamager.Damage { get => Damage.Damage; }
+        float IDamager.Damage { get => Damage.Amount; }
         public DamageSourceType DamageSourceType => DamageSourceType.Undefined;
 
         [SerializeField]
@@ -47,7 +47,7 @@ namespace MBS.AoeSystem
             else
                 Debug.Log($"{GetType()} on {gameObject.name} needs AreaOfEffectBase subclass to work! Add the component to resolve.");
 
-            Damage.ForceData.SetPointOfForce(transform);
+            //Damage.ForceData.SetPointOfForce(transform);
             timeTillNextTick = 0;
 
         }
@@ -70,12 +70,13 @@ namespace MBS.AoeSystem
             if (damageable == null)
                 return;
 
-            instanceDamage = Damage.GetShallowCopy();
-            instanceDamage.SetDamage(instanceDamage.Damage * (1 - (PercentDamageDropoffInSecondaryRadius / 100)));
-            instanceDamage.SetForceData(instanceDamage.ForceData.GetShallowCopy());
-            instanceDamage.ForceData.SetForce(instanceDamage.ForceData.Force * (1 - (PercentDamageDropoffInSecondaryRadius / 100)));
+            instanceDamage = Damage.Copy();
+            Debug.Log("Need to rework AoE Damage to work with Opsive Damage...");
+            //instanceDamage.SetDamage(instanceDamage.Amount * (1 - (PercentDamageDropoffInSecondaryRadius / 100)));
+            //instanceDamage.SetForceData(instanceDamage.ForceData.GetShallowCopy());
+            //instanceDamage.ForceData.SetForce(instanceDamage.ForceData.Force * (1 - (PercentDamageDropoffInSecondaryRadius / 100)));
 
-            instanceDamage.ChangeSource(this, OriginTags);
+            //instanceDamage.ChangeSource(this, OriginTags);
             DealDamage(damageable, collider.bounds.center, collider);
 
         }
@@ -89,9 +90,9 @@ namespace MBS.AoeSystem
             if (damageable == null)
                 return;
 
-            instanceDamage = Damage.GetShallowCopy();
-
-            instanceDamage.ChangeSource(this, OriginTags);
+            instanceDamage = Damage.Copy();
+            Debug.Log("Need to rework AoE Damage to work with Opsive Damage...");
+            //instanceDamage.ChangeSource(this, OriginTags);
             DealDamage(damageable, collider.bounds.center, collider);
 
 
@@ -116,7 +117,8 @@ namespace MBS.AoeSystem
             if (instanceAreaOfEffect == null)
                 return;
 
-            Damage.ForceData.ExplosiveRadius = instanceAreaOfEffect.SecondaryRadius;
+            Debug.Log("Need to rework AoE Damage to work with Opsive Damage...");
+            //Damage.ForceData.ExplosiveRadius = instanceAreaOfEffect.SecondaryRadius;
         }
 
         public void DealDamage(IDamageable damageableHit, Vector3 hitPoint, Collider colliderHit = null)

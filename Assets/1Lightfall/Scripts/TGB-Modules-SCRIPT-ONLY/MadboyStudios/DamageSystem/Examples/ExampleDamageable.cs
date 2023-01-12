@@ -9,7 +9,7 @@ namespace MBS.DamageSystem
     {
         public void TakeDamage(DamageData damageData, Collider colliderHit = null)
         {
-            Debug.Log($"{gameObject.name} recieved {damageData.Damage} damage from {damageData.Source.gameObject.name}");
+            Debug.Log($"{gameObject.name} recieved {damageData.Amount} damage from {damageData.DamageSource.SourceGameObject.name}");
         }
 
         public void TakeForce(ForceData forceData)
