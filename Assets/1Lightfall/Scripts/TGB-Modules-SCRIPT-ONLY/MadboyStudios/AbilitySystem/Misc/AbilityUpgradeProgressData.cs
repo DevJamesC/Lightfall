@@ -1,23 +1,62 @@
-﻿using System;
+﻿using Sirenix.OdinInspector;
+using System;
 using System.Collections.Generic;
-
+using UnityEngine;
 
 namespace MBS.AbilitySystem
 {
     [Serializable]
     public class AbilityUpgradeProgressData
     {
-        public bool AbilityUnlocked;
-        public bool Upgrade1;
-        public bool Upgrade2;
-        public bool Upgrade3a;
-        public bool Upgrade3b;
-        public bool Upgrade4a;
-        public bool Upgrade4b;
-        public bool Upgrade5a;
-        public bool Upgrade5b;
+        private bool IsToggled;
+        [SerializeField, ReadOnly] private string initalUpgrade;
+
+        [ShowIf("IsToggled")] public bool AbilityUnlocked;
+        [ShowIf("IsToggled")] public bool Upgrade1;
+        [ShowIf("IsToggled")] public bool Upgrade2;
+        [ShowIf("IsToggled")] public bool Upgrade3a;
+        [ShowIf("IsToggled")] public bool Upgrade3b;
+        [ShowIf("IsToggled")] public bool Upgrade4a;
+        [ShowIf("IsToggled")] public bool Upgrade4b;
+        [ShowIf("IsToggled")] public bool Upgrade5a;
+        [ShowIf("IsToggled")] public bool Upgrade5b;
 
         public event Action OnAbilityUpgrade = delegate { };
+
+        [SerializeField] private UpgradeEnum targetUpgrade;
+
+        [SerializeField, Button("Try Upgrade")]
+        private void DefaultSizedButton()
+        {
+            if (!Application.isPlaying)
+            {
+                Debug.Log("can only tryUpgrade when in play mode");
+                return;
+            }
+
+            string upgradeString = "";
+            switch (targetUpgrade)
+            {
+                case UpgradeEnum.AbilityUnlocked: upgradeString = "0"; break;
+                case UpgradeEnum.Upgrade1: upgradeString = "1"; break;
+                case UpgradeEnum.Upgrade2: upgradeString = "2"; break;
+                case UpgradeEnum.Upgrade3a: upgradeString = "3a"; break;
+                case UpgradeEnum.Upgrade3b: upgradeString = "3b"; break;
+                case UpgradeEnum.Upgrade4a: upgradeString = "4a"; break;
+                case UpgradeEnum.Upgrade4b: upgradeString = "4b"; break;
+                case UpgradeEnum.Upgrade5a: upgradeString = "5a"; break;
+                case UpgradeEnum.Upgrade5b: upgradeString = "5b"; break;
+            }
+
+            TryUpgrade(upgradeString);
+            SetInitalUpgradeString();
+        }
+
+        [SerializeField, Button("Toggle Inital Upgrade state")]
+        private void ToggleSetInitalUpgrades()
+        {
+            IsToggled = !IsToggled;
+        }
 
         //Used for UI interfacing
         public int GetUIUpgradeLevel()
@@ -103,5 +142,57 @@ namespace MBS.AbilitySystem
 
             return false;
         }
+
+        [Serializable]
+        private enum UpgradeEnum
+        {
+            AbilityUnlocked,
+            Upgrade1,
+            Upgrade2,
+            Upgrade3a,
+            Upgrade3b,
+            Upgrade4a,
+            Upgrade4b,
+            Upgrade5a,
+            Upgrade5b
+
+        }
+
+        public void OnValidate()
+        {
+            SetInitalUpgradeString();
+        }
+
+        private void SetInitalUpgradeString()
+        {
+            initalUpgrade = " ";
+            initalUpgrade += AbilityUnlocked ? "Unlocked " : "Locked ";
+            initalUpgrade += Upgrade1 ? "[1] " : "[] ";
+            initalUpgrade += Upgrade2 ? "[2] " : "[] ";
+            initalUpgrade += OutputChoiceUpgradeString(Upgrade3a, Upgrade3b, 3);
+            initalUpgrade += OutputChoiceUpgradeString(Upgrade4a, Upgrade4b, 4);
+            initalUpgrade += OutputChoiceUpgradeString(Upgrade5a, Upgrade5b, 5);
+
+
+            string OutputChoiceUpgradeString(bool choice1, bool choice2, int level)
+            {
+                string returnval = "";
+
+                if (choice1 && choice2)
+                    returnval += $"[{level}ab] ";
+                else if (choice1 || choice2)
+                {
+                    string choice = choice1 ? "a" : "b";
+                    returnval += $"[{level}{choice}] ";
+                }
+                else
+                {
+                    returnval += "[] ";
+                }
+
+                return returnval;
+            }
+        }
+
     }
 }

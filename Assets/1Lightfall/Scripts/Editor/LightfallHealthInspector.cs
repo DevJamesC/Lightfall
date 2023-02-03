@@ -60,6 +60,7 @@ namespace MBS.Lightfall
                 attributeNames[0] = "(None)";
                 var healthNameIndex = 0;
                 var shieldNameIndex = 0;
+                var armorNameIndex = 0;
                 for (int i = 0; i < m_AttributeManager.Attributes.Length; ++i)
                 {
                     attributeNames[i + 1] = m_AttributeManager.Attributes[i].Name;
@@ -70,6 +71,10 @@ namespace MBS.Lightfall
                     if (m_Health.ShieldAttributeName == attributeNames[i + 1])
                     {
                         shieldNameIndex = i + 1;
+                    }
+                    if (m_Health.ArmorAttributeName == attributeNames[i + 1])
+                    {
+                        armorNameIndex = i + 1;
                     }
                 }
 
@@ -101,6 +106,21 @@ namespace MBS.Lightfall
                     EditorGUI.indentLevel++;
                     GUI.enabled = false;
                     EditorGUILayout.TextField("Value", m_AttributeManager.Attributes[selectedShieldNameIndex - 1].Value.ToString(CultureInfo.InvariantCulture));
+                    GUI.enabled = true;
+                    EditorGUI.indentLevel--;
+                }
+                var selectedArmorNameIndex = EditorGUILayout.Popup("Armor Attribute", armorNameIndex, attributeNames);
+                if (armorNameIndex != selectedArmorNameIndex)
+                {
+                    m_Health.ArmorAttributeName = (selectedArmorNameIndex == 0 ? string.Empty : m_AttributeManager.Attributes[selectedArmorNameIndex - 1].Name);
+                    Opsive.Shared.Editor.Utility.EditorUtility.SetDirty(target);
+                }
+                // Show the current shield value.
+                if (Application.isPlaying && !string.IsNullOrEmpty(m_Health.ArmorAttributeName) && selectedArmorNameIndex > 0 && selectedArmorNameIndex - 1 < m_AttributeManager.Attributes.Length)
+                {
+                    EditorGUI.indentLevel++;
+                    GUI.enabled = false;
+                    EditorGUILayout.TextField("Value", m_AttributeManager.Attributes[selectedArmorNameIndex - 1].Value.ToString(CultureInfo.InvariantCulture));
                     GUI.enabled = true;
                     EditorGUI.indentLevel--;
                 }

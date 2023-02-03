@@ -2,6 +2,8 @@
 using MBS.ForceSystem;
 using MBS.ModifierSystem;
 using MBS.StatsAndTags;
+using Opsive.UltimateCharacterController.Character.Effects;
+using Opsive.UltimateCharacterController.Items.Actions.Impact;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -21,7 +23,7 @@ namespace MBS.AbilitySystem
         public AbilityBase AbilityBase { get; protected set; }
         protected List<AbilityUpgradeBase> activeUpgrades;
         protected List<AbilityConditionBase> conditions;
-        protected List<AbilityEffectBase> effects;
+        internal List<AbilityEffectBase> effects;
         protected List<AbilityFXBase> fX;
 
         public event Action<AbilityWrapperBase> OnUse = delegate { };
@@ -55,6 +57,22 @@ namespace MBS.AbilitySystem
         public int BaseMaxCharges { get; set; }
         public int ChargesRemaining { get; protected set; }
 
+        public bool CanBeCanceled
+        {
+            get
+            {
+                bool returnVal = true;
+                foreach (var effect in effects)
+                {
+                    if (!effect.CanBeCanceled)
+                    {
+                        return false;
+                    }
+                }
+                return returnVal;
+            }
+        }
+
         public void ChangeChargesRemaining(int changeVal)
         {
             ChargesRemaining += changeVal;
@@ -68,6 +86,20 @@ namespace MBS.AbilitySystem
             ChargesRemaining = setVal;
             if (ChargesRemaining < 0)
                 ChargesRemaining = 0;
+        }
+
+        public void AddAbilityEffect(AbilityEffectBase effect, bool addEffectToEffectsList = true)
+        {
+            AbilityEffectBase newEffect = effect;
+            if (addEffectToEffectsList)
+            {
+                newEffect = effect.GetShallowCopy();
+                effects.Add(newEffect);
+            }
+
+            newEffect.Init(this);
+            OnUpdate += newEffect.OnUpdate;
+            newEffect.OnEffectFinished += () => { effectsWaitingToFinish--; };
         }
 
         public bool CancelableOnOtherAbilityCast { get; set; } //Set by EquipOnUseAbilityEffect and read by AbilityLoadout.
@@ -119,9 +151,7 @@ namespace MBS.AbilitySystem
             //setup all effects attached to this ability
             foreach (var effect in effects)
             {
-                effect.Init(this);
-                OnUpdate += effect.OnUpdate;
-                effect.OnEffectFinished += () => { effectsWaitingToFinish--; };
+                AddAbilityEffect(effect, false);
 
             }
 
@@ -230,7 +260,7 @@ namespace MBS.AbilitySystem
             }
         }
 
-        protected virtual bool ValidateUse()
+        public virtual bool ValidateUse()
         {
             if (AbilityBase == null)
                 return false;
@@ -297,7 +327,7 @@ namespace MBS.AbilitySystem
         }
 
         /// <summary>
-        /// Returns the value of the local ability upgrade modifiers plus any changes from the Modifier System
+        /// Returns the value of the local ability upgrade modifiers plus any changes from the Modifier System.
         /// Recharge speed is handled as a special case, and is NormalModifier=True (though it'll handle it if false as well).
         /// </summary>
         /// <param name="statName">Name of the stat to query</param>
@@ -318,6 +348,8 @@ namespace MBS.AbilitySystem
             }
 
             float modifierHandlerValue = includeModifierStatChanges ? ModifierHandler.GetStatModifierValue(statName) : 0;
+            if (!normalModifier && includeModifierStatChanges)
+                modifierHandlerValue -= 1;
 
             if (includeAbilityLocalStatChanges)
             {

@@ -10,6 +10,8 @@ namespace MBS.StatsAndTags
         None,
         AbilityCapacity,
         AbilityDamage,
+        AbilityArmorEffectiveness,
+        AbilityShieldEffectiveness,
         AbilityDuration,
         AbilityForce,
         AbilityRadius,

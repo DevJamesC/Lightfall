@@ -10,17 +10,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 34ae144dffdfcff4f8ac98ef54423866, type: 3}
-  m_Name: TestAbility
+  m_Name: Flamer
   m_EditorClassIdentifier: 
   icon: {fileID: 0}
-  title: 
+  title: Flamer
   description: 
   possibleUpgrades:
     Upgrade1:
       Icon: {fileID: 0}
-      Title: 
-      Description: 
-      Effects: []
+      Title: Damage
+      Description: 20% Damage Increase
+      Effects:
+      - rid: 3613693753857409029
     Upgrade2:
       Icon: {fileID: 0}
       Title: 
@@ -60,17 +61,34 @@ MonoBehaviour:
   timeToUse: 0
   onActivateFX: []
   abilityConditions:
-  - rid: 3613693688542658560
+  - rid: 3613694050531016704
   abilityEffects:
-  - rid: 3613693688542658561
+  - rid: 3613693846485204992
+  - rid: 3613694050531016705
   references:
     version: 2
     RefIds:
-    - rid: 3613693688542658560
+    - rid: 3613693753857409029
+      type: {class: StatAbilityUpgrade, ns: MBS.AbilitySystem, asm: Assembly-CSharp}
+      data:
+        statsToChange:
+        - StatName: 2
+          value: 20
+          flatValueChange: 0
+          divideFlatValueBy100: 0
+    - rid: 3613693846485204992
+      type: {class: EquipOpsiveItemOnUse, ns: MBS.AbilitySystem, asm: Assembly-CSharp}
+      data:
+        subclassName: MBS.AbilitySystem.EquipOpsiveItemOnUse
+        crowdControlType: 0
+        itemSO: {fileID: -8176295628259016961, guid: 47ae2c93518327d4da717b3cdbcd8ee3,
+          type: 2}
+        UseChargeEveryUse: 1
+    - rid: 3613694050531016704
       type: {class: RechargeCondition, ns: MBS.AbilitySystem, asm: Assembly-CSharp}
       data:
         subclassName: MBS.AbilitySystem.RechargeCondition
-    - rid: 3613693688542658561
+    - rid: 3613694050531016705
       type: {class: HasRechargeAbilityEffect, ns: MBS.AbilitySystem, asm: Assembly-CSharp}
       data:
         subclassName: MBS.AbilitySystem.HasRechargeAbilityEffect

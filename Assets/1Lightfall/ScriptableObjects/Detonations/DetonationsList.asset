@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1436aa40df2a5564e96400aa7445d97c, type: 3}
+  m_Name: DetonationsList
+  m_EditorClassIdentifier: 
+  burningDetonation: {fileID: 11400000, guid: 5ec6e3e755b21474e9aa0c9230be15dd, type: 2}
+  freezingDetonation: {fileID: 11400000, guid: 7771582989f76e5458eff72921099e75, type: 2}
+  shockingDetonation: {fileID: 11400000, guid: 9a49c0ba052df2f43a5e80c23d6664f8, type: 2}
+  drainingDetonation: {fileID: 11400000, guid: efddcc5dfb87535428148c98cadaab4e, type: 2}
+  warpingDetonation: {fileID: 11400000, guid: e1ccb6e531cdddd4d9b2c5359e1e2a73, type: 2}
+  balefiringDetonation: {fileID: 11400000, guid: 4f4e8e2ccf98eef408952185b081d6a9,
+    type: 2}

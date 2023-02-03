@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 45f20e5bb12306848a600b423ff21cee, type: 3}
+  m_Name: ShockingDetonation
+  m_EditorClassIdentifier: 
+  FX: []
+  genericDetonationFX:
+    detonatorType: 0
+    intenstiy1FX: []
+    intenstiy2FX: []
+    intenstiy3FX: []
+    intenstiy4FX: []
+    intenstiy5FX: []
+    intenstiy6FX: []
+    intenstiy7FX: []
+  references:
+    version: 2
+    RefIds: []

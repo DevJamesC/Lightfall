@@ -79,6 +79,8 @@ namespace Opsive.UltimateCharacterController.UI
         public Color TargetColor { get { return m_TargetColor; } set { m_TargetColor = value; } }
         public bool DisableOnDeath { get { return m_DisableOnDeath; } set { m_DisableOnDeath = value; } }
 
+        public event System.Action<Transform> OnAquiredTarget = delegate { };
+
         [System.NonSerialized] private GameObject m_GameObject;
         private UnityEngine.Camera m_Camera;
         private CameraController m_CameraController;
@@ -279,6 +281,7 @@ namespace Opsive.UltimateCharacterController.UI
                 m_EnableImage = enableImage;
                 EnableCrosshairsImage(enableImage);
             }
+            OnAquiredTarget.Invoke(target);
         }
 
         /// <summary>

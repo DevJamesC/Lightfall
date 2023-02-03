@@ -123,6 +123,92 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &89677367
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 89677368}
+  - component: {fileID: 89677370}
+  - component: {fileID: 89677371}
+  m_Layer: 5
+  m_Name: MBSAbilityMonitor
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &89677368
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 89677367}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 569591013}
+  m_RootOrder: 10
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: -700, y: 110}
+  m_Pivot: {x: 0.5, y: 0}
+--- !u!114 &89677370
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 89677367}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: db55339484284e547a7b965f87677025, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_States:
+  - m_Name: Default
+    m_Preset: {fileID: 0}
+    m_BlockList: []
+    m_Default: 1
+  m_Character: {fileID: 0}
+  m_AttachToCamera: 1
+  m_Visible: 1
+  abilityUIDisplayPrefab: {fileID: 658014604532925185, guid: e5ce50e88e6846c41b00a31532a27367,
+    type: 3}
+--- !u!114 &89677371
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 89677367}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 30649d3a9faa99c48a7b1166b86bf2a0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Padding:
+    m_Left: 0
+    m_Right: 0
+    m_Top: 0
+    m_Bottom: 0
+  m_ChildAlignment: 1
+  m_Spacing: 0
+  m_ChildForceExpandWidth: 1
+  m_ChildForceExpandHeight: 1
+  m_ChildControlWidth: 0
+  m_ChildControlHeight: 0
+  m_ChildScaleWidth: 0
+  m_ChildScaleHeight: 0
+  m_ReverseArrangement: 0
 --- !u!1 &171489159
 GameObject:
   m_ObjectHideFlags: 0
@@ -763,6 +849,92 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &512584133
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 512584134}
+  - component: {fileID: 512584136}
+  - component: {fileID: 512584135}
+  m_Layer: 5
+  m_Name: AbilityUpgradeUI
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!224 &512584134
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 512584133}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 953010542}
+  m_RootOrder: 1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0, y: 1}
+--- !u!114 &512584135
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 512584133}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 30649d3a9faa99c48a7b1166b86bf2a0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Padding:
+    m_Left: 50
+    m_Right: 0
+    m_Top: 0
+    m_Bottom: 0
+  m_ChildAlignment: 0
+  m_Spacing: 0
+  m_ChildForceExpandWidth: 1
+  m_ChildForceExpandHeight: 1
+  m_ChildControlWidth: 0
+  m_ChildControlHeight: 0
+  m_ChildScaleWidth: 0
+  m_ChildScaleHeight: 0
+  m_ReverseArrangement: 0
+--- !u!114 &512584136
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 512584133}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b2c144b651ee4124598c7dddd72c405f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_States:
+  - m_Name: Default
+    m_Preset: {fileID: 0}
+    m_BlockList: []
+    m_Default: 1
+  m_Character: {fileID: 0}
+  m_AttachToCamera: 1
+  m_Visible: 1
+  abilityOverviewButtonPrefab: {fileID: 8516949130005021292, guid: e9ddf907d4619a1499faf2efa51870a2,
+    type: 3}
 --- !u!1 &534095732
 GameObject:
   m_ObjectHideFlags: 0
@@ -774,6 +946,7 @@ GameObject:
   - component: {fileID: 534095733}
   - component: {fileID: 534095734}
   - component: {fileID: 534095735}
+  - component: {fileID: 534095736}
   m_Layer: 0
   m_Name: Game(MadboyStudios)
   m_TagString: Untagged
@@ -809,6 +982,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   enemyToSpawn: {fileID: 2664925134329737816, guid: bb2fe16dba589ff48960e833f141a1af,
+    type: 3}
+  enemyToSpawn2: {fileID: 7670444121552849861, guid: 7dd64db2701666a41b60f29013b4841e,
     type: 3}
   enemySpawnpoint: {fileID: 1316580697}
   currentWave: 0
@@ -929,6 +1104,143 @@ MonoBehaviour:
       Entry: 8
       Data: 
   unusedAbilityPoints: 0
+--- !u!114 &534095736
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 534095732}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9a7605f4a8635ab49bf517f6bd502654, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  serializationData:
+    SerializedFormat: 2
+    SerializedBytes: 
+    ReferencedUnityObjects: []
+    SerializedBytesString: 
+    Prefab: {fileID: 0}
+    PrefabModificationsReferencedUnityObjects: []
+    PrefabModifications: []
+    SerializationNodes:
+    - Name: ProgressionData
+      Entry: 7
+      Data: 0|System.Collections.Generic.Dictionary`2[[System.String, mscorlib],[MBS.AbilitySystem.AbilityUpgradeProgressData,
+        Assembly-CSharp]], mscorlib
+    - Name: comparer
+      Entry: 7
+      Data: 1|System.Collections.Generic.GenericEqualityComparer`1[[System.String,
+        mscorlib]], mscorlib
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 12
+      Data: 2
+    - Name: 
+      Entry: 7
+      Data: 
+    - Name: $k
+      Entry: 1
+      Data: Frag GrenadeTristanYorboro(Clone)8
+    - Name: $v
+      Entry: 7
+      Data: 2|MBS.AbilitySystem.AbilityUpgradeProgressData, Assembly-CSharp
+    - Name: initalUpgrade
+      Entry: 1
+      Data: ' Unlocked [1] [2] [3a] [4a] [5a] '
+    - Name: AbilityUnlocked
+      Entry: 5
+      Data: true
+    - Name: Upgrade1
+      Entry: 5
+      Data: true
+    - Name: Upgrade2
+      Entry: 5
+      Data: true
+    - Name: Upgrade3a
+      Entry: 5
+      Data: true
+    - Name: Upgrade3b
+      Entry: 5
+      Data: false
+    - Name: Upgrade4a
+      Entry: 5
+      Data: true
+    - Name: Upgrade4b
+      Entry: 5
+      Data: false
+    - Name: Upgrade5a
+      Entry: 5
+      Data: true
+    - Name: Upgrade5b
+      Entry: 5
+      Data: false
+    - Name: targetUpgrade
+      Entry: 3
+      Data: 0
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 7
+      Data: 
+    - Name: $k
+      Entry: 1
+      Data: FlamerTristanYorboro(Clone)9
+    - Name: $v
+      Entry: 7
+      Data: 3|MBS.AbilitySystem.AbilityUpgradeProgressData, Assembly-CSharp
+    - Name: initalUpgrade
+      Entry: 1
+      Data: ' Unlocked [] [] [] [] [] '
+    - Name: AbilityUnlocked
+      Entry: 5
+      Data: true
+    - Name: Upgrade1
+      Entry: 5
+      Data: false
+    - Name: Upgrade2
+      Entry: 5
+      Data: false
+    - Name: Upgrade3a
+      Entry: 5
+      Data: false
+    - Name: Upgrade3b
+      Entry: 5
+      Data: false
+    - Name: Upgrade4a
+      Entry: 5
+      Data: false
+    - Name: Upgrade4b
+      Entry: 5
+      Data: false
+    - Name: Upgrade5a
+      Entry: 5
+      Data: false
+    - Name: Upgrade5b
+      Entry: 5
+      Data: false
+    - Name: targetUpgrade
+      Entry: 3
+      Data: 0
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 13
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
 --- !u!1001 &569591012
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -936,6 +1248,22 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 953010542}
     m_Modifications:
+    - target: {fileID: 467605047, guid: b5bf2e4077598914b83fc5e4ca20f2f4, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 467605047, guid: b5bf2e4077598914b83fc5e4ca20f2f4, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1195433615, guid: b5bf2e4077598914b83fc5e4ca20f2f4, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1195433615, guid: b5bf2e4077598914b83fc5e4ca20f2f4, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 1814214236125630, guid: b5bf2e4077598914b83fc5e4ca20f2f4, type: 3}
       propertyPath: m_Name
       value: Monitors
@@ -1185,7 +1513,6 @@ GameObject:
   - component: {fileID: 954429864}
   - component: {fileID: 954429863}
   - component: {fileID: 954429862}
-  - component: {fileID: 954429865}
   m_Layer: 0
   m_Name: InteractButton
   m_TagString: Untagged
@@ -1498,7 +1825,7 @@ MonoBehaviour:
   m_BlockingObjects: 0
   m_BlockingMask:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 4227858487
 --- !u!114 &953010540
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1556,6 +1883,7 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 569591013}
+  - {fileID: 512584134}
   m_Father: {fileID: 0}
   m_RootOrder: 9
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -1665,24 +1993,6 @@ MonoBehaviour:
   m_ToggleBoolInteractValue: 1
   m_TriggerParameter: Press
   m_InteractAudioClips: []
---- !u!114 &954429865
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 946995811}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6612c7f2b50a26a4ab56add3926388f4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  refireRate: 0
-  hitableLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  refireCountdown: 0
-  debugStats: 0
 --- !u!1 &1285562215
 GameObject:
   m_ObjectHideFlags: 0
@@ -1796,7 +2106,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1316580695}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 35.94, y: 10, z: 50}
+  m_LocalPosition: {x: 30, y: 10, z: 50}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1817,11 +2127,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Grouping: -1
   m_Shape: 2
-  m_Size: 1
+  m_Size: 5
   m_RandomShapeSpawn: 1
   m_GroundSnapHeight: 2
   m_RandomDirection: 0
-  m_CheckForObstruction: 0
+  m_CheckForObstruction: 1
   m_MaxCollisionCount: 20
   m_ObstructionLayers:
     serializedVersion: 2

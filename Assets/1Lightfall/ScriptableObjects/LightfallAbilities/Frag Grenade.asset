@@ -1,0 +1,255 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 34ae144dffdfcff4f8ac98ef54423866, type: 3}
+  m_Name: Frag Grenade
+  m_EditorClassIdentifier: 
+  icon: {fileID: 0}
+  title: Frag Grenade
+  description: Frag grenade
+  possibleUpgrades:
+    Upgrade1:
+      Icon: {fileID: 0}
+      Title: Capacity
+      Description: +1 Charge
+      Effects:
+      - rid: 3613693753857409029
+    Upgrade2:
+      Icon: {fileID: 0}
+      Title: Ruin
+      Description: +20% Ruin
+      Effects:
+      - rid: 3613693957256511488
+    Upgrade3a:
+      Icon: {fileID: 0}
+      Title: Ruin
+      Description: +30% Ruin
+      Effects:
+      - rid: 3613693957256511489
+    Upgrade3b:
+      Icon: {fileID: 0}
+      Title: Radius
+      Description: +30% Radius
+      Effects:
+      - rid: 3613693957256511490
+    Upgrade4a:
+      Icon: {fileID: 0}
+      Title: Capacity
+      Description: +2 Charges
+      Effects:
+      - rid: 3613693957256511491
+    Upgrade4b:
+      Icon: {fileID: 0}
+      Title: Dense Shrapnel
+      Description: +75% Armor Damage
+      Effects:
+      - rid: 3613693982486298630
+    Upgrade5a:
+      Icon: {fileID: 0}
+      Title: Voltic Override
+      Description: '+Energy Effect (garunteed stagger vs health [no stagger vs shield],
+        can arc,+200 Damage, +100% Shield Damage)
+
+        -50% Force'
+      Effects:
+      - rid: 3613694009248317440
+      - rid: 3613694009248317444
+      - rid: 4205560569808814080
+    Upgrade5b:
+      Icon: {fileID: 0}
+      Title: High-Impact Charge
+      Description: +40% force, +30% radius
+      Effects:
+      - rid: 3613693957256511495
+      - rid: 3613694009248317442
+  abilityType: 0
+  timeToUse: 0
+  onActivateFX: []
+  abilityConditions:
+  - rid: 3613693935334981632
+  abilityEffects:
+  - rid: 3613693846485204992
+  - rid: 3613693935334981633
+  references:
+    version: 2
+    RefIds:
+    - rid: 3613693753857409029
+      type: {class: StatAbilityUpgrade, ns: MBS.AbilitySystem, asm: Assembly-CSharp}
+      data:
+        statsToChange:
+        - StatName: 1
+          value: 1
+          flatValueChange: 1
+          divideFlatValueBy100: 0
+    - rid: 3613693846485204992
+      type: {class: EquipOpsiveItemOnUse, ns: MBS.AbilitySystem, asm: Assembly-CSharp}
+      data:
+        subclassName: MBS.AbilitySystem.EquipOpsiveItemOnUse
+        crowdControlType: 0
+        itemSO: {fileID: 6089150081732252308, guid: 47ae2c93518327d4da717b3cdbcd8ee3,
+          type: 2}
+        UseChargeEveryUse: 1
+        ItemBaseStats:
+        - StatName: 2
+          StatNameDisplayName: Ruin
+          statValueDisplaySuffix: 
+          EffectIcon: {fileID: 0}
+          InitalValue: 900
+          MaxValue: 900
+          CurrentValue: 900
+          ProspectiveValue: 900
+        - StatName: 7
+          StatNameDisplayName: Radius
+          statValueDisplaySuffix: m
+          EffectIcon: {fileID: 0}
+          InitalValue: 6
+          MaxValue: 6
+          CurrentValue: 6
+          ProspectiveValue: 6
+        - StatName: 6
+          StatNameDisplayName: Force
+          statValueDisplaySuffix: N
+          EffectIcon: {fileID: 0}
+          InitalValue: 1000
+          MaxValue: 1000
+          CurrentValue: 1000
+          ProspectiveValue: 1000
+    - rid: 3613693935334981632
+      type: {class: ChargeCondition, ns: MBS.AbilitySystem, asm: Assembly-CSharp}
+      data:
+        subclassName: MBS.AbilitySystem.ChargeCondition
+    - rid: 3613693935334981633
+      type: {class: HasChargesAbilityEffect, ns: MBS.AbilitySystem, asm: Assembly-CSharp}
+      data:
+        subclassName: MBS.AbilitySystem.HasChargesAbilityEffect
+        crowdControlType: 0
+        maxCharges: 1
+        consumeChargeOnUse: 0
+    - rid: 3613693957256511488
+      type: {class: StatAbilityUpgrade, ns: MBS.AbilitySystem, asm: Assembly-CSharp}
+      data:
+        statsToChange:
+        - StatName: 2
+          value: 20
+          flatValueChange: 0
+          divideFlatValueBy100: 0
+    - rid: 3613693957256511489
+      type: {class: StatAbilityUpgrade, ns: MBS.AbilitySystem, asm: Assembly-CSharp}
+      data:
+        statsToChange:
+        - StatName: 2
+          value: 30
+          flatValueChange: 0
+          divideFlatValueBy100: 0
+    - rid: 3613693957256511490
+      type: {class: StatAbilityUpgrade, ns: MBS.AbilitySystem, asm: Assembly-CSharp}
+      data:
+        statsToChange:
+        - StatName: 7
+          value: 30
+          flatValueChange: 0
+          divideFlatValueBy100: 0
+    - rid: 3613693957256511491
+      type: {class: StatAbilityUpgrade, ns: MBS.AbilitySystem, asm: Assembly-CSharp}
+      data:
+        statsToChange:
+        - StatName: 1
+          value: 2
+          flatValueChange: 1
+          divideFlatValueBy100: 0
+    - rid: 3613693957256511495
+      type: {class: StatAbilityUpgrade, ns: MBS.AbilitySystem, asm: Assembly-CSharp}
+      data:
+        statsToChange:
+        - StatName: 6
+          value: 40
+          flatValueChange: 0
+          divideFlatValueBy100: 0
+        - StatName: 7
+          value: 30
+          flatValueChange: 0
+          divideFlatValueBy100: 0
+    - rid: 3613693982486298630
+      type: {class: StatAbilityUpgrade, ns: MBS.AbilitySystem, asm: Assembly-CSharp}
+      data:
+        statsToChange:
+        - StatName: 3
+          value: 75
+          flatValueChange: 1
+          divideFlatValueBy100: 1
+    - rid: 3613694009248317440
+      type: {class: StatAbilityUpgrade, ns: MBS.AbilitySystem, asm: Assembly-CSharp}
+      data:
+        statsToChange:
+        - StatName: 6
+          value: -50
+          flatValueChange: 0
+          divideFlatValueBy100: 0
+    - rid: 3613694009248317442
+      type: {class: AddAbilityEffect, ns: MBS.AbilitySystem, asm: Assembly-CSharp}
+      data:
+        abilityEffectToAdd:
+          rid: 3613694009248317443
+    - rid: 3613694009248317443
+      type: {class: DetonateMajorEffect, ns: MBS.AbilitySystem, asm: Assembly-CSharp}
+      data:
+        subclassName: 
+        crowdControlType: 0
+        AbilityEffectStatUIIcon: {fileID: 0}
+        detonationsSO: {fileID: 11400000, guid: e5d3aea0e94c5d84c8b37ef95475b85e,
+          type: 2}
+        detonatorType: 0
+    - rid: 3613694009248317444
+      type: {class: AddAbilityEffect, ns: MBS.AbilitySystem, asm: Assembly-CSharp}
+      data:
+        abilityEffectToAdd:
+          rid: 3613694009248317445
+    - rid: 3613694009248317445
+      type: {class: DetonateMajorEffect, ns: MBS.AbilitySystem, asm: Assembly-CSharp}
+      data:
+        subclassName: 
+        crowdControlType: 1
+        AbilityEffectStatUIIcon: {fileID: 0}
+        detonationsSO: {fileID: 11400000, guid: e5d3aea0e94c5d84c8b37ef95475b85e,
+          type: 2}
+        detonatorType: 3
+    - rid: 4205560569808814080
+      type: {class: AddImpactActionToAbilityItem, ns: MBS.AbilitySystem, asm: Assembly-CSharp}
+      data:
+        upgrades: 0000000001000000
+        delayedDamageFields:
+          Delay: 1
+          Damagefields:
+            UseContextData: 1
+            SetDamageImpactData: 1
+            InvokeOnObjectImpact: 0
+            DamageProcessor: {fileID: 11400000, guid: b08de097dff57f94e8d3c3bbd79456ed,
+              type: 2}
+            DamageAmount: 200
+            ImpactForce: 0
+            ImpactForceFrames: 0
+            ImpactRadius: 0
+            UserData:
+              _weakpointMultiplier: 2
+              _sheildEffectiveness: 1
+              _armorEffectiveness: 1
+              _staggerForce: 500
+              _applyExtraDamageFromStaggerForce: 0
+              _ignoreShield: 0
+              _ignoreArmor: 0
+              _isSelfDamage: 0
+              _sourceTags: []
+        causeStaggerInitFields:
+          Delay: 1
+          StaggerChance: 100
+        detonateMajorEffectInitFields:
+          Delay: 0
+          MajorEffect: 0

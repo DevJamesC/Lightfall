@@ -16,6 +16,8 @@ namespace MBS.AbilitySystem
         [SerializeField]
         private Color ProspectiveColor = Color.green;
         [SerializeField]
+        private Color ProspectiveNegativeColor = Color.red;
+        [SerializeField]
         private Image BackgroundImage;
         [SerializeField]
         private Slider CurrentValueSlider;
@@ -25,6 +27,10 @@ namespace MBS.AbilitySystem
         private Slider ProspectiveValueSlider;
         [SerializeField]
         private Image ProspectiveValueSliderImage;
+        [SerializeField]
+        private Slider ProspectiveNegativeValueSlider;
+        [SerializeField]
+        private Image ProspectiveNegativeValueSliderImage;
         [SerializeField]
         private TextMeshProUGUI TitleText;
         [SerializeField]
@@ -43,19 +49,41 @@ namespace MBS.AbilitySystem
 
             if (stat.ProspectiveValue != stat.CurrentValue)
             {
-                ProspectiveValueSlider.value = stat.ProspectiveValue / stat.MaxValue;
-                if (stat.StatName == StatName.AbilityRecharge)
-                    ProspectiveValueSlider.value = stat.MaxValue / stat.ProspectiveValue;
-
-                DisplayValueText.text = (Mathf.Round(stat.ProspectiveValue * 100) / 100).ToString() + stat.statValueDisplaySuffix;
-                DisplayValueText.outlineColor = ProspectiveColor;
-                DisplayValueText.outlineWidth = .15f;
-                ProspectiveValueSlider.gameObject.SetActive(true);
+                InitalizePospectiveValue(stat);
             }
             else
             {
                 ProspectiveValueSlider.gameObject.SetActive(false);
+                ProspectiveNegativeValueSlider.gameObject.SetActive(false);
+                ProspectiveNegativeValueSliderImage.gameObject.SetActive(false);
             }
+        }
+
+        private void InitalizePospectiveValue(AbilityUIStat stat)
+        {
+            bool isPositive = stat.ProspectiveValue >= stat.CurrentValue;
+            if (stat.StatName == StatName.AbilityRecharge) isPositive = !isPositive;
+
+            Slider slider = isPositive ? ProspectiveValueSlider : ProspectiveNegativeValueSlider;
+
+            slider.value = stat.ProspectiveValue / stat.MaxValue;
+            if (stat.StatName == StatName.AbilityRecharge)
+                slider.value = stat.MaxValue / stat.ProspectiveValue;
+
+            if (!isPositive)
+            {
+                ProspectiveValueSlider.gameObject.SetActive(false);
+                //Debug.Log("currently takes PERCENT CHANGE off of the blue line, rather than off the total line. (It give the illusion of working if the blue line has not been changed via upgrade...)");
+                slider.value = 1 - slider.value;
+            }
+            else
+                ProspectiveNegativeValueSliderImage.gameObject.SetActive(false);
+
+            DisplayValueText.text = (Mathf.Round(stat.ProspectiveValue * 100) / 100).ToString() + stat.statValueDisplaySuffix;
+            DisplayValueText.outlineColor = ProspectiveColor;
+            DisplayValueText.outlineWidth = .15f;
+            slider.gameObject.SetActive(true);
+
         }
 
         private void OnValidate()
@@ -63,6 +91,7 @@ namespace MBS.AbilitySystem
             BackgroundImage.color = EmptyColor;
             CurrentValueSliderImage.color = FillColor;
             ProspectiveValueSliderImage.color = ProspectiveColor;
+            ProspectiveNegativeValueSliderImage.color = ProspectiveNegativeColor;
         }
     }
 }

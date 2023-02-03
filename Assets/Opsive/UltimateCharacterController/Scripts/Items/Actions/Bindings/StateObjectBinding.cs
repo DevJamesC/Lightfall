@@ -19,11 +19,11 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Bindings
     public class BoundStateObject : StateObject
     {
         [Tooltip("The state object bindings used to bind properties with external values.")]
-        [HideInInspector] [SerializeField] protected StateObjectBindingGroup m_Bindings;
+        [HideInInspector][SerializeField] protected StateObjectBindingGroup m_Bindings;
 
         //The Bound GamObject can be overriden by sub classes.
         protected virtual GameObject BoundGameObject => StateBoundGameObject;
-        
+
         /// <summary>
         /// Initializes the default values.
         /// </summary>
@@ -43,13 +43,16 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Bindings
             // For example the state object game object could be the character and the bound gameobject could be the weapon.
             InitializeStateObjectBindings(BoundGameObject);
         }
-        
+
         /// <summary>
         /// Initialize the binding group.
         /// </summary>
         /// <param name="boundGameObject">The game object to bind.</param>
         public virtual void InitializeStateObjectBindings(GameObject boundGameObject)
         {
+            if (m_Bindings == null)
+                m_Bindings = new StateObjectBindingGroup();
+
             m_Bindings.Initialize(this, boundGameObject);
         }
     }
@@ -65,7 +68,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Bindings
 
         protected StateObject m_StateObject;
         protected GameObject m_BoundGameObject;
-        
+
         public StateObject StateObject { get => m_StateObject; set => m_StateObject = value; }
         public GameObject BoundGameObject { get => m_BoundGameObject; set => m_BoundGameObject = value; }
         public StateObjectBinding[] Bindings { get => m_Bindings; set => m_Bindings = value; }
@@ -79,12 +82,13 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Bindings
         {
             m_StateObject = boundStateObject;
             m_BoundGameObject = boundGameObject;
-            
+
             if (Bindings == null) { return; }
 
-            for (int i = 0; i < Bindings.Length; i++) {
-                if(Bindings[i] == null){ continue; }
-                
+            for (int i = 0; i < Bindings.Length; i++)
+            {
+                if (Bindings[i] == null) { continue; }
+
                 Bindings[i].Initialize(boundStateObject, boundGameObject);
             }
         }
@@ -98,10 +102,10 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Bindings
     {
         protected StateObject m_StateObject;
         protected GameObject m_BoundGameObject;
-        
+
         public StateObject StateObject => m_StateObject;
         public GameObject BoundGameObject => m_BoundGameObject;
-        
+
         /// <summary>
         /// Initialize the state binding with the bound state object.
         /// </summary>
@@ -111,7 +115,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Bindings
         {
             m_StateObject = boundStateObject;
             m_BoundGameObject = boundGameObject;
-            if(Application.isPlaying == false){ return; }
+            if (Application.isPlaying == false) { return; }
 
             InitializeInternal();
         }
@@ -130,7 +134,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Bindings
             return GetType().Name;
         }
     }
-    
+
     /// <summary>
     /// A State Object Binding is a base class for binding state object properties to external values.
     /// </summary>
@@ -146,16 +150,17 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Bindings
 
         private Traits.Attribute m_Attribute;
         private PropertyInfo m_BoundPropertyInfo;
-        
+
         /// <summary>
         /// Initialize the state binding with the bound state object.
         /// </summary>
         protected override void InitializeInternal()
         {
             m_Attribute = m_AttributeManager?.GetAttribute(m_AttributeName);
-            if(m_Attribute == null){ return; }
-            
-            if (Application.isPlaying) {
+            if (m_Attribute == null) { return; }
+
+            if (Application.isPlaying)
+            {
                 m_BoundPropertyInfo = m_StateObject.GetType().GetProperty(m_PropertyPath);
                 Shared.Events.EventHandler.RegisterEvent<Traits.Attribute>(m_AttributeManager.gameObject, "OnAttributeUpdateValue", OnAttributeChange);
             }
@@ -167,7 +172,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Bindings
         /// <param name="attributeThatChanged">The attribute that changed.</param>
         private void OnAttributeChange(Traits.Attribute attributeThatChanged)
         {
-            if(attributeThatChanged != m_Attribute){ return; }
+            if (attributeThatChanged != m_Attribute) { return; }
 
             var property = m_BoundPropertyInfo;
             property.SetValue(m_StateObject, m_Attribute.Value);

@@ -514,7 +514,8 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Impact
         [SerializeField] protected float m_ImpactStateDisableTimer = 10;
         [Tooltip("The Surface Impact defines what effects happen on impact.")]
         [SerializeField] protected SurfaceImpact m_SurfaceImpact;
-        
+
+
         public LayerMask LayerMask { get => m_LayerMask; set => m_LayerMask = value; }
         public DamageProcessor DamageProcessor { get => m_DamageProcessor; set => m_DamageProcessor = value; }
         public float DamageAmount { get => m_DamageAmount; set => m_DamageAmount = value; }

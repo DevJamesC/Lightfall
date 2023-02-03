@@ -303,6 +303,7 @@ namespace MBS.ModifierSystem
 
     public enum MajorEffects
     {
+        Generic,
         Burning,
         Freezing,
         Shocking,

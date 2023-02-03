@@ -304,6 +304,7 @@ namespace MBS.AbilitySystem
         }
     }
 
+    [Serializable]
     public class AbilityUIStat
     {
         public StatName StatName;
@@ -316,6 +317,21 @@ namespace MBS.AbilitySystem
         public float CurrentValue;
         public float ProspectiveValue;
         //add an image, so it can return an "effect" that isn't necessarily a stat increase (such as "bleed effect", or fire primer/ detonator)?
+
+        public AbilityUIStat Copy()
+        {
+            return new AbilityUIStat
+            {
+                StatName = StatName,
+                StatNameDisplayName = StatNameDisplayName,
+                statValueDisplaySuffix = statValueDisplaySuffix,
+                EffectIcon = EffectIcon,
+                InitalValue = InitalValue,
+                MaxValue = MaxValue,
+                CurrentValue = CurrentValue,
+                ProspectiveValue = ProspectiveValue
+            };
+        }
     }
 }
 

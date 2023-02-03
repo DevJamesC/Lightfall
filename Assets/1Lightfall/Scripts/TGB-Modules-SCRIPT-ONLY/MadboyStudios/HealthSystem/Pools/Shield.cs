@@ -28,8 +28,8 @@ namespace MBS.HealthSystem
             InvokePreDamageEvent(damageData);
 
             MBSExtraDamageData extraDamageData = damageData.GetUserData<MBSExtraDamageData>();
-            int damageToShields = Mathf.RoundToInt(damageData.Amount * extraDamageData.SheildEffectiveness);
-            int overflow = Mathf.RoundToInt(((damageToShields - currentValue) / extraDamageData.SheildEffectiveness) * OverbleedMultiplier);
+            int damageToShields = Mathf.RoundToInt(damageData.Amount * extraDamageData.ShieldEffectiveness);
+            int overflow = Mathf.RoundToInt(((damageToShields - currentValue) / extraDamageData.ShieldEffectiveness) * OverbleedMultiplier);
             DecreaseCurrentValue(damageData.Amount);
 
             InvokePostDamageEvent(damageData);

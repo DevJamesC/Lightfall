@@ -22,6 +22,9 @@ namespace MBS.AbilitySystem
         protected CrowdControlType crowdControlType = CrowdControlType.None;
         public CrowdControlType CrowdControlType { get => crowdControlType; }
 
+        public virtual bool CanBeCanceled { get { return true; } }
+
+
         /// <summary>
         /// Use() is called when the ability is "used".
         /// Must call OnAbilityFinishedInvoke() to tell the abilitywrapper the effect has finished.

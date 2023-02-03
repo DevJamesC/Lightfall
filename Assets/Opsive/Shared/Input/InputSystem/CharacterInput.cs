@@ -245,12 +245,12 @@ public partial class @CharacterInput : IInputActionCollection2, IDisposable
                 },
                 {
                     ""name"": ""Equip Next Item"",
-                    ""type"": ""Button"",
+                    ""type"": ""Value"",
                     ""id"": ""9beb1755-6e71-4107-b0bc-fecc75a3c194"",
-                    ""expectedControlType"": ""Button"",
+                    ""expectedControlType"": ""Axis"",
                     ""processors"": """",
                     ""interactions"": """",
-                    ""initialStateCheck"": false
+                    ""initialStateCheck"": true
                 },
                 {
                     ""name"": ""Equip Tenth Item"",
@@ -263,12 +263,12 @@ public partial class @CharacterInput : IInputActionCollection2, IDisposable
                 },
                 {
                     ""name"": ""Equip Previous Item"",
-                    ""type"": ""Button"",
+                    ""type"": ""Value"",
                     ""id"": ""fe256b77-67cf-44b6-897d-213e36f3d258"",
-                    ""expectedControlType"": ""Button"",
+                    ""expectedControlType"": ""Axis"",
                     ""processors"": """",
                     ""interactions"": """",
-                    ""initialStateCheck"": false
+                    ""initialStateCheck"": true
                 },
                 {
                     ""name"": ""Toggle Item Equip"",
@@ -346,6 +346,33 @@ public partial class @CharacterInput : IInputActionCollection2, IDisposable
                     ""name"": ""Previous"",
                     ""type"": ""Button"",
                     ""id"": ""3f2b06ce-1d78-43cd-ae3f-a8e880489a7d"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Ability1"",
+                    ""type"": ""Button"",
+                    ""id"": ""277358b1-b3f0-4419-8434-5f5bf2bef2a6"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Ability2"",
+                    ""type"": ""Button"",
+                    ""id"": ""56239e78-7156-44fe-b0d1-a8bdf4ff1040"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Ability3"",
+                    ""type"": ""Button"",
+                    ""id"": ""02c8d279-c160-4aae-b510-7a81083ae5e6"",
                     ""expectedControlType"": ""Button"",
                     ""processors"": """",
                     ""interactions"": """",
@@ -598,7 +625,7 @@ public partial class @CharacterInput : IInputActionCollection2, IDisposable
                 {
                     ""name"": """",
                     ""id"": ""776a00b4-1507-49a3-a1ef-fc08df5e5bfd"",
-                    ""path"": ""<Keyboard>/c"",
+                    ""path"": ""<Keyboard>/ctrl"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": ""Keyboard"",
@@ -707,11 +734,11 @@ public partial class @CharacterInput : IInputActionCollection2, IDisposable
                 },
                 {
                     ""name"": """",
-                    ""id"": ""a16e9ac1-7831-424b-b4bb-5d7cb1017107"",
-                    ""path"": ""<Keyboard>/e"",
+                    ""id"": ""013abb97-8e30-4b74-889d-a13311fdf2e7"",
+                    ""path"": """",
                     ""interactions"": """",
                     ""processors"": """",
-                    ""groups"": ""Keyboard"",
+                    ""groups"": """",
                     ""action"": ""Equip Next Item"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
@@ -729,11 +756,11 @@ public partial class @CharacterInput : IInputActionCollection2, IDisposable
                 },
                 {
                     ""name"": """",
-                    ""id"": ""3b288d5b-5b4a-4ff5-96bd-da053644e38a"",
-                    ""path"": ""<Keyboard>/q"",
+                    ""id"": ""712fdbf1-04bc-46cc-9709-d0baaa91de5d"",
+                    ""path"": """",
                     ""interactions"": """",
                     ""processors"": """",
-                    ""groups"": ""Keyboard"",
+                    ""groups"": """",
                     ""action"": ""Equip Previous Item"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
@@ -1144,6 +1171,39 @@ public partial class @CharacterInput : IInputActionCollection2, IDisposable
                     ""action"": ""Controller Y"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""a8811f20-aa85-43dd-935f-2637af3fffca"",
+                    ""path"": ""<Keyboard>/q"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard"",
+                    ""action"": ""Ability1"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""486f04fe-77b3-42fe-af0d-ddf0f4ede07a"",
+                    ""path"": ""<Keyboard>/e"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard"",
+                    ""action"": ""Ability2"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""c58bc892-49cf-4b4d-ba4c-3f95d9590929"",
+                    ""path"": ""<Keyboard>/c"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard"",
+                    ""action"": ""Ability3"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         },
@@ -1743,6 +1803,9 @@ public partial class @CharacterInput : IInputActionCollection2, IDisposable
         m_Gameplay_ClosePanel = m_Gameplay.FindAction("Close Panel", throwIfNotFound: true);
         m_Gameplay_Next = m_Gameplay.FindAction("Next", throwIfNotFound: true);
         m_Gameplay_Previous = m_Gameplay.FindAction("Previous", throwIfNotFound: true);
+        m_Gameplay_Ability1 = m_Gameplay.FindAction("Ability1", throwIfNotFound: true);
+        m_Gameplay_Ability2 = m_Gameplay.FindAction("Ability2", throwIfNotFound: true);
+        m_Gameplay_Ability3 = m_Gameplay.FindAction("Ability3", throwIfNotFound: true);
         // UI
         m_UI = asset.FindActionMap("UI", throwIfNotFound: true);
         m_UI_TrackedDeviceOrientation = m_UI.FindAction("TrackedDeviceOrientation", throwIfNotFound: true);
@@ -1850,6 +1913,9 @@ public partial class @CharacterInput : IInputActionCollection2, IDisposable
     private readonly InputAction m_Gameplay_ClosePanel;
     private readonly InputAction m_Gameplay_Next;
     private readonly InputAction m_Gameplay_Previous;
+    private readonly InputAction m_Gameplay_Ability1;
+    private readonly InputAction m_Gameplay_Ability2;
+    private readonly InputAction m_Gameplay_Ability3;
     public struct GameplayActions
     {
         private @CharacterInput m_Wrapper;
@@ -1890,6 +1956,9 @@ public partial class @CharacterInput : IInputActionCollection2, IDisposable
         public InputAction @ClosePanel => m_Wrapper.m_Gameplay_ClosePanel;
         public InputAction @Next => m_Wrapper.m_Gameplay_Next;
         public InputAction @Previous => m_Wrapper.m_Gameplay_Previous;
+        public InputAction @Ability1 => m_Wrapper.m_Gameplay_Ability1;
+        public InputAction @Ability2 => m_Wrapper.m_Gameplay_Ability2;
+        public InputAction @Ability3 => m_Wrapper.m_Gameplay_Ability3;
         public InputActionMap Get() { return m_Wrapper.m_Gameplay; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -2007,6 +2076,15 @@ public partial class @CharacterInput : IInputActionCollection2, IDisposable
                 @Previous.started -= m_Wrapper.m_GameplayActionsCallbackInterface.OnPrevious;
                 @Previous.performed -= m_Wrapper.m_GameplayActionsCallbackInterface.OnPrevious;
                 @Previous.canceled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnPrevious;
+                @Ability1.started -= m_Wrapper.m_GameplayActionsCallbackInterface.OnAbility1;
+                @Ability1.performed -= m_Wrapper.m_GameplayActionsCallbackInterface.OnAbility1;
+                @Ability1.canceled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnAbility1;
+                @Ability2.started -= m_Wrapper.m_GameplayActionsCallbackInterface.OnAbility2;
+                @Ability2.performed -= m_Wrapper.m_GameplayActionsCallbackInterface.OnAbility2;
+                @Ability2.canceled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnAbility2;
+                @Ability3.started -= m_Wrapper.m_GameplayActionsCallbackInterface.OnAbility3;
+                @Ability3.performed -= m_Wrapper.m_GameplayActionsCallbackInterface.OnAbility3;
+                @Ability3.canceled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnAbility3;
             }
             m_Wrapper.m_GameplayActionsCallbackInterface = instance;
             if (instance != null)
@@ -2119,6 +2197,15 @@ public partial class @CharacterInput : IInputActionCollection2, IDisposable
                 @Previous.started += instance.OnPrevious;
                 @Previous.performed += instance.OnPrevious;
                 @Previous.canceled += instance.OnPrevious;
+                @Ability1.started += instance.OnAbility1;
+                @Ability1.performed += instance.OnAbility1;
+                @Ability1.canceled += instance.OnAbility1;
+                @Ability2.started += instance.OnAbility2;
+                @Ability2.performed += instance.OnAbility2;
+                @Ability2.canceled += instance.OnAbility2;
+                @Ability3.started += instance.OnAbility3;
+                @Ability3.performed += instance.OnAbility3;
+                @Ability3.canceled += instance.OnAbility3;
             }
         }
     }
@@ -2293,6 +2380,9 @@ public partial class @CharacterInput : IInputActionCollection2, IDisposable
         void OnClosePanel(InputAction.CallbackContext context);
         void OnNext(InputAction.CallbackContext context);
         void OnPrevious(InputAction.CallbackContext context);
+        void OnAbility1(InputAction.CallbackContext context);
+        void OnAbility2(InputAction.CallbackContext context);
+        void OnAbility3(InputAction.CallbackContext context);
     }
     public interface IUIActions
     {

@@ -1,6 +1,8 @@
 ﻿using MBS.ForceSystem;
 using MBS.StatsAndTags;
+using Opsive.UltimateCharacterController.Game;
 using Opsive.UltimateCharacterController.Items.Actions.Impact;
+using Opsive.UltimateCharacterController.SurfaceSystem;
 using Opsive.UltimateCharacterController.Traits.Damage;
 using Sirenix.OdinInspector;
 using System;
@@ -38,21 +40,48 @@ namespace MBS.DamageSystem
     }
 
     [Serializable]
+    public class ImpactDamageData : Opsive.UltimateCharacterController.Items.Actions.Impact.ImpactDamageData
+    {
+        [Tooltip("Object allowing custom user data.")]
+        protected object m_UserData;
+
+        public object UserData { get => m_UserData; set => m_UserData = value; }
+
+        public ImpactDamageData InjectValues(MBSImpactDamageDataForInspector values)
+        {
+            LayerMask = values.LayerMask;
+            DamageProcessor = values.DamageProcessor;
+            DamageAmount = values.DamageAmount;
+            ImpactForce = values.ImpactForce;
+            ImpactForceFrames = values.ImpactForceFrames;
+            ImpactRadius = values.ImpactRadius;
+            ImpactStateName = values.ImpactStateName;
+            ImpactStateDisableTimer = values.ImpactStateDisableTimer;
+            SurfaceImpact = values.SurfaceImpact;
+            UserData = values.UserData.Copy();
+            return this;
+        }
+    }
+
+    [Serializable]
     public class MBSExtraDamageData
     {
         [SerializeField] private float _weakpointMultiplier;
         [SerializeField] private float _sheildEffectiveness;
         [SerializeField] private float _armorEffectiveness;
         [SerializeField] private float _staggerForce;
+        [SerializeField] private bool _applyExtraDamageFromStaggerForce;
         [SerializeField] private bool _ignoreShield;
         [SerializeField] private bool _ignoreArmor;
         [SerializeField] private bool _isSelfDamage;
         [SerializeField] private List<Tag> _sourceTags;
 
         public float WeakpointMultiplier { get => _weakpointMultiplier; set => _weakpointMultiplier = value; }
-        public float SheildEffectiveness { get => _sheildEffectiveness; set => _sheildEffectiveness = value; }
+        public float ShieldEffectiveness { get => _sheildEffectiveness; set => _sheildEffectiveness = value; }
         public float ArmorEffectiveness { get => _armorEffectiveness; set => _armorEffectiveness = value; }
         public float StaggerForce { get => _staggerForce; set => _staggerForce = value; }
+
+        public bool ApplyExtraDamageFromStaggerForce { get => _applyExtraDamageFromStaggerForce; set => _applyExtraDamageFromStaggerForce = value; }
         public bool IgnoreShield { get => _ignoreShield; set => _ignoreShield = value; }
         public bool IgnoreArmor { get => _ignoreArmor; set => _ignoreArmor = value; }
         public bool IsSelfDamage { get => _isSelfDamage; set => _isSelfDamage = value; }
@@ -66,7 +95,7 @@ namespace MBS.DamageSystem
         public void Initalize(float weakpointMult, float sheildEff, float armorEff, float staggerForce, bool ignoreShield, bool ignoreArmor, bool isSelfDamage = false, List<Tag> sourceTags = null)
         {
             WeakpointMultiplier = weakpointMult;
-            SheildEffectiveness = sheildEff;
+            ShieldEffectiveness = sheildEff;
             ArmorEffectiveness = armorEff;
             StaggerForce = staggerForce;
             IgnoreShield = ignoreShield;
@@ -79,9 +108,10 @@ namespace MBS.DamageSystem
         {
             MBSExtraDamageData returnVal = new MBSExtraDamageData();
             returnVal.WeakpointMultiplier = WeakpointMultiplier;
-            returnVal.SheildEffectiveness = SheildEffectiveness;
+            returnVal.ShieldEffectiveness = ShieldEffectiveness;
             returnVal.ArmorEffectiveness = ArmorEffectiveness;
             returnVal.StaggerForce = StaggerForce;
+            returnVal.ApplyExtraDamageFromStaggerForce = ApplyExtraDamageFromStaggerForce;
             returnVal.IgnoreShield = IgnoreShield;
             returnVal.IgnoreArmor = IgnoreArmor;
             returnVal.IsSelfDamage = IsSelfDamage;
@@ -100,7 +130,7 @@ namespace MBS.DamageSystem
         [SerializeField] public bool UseContextData;
         [Tooltip("Use the impact damage data from the context if it is possible?")]
         [SerializeField] public bool SetDamageImpactData = true;
-        [Tooltip("Use the impact damage data from the context if it is possible?")]
+        [Tooltip("Invoke On Object Impact event")]
         [SerializeField] public bool InvokeOnObjectImpact;
         [Tooltip("Processes the damage dealt to a Damage Target.")]
         [SerializeField] public DamageProcessor DamageProcessor;
@@ -112,8 +142,70 @@ namespace MBS.DamageSystem
         [SerializeField] public int ImpactForceFrames = 15;
         [Tooltip("The impact radius.")]
         [SerializeField] public float ImpactRadius;
-        [Tooltip("The use specified fields.")]
+        [Tooltip("The user specified fields.")]
         [SerializeField] public MBSExtraDamageData UserData = new MBSExtraDamageData();
+    }
+    [Serializable]
+    public class MBSImpactDamageDataForInspector
+    {
+        [Tooltip("The Layer mask to which deal damage.")]
+        [SerializeField]
+        public LayerMask LayerMask =
+           ~(1 << LayerManager.IgnoreRaycast
+             | 1 << LayerManager.Water
+             | 1 << LayerManager.SubCharacter
+             | 1 << LayerManager.Overlay
+             | 1 << LayerManager.VisualEffect);
+        [Tooltip("Processes the damage dealt to a Damage Target.")]
+        [SerializeField] public DamageProcessor DamageProcessor;
+        [Tooltip("The amount of damage to apply to the hit object.")]
+        [SerializeField] public float DamageAmount = 10;
+        [Tooltip("The amount of force to apply to the hit object.")]
+        [SerializeField] public float ImpactForce = 2;
+        [Tooltip("The number of frames to add the impact force to.")]
+        [SerializeField] public int ImpactForceFrames = 15;
+        [Tooltip("The impact radius.")]
+        [SerializeField] public float ImpactRadius;
+        [Tooltip("The name of the state to activate upon impact.")]
+        [SerializeField] public string ImpactStateName;
+        [Tooltip("The number of seconds until the impact state is disabled. A value of -1 will require the state to be disabled manually.")]
+        [SerializeField] public float ImpactStateDisableTimer = 10;
+        [Tooltip("The Surface Impact defines what effects happen on impact.")]
+        [SerializeField] public SurfaceImpact SurfaceImpact;
+        [Tooltip("The user specified fields.")]
+        [SerializeField] public MBSExtraDamageData UserData = new MBSExtraDamageData();
+
+        public MBSImpactDamageDataForInspector InjectValues(ImpactDamageData values)
+        {
+            LayerMask = values.LayerMask;
+            DamageProcessor = values.DamageProcessor;
+            DamageAmount = values.DamageAmount;
+            ImpactForce = values.ImpactForce;
+            ImpactForceFrames = values.ImpactForceFrames;
+            ImpactRadius = values.ImpactRadius;
+            ImpactStateName = values.ImpactStateName;
+            ImpactStateDisableTimer = values.ImpactStateDisableTimer;
+            SurfaceImpact = values.SurfaceImpact;
+            UserData = values.UserData as MBSExtraDamageData;
+            return this;
+        }
+
+        public MBSImpactDamageDataForInspector Copy()
+        {
+            return new MBSImpactDamageDataForInspector()
+            {
+                LayerMask = LayerMask,
+                DamageProcessor = DamageProcessor,
+                DamageAmount = DamageAmount,
+                ImpactForce = ImpactForce,
+                ImpactForceFrames = ImpactForceFrames,
+                ImpactRadius = ImpactRadius,
+                ImpactStateName = ImpactStateName,
+                ImpactStateDisableTimer = ImpactStateDisableTimer,
+                SurfaceImpact = SurfaceImpact,
+                UserData = UserData.Copy(),
+            };
+        }
     }
 
     //CURRENTLY USING OPSIVE DAMAGEDATA... uncomment all below if not using Opsive DamageData

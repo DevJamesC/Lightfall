@@ -9,14 +9,15 @@ using UnityEngine;
 namespace MBS.Lightfall
 {
     public class WaveManager : SingletonMonobehavior<WaveManager>
-    {     
+    {
 
         [SerializeField] private GameObject enemyToSpawn;
+        [SerializeField] private GameObject enemyToSpawn2;
         [SerializeField] private SpawnPoint enemySpawnpoint;
         [SerializeField, ReadOnly] private int currentWave;
         [SerializeField, ReadOnly] private bool isWaveActive;
         private int enemiesRemaining;
-        
+
 
 
         protected override void Awake()
@@ -36,7 +37,8 @@ namespace MBS.Lightfall
             currentWave++;
             //spawn enemy
             isWaveActive = true;
-            SpawnEnemy();
+            SpawnEnemy(enemyToSpawn, enemySpawnpoint);
+            SpawnEnemy(enemyToSpawn2, enemySpawnpoint);
         }
 
         private void OnWaveEnd(int currentWave)
@@ -65,28 +67,35 @@ namespace MBS.Lightfall
                 EventHandler.ExecuteEvent(gameObject, "OnWaveEnd", currentWave);
         }
 
-        private void SpawnEnemy()
+        private void SpawnEnemy(GameObject enemyPrefab, SpawnPoint spawnpoint)
         {
-            if (enemyToSpawn == null)
+            if (enemyPrefab == null)
             {
                 Debug.LogWarning($"You have a spawner \"{name}\" which has no object to spawn assigned");
                 return;
             }
-            if (enemySpawnpoint == null)
+            if (spawnpoint == null)
             {
                 Debug.LogWarning($"You have a spawner \"{name}\" which has no spawnpoint assigned");
                 return;
             }
 
-            Vector3 position = enemySpawnpoint.transform.position;
-            Quaternion rotation = enemySpawnpoint.transform.rotation;
-            enemySpawnpoint.GetPlacement(enemyToSpawn, ref position, ref rotation);
+            Vector3 position = spawnpoint.transform.position;
+            Quaternion rotation = spawnpoint.transform.rotation;
+            float size = enemyPrefab.GetComponentInChildren<Collider>().bounds.size.magnitude;
+            if (spawnpoint.GetPlacement(enemyPrefab, ref position, ref rotation, size))
+            {
+                GameObject spawnedObject = Instantiate(enemyPrefab, position, rotation);
+                //register to the enemy onDeath event
+                EventHandler.RegisterEvent<Vector3, Vector3, GameObject>(spawnedObject, "OnDeath", OnDeath);
+                enemiesRemaining++;
+            }
+            else
+            {
+                Debug.Log($"spawn placement failed for {enemyPrefab.name}");
+            }
 
-            GameObject spawnedObject = Instantiate(enemyToSpawn, position, rotation);
 
-            //register to the enemy onDeath event
-            EventHandler.RegisterEvent<Vector3, Vector3, GameObject>(spawnedObject, "OnDeath", OnDeath);
-            enemiesRemaining++;
         }
 
         private void OnEnable()

@@ -1,0 +1,147 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-8176295628259016961
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e74c32144565264eb86dc7514aca7f7, type: 3}
+  m_Name: Grenade TEST
+  m_EditorClassIdentifier: 
+  m_ID: 3
+  m_CategoryIDs: 1419f014
+  m_Capacity: 2147483647
+  m_Prefabs:
+  - {fileID: 1798176879195562, guid: 59672e8160477f9488ec604e7dd86acd, type: 3}
+--- !u!114 &-7809829889121645812
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e74c32144565264eb86dc7514aca7f7, type: 3}
+  m_Name: Grenade TEST OPSIVE
+  m_EditorClassIdentifier: 
+  m_ID: 4
+  m_CategoryIDs: 1419f014
+  m_Capacity: 2147483647
+  m_Prefabs:
+  - {fileID: 1798176879195562, guid: cfc693cce96a090429991703e7c7ae53, type: 3}
+--- !u!114 &-1282431027128274836
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3ee2c1a75ff367a42ba5f16bd97e5519, type: 3}
+  m_Name: Throwable
+  m_EditorClassIdentifier: 
+  m_ID: 555126530
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cd29761419510c7469e993b29ea117d8, type: 3}
+  m_Name: LightfallItemCollection
+  m_EditorClassIdentifier: 
+  m_Categories:
+  - {fileID: 2384641201098458359}
+  - {fileID: -1282431027128274836}
+  - {fileID: 1980276922498775102}
+  m_ItemTypes:
+  - {fileID: 3958490973418265109}
+  - {fileID: 7723788363759386325}
+  - {fileID: 6089150081732252308}
+  - {fileID: -8176295628259016961}
+  - {fileID: -7809829889121645812}
+--- !u!114 &1980276922498775102
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3ee2c1a75ff367a42ba5f16bd97e5519, type: 3}
+  m_Name: Ammo
+  m_EditorClassIdentifier: 
+  m_ID: 1364753993
+--- !u!114 &2384641201098458359
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3ee2c1a75ff367a42ba5f16bd97e5519, type: 3}
+  m_Name: Shootable
+  m_EditorClassIdentifier: 
+  m_ID: 351279380
+--- !u!114 &3958490973418265109
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e74c32144565264eb86dc7514aca7f7, type: 3}
+  m_Name: DefenderRifle
+  m_EditorClassIdentifier: 
+  m_ID: 0
+  m_CategoryIDs: 1419f014
+  m_Capacity: 1
+  m_Prefabs:
+  - {fileID: 857006436034540796, guid: 0d099cf61852530489439d9d3cf096d8, type: 3}
+--- !u!114 &6089150081732252308
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e74c32144565264eb86dc7514aca7f7, type: 3}
+  m_Name: Grenade
+  m_EditorClassIdentifier: 
+  m_ID: 2
+  m_CategoryIDs: 1419f014
+  m_Capacity: 2147483647
+  m_Prefabs:
+  - {fileID: 1798176879195562, guid: 8e80e76b5d17ed54485da54804776f3c, type: 3}
+--- !u!114 &7723788363759386325
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e74c32144565264eb86dc7514aca7f7, type: 3}
+  m_Name: AmmoCell
+  m_EditorClassIdentifier: 
+  m_ID: 1
+  m_CategoryIDs: 497e5851
+  m_Capacity: 2147483647
+  m_Prefabs: []

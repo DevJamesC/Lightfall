@@ -1,62 +1,104 @@
+using MBS.Lightfall;
+using Opsive.Shared.Events;
+using Opsive.Shared.Game;
+using Opsive.Shared.Input;
+using Opsive.Shared.Integrations.InputSystem;
+using Opsive.UltimateCharacterController.Character;
+using Opsive.UltimateCharacterController.UI;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace MBS.AbilitySystem
 {
-    public class DisplayAbilityListMenu : MonoBehaviour
+    public class DisplayAbilityListMenu : CharacterMonitor
     {
-        public GameObject ObjectWithAbilitiesToView;
 
         public AbilityOverviewButton abilityOverviewButtonPrefab;
 
-
+        protected GameObject ObjectWithAbilitiesToView;
+        protected UnityEngine.InputSystem.PlayerInput playerInput;
+        protected UnityInputSystem opsiveUnityInput;
         private List<AbilityAndUpgradePair> abilityUpgradePair;
         private List<AbilityOverviewButton> displayedAbilityElements;
 
 
-
-        private void Awake()
+        protected override void Awake()
         {
+            base.Awake();
             abilityUpgradePair = new List<AbilityAndUpgradePair>();
             displayedAbilityElements = new List<AbilityOverviewButton>();
+        }
+
+        protected override void OnAttachCharacter(GameObject character)
+        {
+            base.OnAttachCharacter(character);
+            ObjectWithAbilitiesToView = character;
+            if (character != null)
+            {
+                PlayerInputProxy inputProxy = character.GetComponentInChildren<PlayerInputProxy>();
+                playerInput = inputProxy.PlayerInput.gameObject.GetComponent<UnityEngine.InputSystem.PlayerInput>();
+                opsiveUnityInput = inputProxy.PlayerInput.gameObject.GetComponent<UnityInputSystem>();
+                Scheduler.Schedule(1f, () => { EventHandler.ExecuteEvent(gameObject, "OnOpenCloseAbilityMenu", true); });
+            }
+
 
         }
 
-        // Start is called before the first frame update
-        void Start()
+        private void OpenCloseAbilityMenu(bool open)
         {
-            GetAbilityData(ObjectWithAbilitiesToView);
-            DrawAbilityList();
+            if (open)
+            {
+                GetAbilityData(ObjectWithAbilitiesToView);
+                DrawAbilityList();
+                playerInput.SwitchCurrentActionMap("UI");
+                opsiveUnityInput.DisableCursor = false;
+            }
+            else
+            {
+                ClearUI();
+                playerInput.SwitchCurrentActionMap("Gameplay");
+                opsiveUnityInput.DisableCursor = true;
+                Debug.Log("the 'enable-disable cursor and UI Input Mode' logic will need to be moved to a more centralized location.");
+            }
 
         }
 
         private void GetAbilityData(GameObject sourceObject)
         {
             abilityUpgradePair.Clear();
-            AbilityLoadout loadout = sourceObject.GetComponent<AbilityLoadout>();
-            if (loadout == null)
+
+            //AbilityLoadout loadout = sourceObject.GetComponent<AbilityLoadout>();
+            //if (loadout == null)
+            //{
+            //    Debug.LogWarning($"Trying to display abilites for {sourceObject.name}, which does not contain an AbilityLoadout.");
+            //    return;
+            //}
+            //foreach (var abilityUpPair in loadout.Abilities)
+            //{
+            //    abilityUpgradePair.Add(abilityUpPair);
+            //}
+
+            UltimateCharacterLocomotion characterLocomotion = sourceObject.GetComponent<UltimateCharacterLocomotion>();
+            foreach (var ability in characterLocomotion.Abilities)
             {
-                Debug.LogWarning($"Trying to display abilites for {sourceObject.name}, which does not contain an AbilityLoadout.");
-                return;
+                LightfallAbilityBase lightfallAbility = ability as LightfallAbilityBase;
+                if (lightfallAbility != null)
+                {
+                    abilityUpgradePair.Add(new AbilityAndUpgradePair() { AbilitySO = lightfallAbility.abilitySO, Upgrades = lightfallAbility.UpgradeData });
+
+                }
             }
 
 
-
-            foreach (var abilityUpPair in loadout.Abilities)
-            {
-                abilityUpgradePair.Add(abilityUpPair);
-            }
         }
         private void DrawAbilityList()
         {
             //clear current abilities displaying if any exist
-            foreach (var item in displayedAbilityElements)
-            {
-                Destroy(item.gameObject);
-            }
-            displayedAbilityElements.Clear();
+            ClearUI();
 
             //redraw abilities
             foreach (var abilityUpPair in abilityUpgradePair)
@@ -70,16 +112,31 @@ namespace MBS.AbilitySystem
             }
         }
 
+        private void ClearUI()
+        {
+            foreach (var item in displayedAbilityElements)
+            {
+                Destroy(item.gameObject);
+            }
+            displayedAbilityElements.Clear();
+        }
+
         private void OnDisable()
         {
-            if (ObjectWithAbilitiesToView != null)
-                ObjectWithAbilitiesToView.GetComponent<AbilityLoadout>().AbilitiesChanged -= DrawAbilityList;
+            //if (ObjectWithAbilitiesToView != null)
+            //ObjectWithAbilitiesToView.GetComponent<AbilityLoadout>().AbilitiesChanged -= DrawAbilityList;
+
+            EventHandler.UnregisterEvent<bool>(gameObject, "OnOpenCloseAbilityMenu", OpenCloseAbilityMenu);
         }
+
+
 
         private void OnEnable()
         {
             DrawAbilityList();
-            ObjectWithAbilitiesToView.GetComponent<AbilityLoadout>().AbilitiesChanged += DrawAbilityList;
+            //ObjectWithAbilitiesToView.GetComponent<AbilityLoadout>().AbilitiesChanged += DrawAbilityList;
+
+            EventHandler.RegisterEvent<bool>(gameObject, "OnOpenCloseAbilityMenu", OpenCloseAbilityMenu);
         }
 
 

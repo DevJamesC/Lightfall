@@ -31,7 +31,7 @@ namespace MBS.Lightfall
         public float ImpactForce { get { return damageFields.ImpactForce; } set { damageFields.ImpactForce = value; } }
         public int ImpactForceFrames { get { return damageFields.ImpactForceFrames; } set { damageFields.ImpactForceFrames = value; } }
 
-        protected ImpactDamageData m_CachedImpactDamageData;
+        protected DamageSystem.ImpactDamageData m_CachedImpactDamageData;
 
         /// <summary>
         /// Default constructor.
@@ -64,9 +64,12 @@ namespace MBS.Lightfall
                 impactForce = ctx.ImpactDamageData.ImpactForce;
                 impactforceframes = ctx.ImpactDamageData.ImpactForceFrames;
                 radius = ctx.ImpactDamageData.ImpactRadius;
+                MBS.DamageSystem.ImpactDamageData mbsImpactDamageData = ctx.ImpactDamageData as MBS.DamageSystem.ImpactDamageData;
+                if (mbsImpactDamageData != null)
+                    damageFields.UserData = mbsImpactDamageData.UserData as MBSExtraDamageData;
             }
 
-            // The shield can absorb some (or none) of the damage from the hitscan. (I belvie this is a handheld shield, not sci-fy force shield)
+            // The shield can absorb some (or none) of the damage from the hitscan. (I beleive this is a handheld shield, not sci-fy force shield)
             var shieldCollider = impactData.ImpactCollider.gameObject.GetCachedComponent<ShieldCollider>();
             if (shieldCollider != null)
             {
@@ -142,7 +145,7 @@ namespace MBS.Lightfall
                 {
                     if (m_CachedImpactDamageData == null)
                     {
-                        m_CachedImpactDamageData = new ImpactDamageData();
+                        m_CachedImpactDamageData = new DamageSystem.ImpactDamageData();
                     }
                     ctxImpactData = m_CachedImpactDamageData;
                 }

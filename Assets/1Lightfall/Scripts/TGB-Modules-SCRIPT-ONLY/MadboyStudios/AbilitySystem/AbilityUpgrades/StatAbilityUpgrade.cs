@@ -61,6 +61,8 @@ namespace MBS.AbilitySystem
                         case StatName.AbilityForce: displayName = "Force"; displaySuffix = "N"; break;
                         case StatName.AbilityModifierEffectIntensity: displayName = "Intensity"; displaySuffix = "N"; break;
                         case StatName.DetonationSize: displayName = "Ability Detonation Size"; displaySuffix = "%"; break;
+                        case StatName.AbilityArmorEffectiveness: displayName = "Armor Effectiveness"; displaySuffix = "%"; break;
+                        case StatName.AbilityShieldEffectiveness: displayName = "Shield Effectiveness"; displaySuffix = "%"; break;
                     }
 
                     float statVal = hasUpgrade ? stat.Value : 0;
@@ -88,6 +90,7 @@ namespace MBS.AbilitySystem
                 }
                 else//else handle incrimenting the stat
                 {
+
                     float statVal = 0;
 
                     if (stat.DivideFlatValueBy100 && stat.flatValueChange)
@@ -95,7 +98,10 @@ namespace MBS.AbilitySystem
                     else
                         statVal = stat.Value;
 
-                    results[0].MaxValue += stat.flatValueChange ? statVal : (results[0].MaxValue * statVal);
+                    if (statVal >= 0)
+                        results[0].MaxValue += stat.flatValueChange ? statVal : (results[0].MaxValue * statVal);
+                    else
+                        results[0].InitalValue += stat.flatValueChange ? statVal : (results[0].MaxValue * statVal);
 
                     if (hasUpgrade)
                     {

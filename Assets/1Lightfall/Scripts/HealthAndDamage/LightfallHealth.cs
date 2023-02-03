@@ -1,10 +1,12 @@
 namespace MBS.Lightfall
 {
     using MBS.DamageSystem;
+    using MBS.ForceSystem;
     using Opsive.Shared.Audio;
     using Opsive.Shared.Game;
     using Opsive.Shared.StateSystem;
     using Opsive.Shared.Utility;
+    using Opsive.UltimateCharacterController.Character.Abilities;
     using Opsive.UltimateCharacterController.Events;
     using Opsive.UltimateCharacterController.Game;
     using Opsive.UltimateCharacterController.Objects;
@@ -33,6 +35,12 @@ namespace MBS.Lightfall
         [SerializeField] protected string m_HealthAttributeName = "Health";
         [Tooltip("The name of the shield attribute.")]
         [SerializeField] protected string m_ShieldAttributeName;
+        [Tooltip("The name of armor attribute.")]
+        [SerializeField] protected string m_ArmorAttributeName;
+        [Tooltip("The type of CC the target resists, if any.")]
+        [SerializeField] protected CrowdControlType resistantToCrowdControl;
+        [Tooltip("The amount of force to render the target weightless, AKA the stagger threshold.")]
+        [SerializeField] protected float WeightlessStaggerThreshold;
         [Tooltip("The list of Colliders that should apply a multiplier when damaged.")]
         [SerializeField] protected Hitbox[] m_Hitboxes;
         [Tooltip("The maximum number of colliders that can be detected when determining if a hitbox was damaged.")]
@@ -105,6 +113,26 @@ namespace MBS.Lightfall
                 }
             }
         }
+
+        public string ArmorAttributeName
+        {
+            get { return m_ArmorAttributeName; }
+            set
+            {
+                m_ArmorAttributeName = value;
+                if (Application.isPlaying)
+                {
+                    if (!string.IsNullOrEmpty(m_ArmorAttributeName))
+                    {
+                        m_ArmorAttribute = m_AttributeManager.GetAttribute(m_ArmorAttributeName);
+                    }
+                    else
+                    {
+                        m_ArmorAttribute = null;
+                    }
+                }
+            }
+        }
         [Opsive.Shared.Utility.NonSerialized] public Hitbox[] Hitboxes { get { return m_Hitboxes; } set { m_Hitboxes = value; } }
         public int MaxHitboxCollisionCount { get { return m_MaxHitboxCollisionCount; } set { m_MaxHitboxCollisionCount = value; } }
         public GameObject[] SpawnedObjectsOnDeath { get { return m_SpawnedObjectsOnDeath; } set { m_SpawnedObjectsOnDeath = value; } }
@@ -128,6 +156,7 @@ namespace MBS.Lightfall
         private AttributeManager m_AttributeManager;
         private Attribute m_HealthAttribute;
         private Attribute m_ShieldAttribute;
+        private Attribute m_ArmorAttribute;
 #if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
         private INetworkInfo m_NetworkInfo;
         private INetworkHealthMonitor m_NetworkHealthMonitor;
@@ -141,6 +170,7 @@ namespace MBS.Lightfall
 
         public float HealthValue { get { return (m_HealthAttribute != null ? m_HealthAttribute.Value : 0); } }
         public float ShieldValue { get { return (m_ShieldAttribute != null ? m_ShieldAttribute.Value : 0); } }
+        public float ArmorValue { get { return (m_ArmorAttribute != null ? m_ArmorAttribute.Value : 0); } }
         public float Value { get { return HealthValue + ShieldValue; } }
 
         /// <summary>
@@ -162,6 +192,10 @@ namespace MBS.Lightfall
             if (!string.IsNullOrEmpty(m_ShieldAttributeName))
             {
                 m_ShieldAttribute = m_AttributeManager.GetAttribute(m_ShieldAttributeName);
+            }
+            if (!string.IsNullOrEmpty(m_ArmorAttributeName))
+            {
+                m_ArmorAttribute = m_AttributeManager.GetAttribute(m_ArmorAttributeName);
             }
             m_AliveLayer = m_GameObject.layer;
 #if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
@@ -336,7 +370,7 @@ namespace MBS.Lightfall
         public virtual void OnDamage(Opsive.UltimateCharacterController.Traits.Damage.DamageData damageData)
         {
             if (damageData == null) { return; }
-
+            MBSExtraDamageData extraDamageFields = damageData.GetUserData<MBSExtraDamageData>();
             // Add a multiplier if a particular collider was hit. Do not apply a multiplier if the damage is applied through a radius because multiple
             // collider are hit.
             if (damageData.Radius == 0 && damageData.Direction != Vector3.zero && damageData.HitCollider != null)
@@ -346,7 +380,7 @@ namespace MBS.Lightfall
                     Hitbox hitbox;
                     if (m_ColliderHitboxMap.TryGetValue(damageData.HitCollider, out hitbox))
                     {
-                        //if (damageData.GetUserData<MBSExtraDamageData>().UseColliderDamageMultiplier)
+                        //if (extraDamageFields.UseColliderDamageMultiplier)
                         //damageData.Amount *= hitbox.DamageMultiplier;
                         Debug.Log("You hit a collider which may be a weakpoint, or may be hardened... at any rate, it is not handled");
                     }
@@ -377,7 +411,7 @@ namespace MBS.Lightfall
                             // A new collider has been found - stop iterating if the hitbox map exists and use the hitbox multiplier.
                             if (m_ColliderHitboxMap.TryGetValue(closestRaycastHit.collider, out hitbox))
                             {
-                                //if (damageData.GetUserData<MBSExtraDamageData>().UseColliderDamageMultiplier)
+                                //if (extraDamageFields.UseColliderDamageMultiplier)
                                 //damageData.Amount *= hitbox.DamageMultiplier;
                                 Debug.Log("You hit a collider which may be a weakpoint, or may be hardened... at any rate, it is not handled");
                                 damageData.HitCollider = hitbox.Collider;
@@ -387,20 +421,10 @@ namespace MBS.Lightfall
                     }
                 }
             }
-
-            // Apply the damage to the shield first because the shield can regenrate.
-            if (m_ShieldAttribute != null && m_ShieldAttribute.Value > m_ShieldAttribute.MinValue)
-            {
-                var shieldAmount = Mathf.Min(damageData.Amount, m_ShieldAttribute.Value - m_ShieldAttribute.MinValue);
-                damageData.Amount -= shieldAmount;
-                m_ShieldAttribute.Value -= shieldAmount;
-            }
-
-            // Decrement the health by remaining amount after the shield has taken damage.
-            if (m_HealthAttribute != null && m_HealthAttribute.Value > m_HealthAttribute.MinValue)
-            {
-                m_HealthAttribute.Value -= Mathf.Min(damageData.Amount, m_HealthAttribute.Value - m_HealthAttribute.MinValue);
-            }
+            float damageFromStaggerForce = extraDamageFields.ApplyExtraDamageFromStaggerForce ? extraDamageFields.StaggerForce / 10 : 0;
+            DamageShield(damageData, extraDamageFields, damageFromStaggerForce, out damageFromStaggerForce);
+            DamageHealth(damageData, extraDamageFields, damageFromStaggerForce);
+            TryStagger(extraDamageFields.StaggerForce);
 
             var force = damageData.Direction * damageData.ForceMagnitude;
             if (damageData.ForceMagnitude > 0)
@@ -455,6 +479,61 @@ namespace MBS.Lightfall
             {
                 // Play any take damage audio if the object did not die. If the object died then the death audio will play.
                 m_TakeDamageAudioClipSet.PlayAudioClip(m_GameObject);
+
+            }
+        }
+
+        private void DamageShield(Opsive.UltimateCharacterController.Traits.Damage.DamageData damageData, MBSExtraDamageData extraDamageFields, float damageFromStaggerForce, out float damageFromStaggerForceOut)
+        {
+            // Apply the damage to the shield first because the shield can regenrate.
+            if (m_ShieldAttribute != null && m_ShieldAttribute.Value > m_ShieldAttribute.MinValue)
+            {
+                float adjustedDamage = damageData.Amount * extraDamageFields.ShieldEffectiveness;
+                var shieldAmount = Mathf.Min(adjustedDamage, m_ShieldAttribute.Value - m_ShieldAttribute.MinValue);
+                damageData.Amount -= shieldAmount;
+                m_ShieldAttribute.Value -= shieldAmount;
+
+                //if we still have shield, take damage from stagger force damage
+                if (m_ShieldAttribute.Value > m_ShieldAttribute.MinValue && damageFromStaggerForce > 0)
+                {
+                    shieldAmount = Mathf.Min(damageFromStaggerForce, m_ShieldAttribute.Value - m_ShieldAttribute.MinValue);
+                    damageFromStaggerForce -= shieldAmount;
+                    m_ShieldAttribute.Value -= shieldAmount;
+                }
+                //if we still have shield after damage and stagger force damage, reduce stagger force to 0, because targets with a shield cannot be staggered by normal damage.
+                if (m_ShieldAttribute.Value > m_ShieldAttribute.MinValue && damageFromStaggerForce > 0)
+                {
+                    extraDamageFields.StaggerForce = 0;
+                }
+            }
+            damageFromStaggerForceOut = damageFromStaggerForce;
+        }
+
+        private void DamageHealth(Opsive.UltimateCharacterController.Traits.Damage.DamageData damageData, MBSExtraDamageData extraDamageFields, float damageFromStaggerForce)
+        {
+            // Decrement the health by remaining amount after the shield has taken damage.
+            if (m_HealthAttribute != null && m_HealthAttribute.Value > m_HealthAttribute.MinValue)
+            {
+                float adjustedDamage = damageData.Amount;
+                //adjust incoming damage by armor
+                if (m_ArmorAttribute != null && m_ArmorAttribute.Value > 0)
+                {
+                    adjustedDamage *= extraDamageFields.ArmorEffectiveness;
+                    adjustedDamage -= m_ArmorAttribute.Value;
+                    damageFromStaggerForce -= m_ArmorAttribute.Value;
+                }
+
+                var healthAmount = Mathf.Min(adjustedDamage, m_HealthAttribute.Value - m_HealthAttribute.MinValue);
+                damageData.Amount -= healthAmount;
+                m_HealthAttribute.Value -= healthAmount;
+
+                //if we still have health, take damage from stagger force damage
+                if (m_HealthAttribute.Value > m_HealthAttribute.MinValue && damageFromStaggerForce > 0)
+                {
+                    healthAmount = Mathf.Min(damageFromStaggerForce, m_HealthAttribute.Value - m_HealthAttribute.MinValue);
+                    damageFromStaggerForce -= healthAmount;
+                    m_HealthAttribute.Value -= healthAmount;
+                }
             }
         }
 
@@ -488,8 +567,8 @@ namespace MBS.Lightfall
                 for (int i = 0; i < m_SpawnedObjectsOnDeath.Length; ++i)
                 {
                     var spawnedObject = ObjectPoolBase.Instantiate(m_SpawnedObjectsOnDeath[i], m_Transform.position, m_Transform.rotation);
-                    Explosion explosion;
-                    if ((explosion = spawnedObject.GetCachedComponent<Explosion>()) != null)
+                    MBSExplosion explosion;
+                    if ((explosion = spawnedObject.GetCachedComponent<MBSExplosion>()) != null)
                     {
                         explosion.Explode(gameObject);
                     }
@@ -706,6 +785,56 @@ namespace MBS.Lightfall
             }
 
             return 1;
+        }
+
+        public void TryStagger(float incomingForce)
+        {
+
+            float realWeightlessStaggerThreshold = WeightlessStaggerThreshold;
+            if (resistantToCrowdControl == CrowdControlType.SoftCC)
+                realWeightlessStaggerThreshold *= 1.25f;
+            if (resistantToCrowdControl == CrowdControlType.HardCC)
+                realWeightlessStaggerThreshold *= 1.5f;
+
+            float chanceToStagger = Mathf.Pow((incomingForce / realWeightlessStaggerThreshold), 1.75f) * 100;
+            float chanceToRagdoll = Mathf.Pow((incomingForce / (realWeightlessStaggerThreshold * 1.5f)), 1.75f) * 100;
+            float randomRoll = UnityEngine.Random.Range(1, 100);
+            //Debug.Log($"Rolled {randomRoll}, need {chanceToStagger} or lower to Stagger and {chanceToRagdoll} or lower to Ragdoll.");
+            if (randomRoll <= chanceToRagdoll)
+            {
+                Debug.Log($"{gameObject.name} Ragdolled! -Normal");
+                m_Rigidbody.isKinematic = true;
+                //forceData.ApplyForceToRigidbody(rigidbody);
+                //Ragdolled.Invoke();
+            }
+            else if (randomRoll <= chanceToStagger)
+            {
+                Debug.Log($"{gameObject.name} Staggered! -Normal");
+                EventHandler.ExecuteEvent(gameObject, "Staggered");
+            }
+        }
+
+        /// <summary>
+        /// Try to stagger a target based on percent change and RNG. This cannot induce ragdoll/ weightlessness.
+        /// </summary>
+        /// <param name="chanceToStagger">0 is 0%. 100 is 100%. A target's CC resistance will reduce this chance. </param>
+        public void TryStaggerRawPercent(float chanceToStagger, bool canStaggerIfShielded = false)
+        {
+            if (!canStaggerIfShielded && m_ShieldAttribute != null && m_ShieldAttribute.Value > m_ShieldAttribute.MinValue)
+                return;
+
+            if (resistantToCrowdControl == CrowdControlType.SoftCC)
+                chanceToStagger *= .75f;
+            if (resistantToCrowdControl == CrowdControlType.HardCC)
+                chanceToStagger *= .5f;
+
+            float randomRoll = UnityEngine.Random.Range(1, 100);
+            //Debug.Log($"Rolled {randomRoll}, need {chanceToStagger} or lower to Stagger and {chanceToRagdoll} or lower to Ragdoll.");
+            if (randomRoll <= chanceToStagger)
+            {
+                Debug.Log($"{gameObject.name} Staggered! -Raw Percent");
+                EventHandler.ExecuteEvent(gameObject, "Staggered");
+            }
         }
     }
 }

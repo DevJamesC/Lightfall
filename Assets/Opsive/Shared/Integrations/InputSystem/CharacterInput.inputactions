@@ -223,12 +223,12 @@
                 },
                 {
                     "name": "Equip Next Item",
-                    "type": "Button",
+                    "type": "Value",
                     "id": "9beb1755-6e71-4107-b0bc-fecc75a3c194",
-                    "expectedControlType": "Button",
+                    "expectedControlType": "Axis",
                     "processors": "",
                     "interactions": "",
-                    "initialStateCheck": false
+                    "initialStateCheck": true
                 },
                 {
                     "name": "Equip Tenth Item",
@@ -241,12 +241,12 @@
                 },
                 {
                     "name": "Equip Previous Item",
-                    "type": "Button",
+                    "type": "Value",
                     "id": "fe256b77-67cf-44b6-897d-213e36f3d258",
-                    "expectedControlType": "Button",
+                    "expectedControlType": "Axis",
                     "processors": "",
                     "interactions": "",
-                    "initialStateCheck": false
+                    "initialStateCheck": true
                 },
                 {
                     "name": "Toggle Item Equip",
@@ -324,6 +324,33 @@
                     "name": "Previous",
                     "type": "Button",
                     "id": "3f2b06ce-1d78-43cd-ae3f-a8e880489a7d",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Ability1",
+                    "type": "Button",
+                    "id": "277358b1-b3f0-4419-8434-5f5bf2bef2a6",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Ability2",
+                    "type": "Button",
+                    "id": "56239e78-7156-44fe-b0d1-a8bdf4ff1040",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Ability3",
+                    "type": "Button",
+                    "id": "02c8d279-c160-4aae-b510-7a81083ae5e6",
                     "expectedControlType": "Button",
                     "processors": "",
                     "interactions": "",
@@ -576,7 +603,7 @@
                 {
                     "name": "",
                     "id": "776a00b4-1507-49a3-a1ef-fc08df5e5bfd",
-                    "path": "<Keyboard>/c",
+                    "path": "<Keyboard>/ctrl",
                     "interactions": "",
                     "processors": "",
                     "groups": "Keyboard",
@@ -685,11 +712,11 @@
                 },
                 {
                     "name": "",
-                    "id": "a16e9ac1-7831-424b-b4bb-5d7cb1017107",
-                    "path": "<Keyboard>/e",
+                    "id": "013abb97-8e30-4b74-889d-a13311fdf2e7",
+                    "path": "",
                     "interactions": "",
                     "processors": "",
-                    "groups": "Keyboard",
+                    "groups": "",
                     "action": "Equip Next Item",
                     "isComposite": false,
                     "isPartOfComposite": false
@@ -707,11 +734,11 @@
                 },
                 {
                     "name": "",
-                    "id": "3b288d5b-5b4a-4ff5-96bd-da053644e38a",
-                    "path": "<Keyboard>/q",
+                    "id": "712fdbf1-04bc-46cc-9709-d0baaa91de5d",
+                    "path": "",
                     "interactions": "",
                     "processors": "",
-                    "groups": "Keyboard",
+                    "groups": "",
                     "action": "Equip Previous Item",
                     "isComposite": false,
                     "isPartOfComposite": false
@@ -1122,6 +1149,39 @@
                     "action": "Controller Y",
                     "isComposite": false,
                     "isPartOfComposite": true
+                },
+                {
+                    "name": "",
+                    "id": "a8811f20-aa85-43dd-935f-2637af3fffca",
+                    "path": "<Keyboard>/q",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard",
+                    "action": "Ability1",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "486f04fe-77b3-42fe-af0d-ddf0f4ede07a",
+                    "path": "<Keyboard>/e",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard",
+                    "action": "Ability2",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "c58bc892-49cf-4b4d-ba4c-3f95d9590929",
+                    "path": "<Keyboard>/c",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard",
+                    "action": "Ability3",
+                    "isComposite": false,
+                    "isPartOfComposite": false
                 }
             ]
         },

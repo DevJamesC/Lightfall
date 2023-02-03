@@ -363,7 +363,7 @@ namespace Opsive.UltimateCharacterController.Objects
         /// </summary>
         /// <param name="hitPosition">The position of the destruction.</param>
         /// <param name="hitNormal">The normal direction of the destruction.</param>
-        public void Destruct(Vector3 hitPosition, Vector3 hitNormal)
+        public virtual void Destruct(Vector3 hitPosition, Vector3 hitNormal)
         {
             OnDestruct?.Invoke(this, hitPosition, hitNormal);
             m_ProjectileOwner?.OnProjectileDestruct(this, hitPosition, hitNormal);
@@ -406,6 +406,11 @@ namespace Opsive.UltimateCharacterController.Objects
             }
 #endif
             ObjectPoolBase.Destroy(m_GameObject);
+        }
+
+        protected void InvokeOnDestruct(Vector3 hitPosition, Vector3 hitNormal)
+        {
+            OnDestruct?.Invoke(this, hitPosition, hitNormal);
         }
 
         /// <summary>
