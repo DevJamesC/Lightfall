@@ -14,8 +14,6 @@ using static Opsive.UltimateCharacterController.Utility.UnityEngineUtility;
 
 namespace MBS.Lightfall
 {
-
-    [RequireComponent(typeof(CrosshairsMonitor))]
     public class EnemyHealthMonitor : MonoBehaviour
     {
         [SerializeField] private Slider healthSlider;
@@ -34,8 +32,11 @@ namespace MBS.Lightfall
 
         private void Start()
         {
-            CrosshairsMonitor crosshairMonitor = GetComponent<CrosshairsMonitor>();
-            crosshairMonitor.OnAquiredTarget += CrosshairMonitor_OnAquiredTarget;
+            CrosshairsMonitor crosshairMonitor = transform.parent.GetComponentInChildren<CrosshairsMonitor>(true);
+            if (crosshairMonitor != null)
+                crosshairMonitor.OnAquiredTarget += CrosshairMonitor_OnAquiredTarget;
+            else
+                Debug.LogWarning("Enemy Health Monitor requires a Crosshair to detect when an enemy is being pointed at");
 
             healthSlider.gameObject.SetActive(false);
             shieldSlider.gameObject.SetActive(false);

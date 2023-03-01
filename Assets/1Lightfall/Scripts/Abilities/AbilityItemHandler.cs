@@ -139,7 +139,7 @@ namespace MBS.Lightfall
             if (abilityProjectileHandler == null)
                 abilityProjectileHandler = obj.ProjectileData.SpawnedProjectileGO.AddComponent<AbilityProjectileHandler>();
             abilityProjectileHandler.Initalize(sourceAbilityWrapper);
-            MBSThrowableImpactModule module = throwableAction.ImpactModuleGroup.Modules[0] as MBSThrowableImpactModule;
+            MBSThrowableImpactModule module = throwableAction.ImpactModuleGroup.Modules.Count > 0 ? throwableAction.ImpactModuleGroup.Modules[0] as MBSThrowableImpactModule : null;
             if (module != null)
             {
                 abilityProjectileHandler.AddImpactActions(module.ImpactActions.ImpactActions);
