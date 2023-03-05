@@ -43,7 +43,14 @@ namespace MBS.Lightfall
             get
             {
                 if (throwableAction != null)
-                    return throwableAction.IsItemInUse();
+                {
+                    if (throwableAction.IsItemInUse())
+                        return true;
+                    if (!throwableAction.WasThrown)
+                        return true;
+
+                    return false;
+                }
 
                 if (shootableAction != null)
                     return shootableAction.IsItemInUse();
