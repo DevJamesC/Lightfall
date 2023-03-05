@@ -64,7 +64,7 @@ namespace Opsive.UltimateCharacterController.Demo
                 // When the mesh is inflated it'll trigger an OnTriggerExit callback. Prevent this callback from doing anything until 
                 // after the inflated mesh has stabalized.
                 m_AllowTriggerExit = false;
-                SchedulerBase.ScheduleFixed(Time.fixedDeltaTime * 2, () => { m_AllowTriggerExit = true; });
+                Scheduler.ScheduleFixed(Time.fixedDeltaTime * 2, () => { m_AllowTriggerExit = true; });
                 (m_Collider as MeshCollider).sharedMesh = m_ExpandedMesh;
             }
             m_ActiveObject = characterLocomotion.gameObject;

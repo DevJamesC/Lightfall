@@ -8,11 +8,11 @@ namespace Opsive.UltimateCharacterController.Character
 {
     using Opsive.Shared.Events;
     using Opsive.Shared.Game;
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+    using Opsive.Shared.Networking;
+#endif
     using Opsive.Shared.StateSystem;
     using Opsive.Shared.Utility;
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
-    using Opsive.UltimateCharacterController.Networking;
-#endif
     using Opsive.UltimateCharacterController.SurfaceSystem;
     using System.Collections.Generic;
     using UnityEngine;
@@ -101,7 +101,7 @@ namespace Opsive.UltimateCharacterController.Character
         private UltimateCharacterLocomotion m_CharacterLocomotion;
         private CharacterLayerManager m_CharacterLayerManager;
         private ILookSource m_LookSource;
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
         private INetworkInfo m_NetworkInfo;
         private bool m_CanPlaceFootstep;
         public bool CanPlaceFootstep { set { m_CanPlaceFootstep = value; } }
@@ -146,7 +146,7 @@ namespace Opsive.UltimateCharacterController.Character
             m_CharacterLocomotion = gameObject.GetComponentInParent<UltimateCharacterLocomotion>();
             m_GameObject = m_CharacterLocomotion.gameObject;
             m_CharacterLayerManager = m_CharacterLocomotion.gameObject.GetCachedComponent<CharacterLayerManager>();
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
             m_NetworkInfo = m_CharacterLocomotion.gameObject.GetCachedComponent<INetworkInfo>();
 #endif
             if (m_Feet == null) {
@@ -315,7 +315,7 @@ namespace Opsive.UltimateCharacterController.Character
                 return;
             }
 
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
             if (m_NetworkInfo != null && !m_NetworkInfo.IsLocalPlayer()) {
                 // The transform interpolator will set CanPlaceFootstep for remote clients. This will indicate if the character moved.
                 // The character should also be grounded.
@@ -329,7 +329,7 @@ namespace Opsive.UltimateCharacterController.Character
                 if (!m_CharacterLocomotion.Grounded || !m_CharacterLocomotion.Moving) {
                     return;
                 }
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
             }
 #endif
 

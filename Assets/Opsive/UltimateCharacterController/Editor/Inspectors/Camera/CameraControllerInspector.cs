@@ -88,6 +88,10 @@ namespace Opsive.UltimateCharacterController.Editor.Inspectors.Camera
         /// <param name="container">The container of the list.</param>
         private void AddViewTypeList(VisualElement container)
         {
+            if (target == null) {
+                return;
+            }
+
             var foldout = new Foldout() { text = "View Types" };
             foldout.contentContainer.AddToClassList("contained-list");
             container.Add(foldout);

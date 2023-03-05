@@ -127,7 +127,7 @@ namespace Opsive.UltimateCharacterController.Traits
                         continue;
                     }
 
-                    if (m_CharacterLocomotion.OverlapColliders(m_Colliders[i], m_Rigidbody.position + m_CharacterLocomotion.Up * m_CharacterLocomotion.ColliderSpacing, m_Rigidbody.rotation, false) > 0) {
+                    if (m_CharacterLocomotion.OverlapColliders(m_Colliders[i], m_Rigidbody.position + m_CharacterLocomotion.Up * m_CharacterLocomotion.ColliderSpacing, m_Rigidbody.rotation) > 0) {
                         obstruction = true;
                         break;
                     }
@@ -136,7 +136,7 @@ namespace Opsive.UltimateCharacterController.Traits
 
                 // Wait to respawn if there is an object obstructing the respawn.
                 if (obstruction) {
-                    m_ScheduledRespawnEvent = SchedulerBase.Schedule(Random.Range(m_MinRespawnTime, m_MaxRespawnTime), Respawn);
+                    m_ScheduledRespawnEvent = Scheduler.Schedule(Random.Range(m_MinRespawnTime, m_MaxRespawnTime), Respawn);
                     return;
                 }
             }

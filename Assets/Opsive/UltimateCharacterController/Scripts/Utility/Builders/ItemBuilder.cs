@@ -463,8 +463,8 @@ namespace Opsive.UltimateCharacterController.Utility.Builders
                             }
                         }
                     }
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
-                    var networkInfo = character.GetComponent<Networking.INetworkInfo>();
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+                    var networkInfo = character.GetComponent<Shared.Networking.INetworkInfo>();
                     if (networkInfo != null) {
                         addThirdPersonObject = true;
                     }
@@ -763,6 +763,8 @@ namespace Opsive.UltimateCharacterController.Utility.Builders
             // Throwable items should be completely dropped.
             var item = throwableAction.gameObject.GetComponent<CharacterItem>();
             item.FullInventoryDrop = true;
+
+            throwableAction.gameObject.AddComponent<Objects.TrajectoryObject>();
         }
 
         /// <summary>

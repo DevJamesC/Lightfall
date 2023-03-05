@@ -70,7 +70,7 @@ namespace Opsive.UltimateCharacterController.Demo
                 return;
             }
 
-            var schedule =SchedulerBase.Schedule(m_InitialImpactDelay, Impact, other);
+            var schedule =Scheduler.Schedule(m_InitialImpactDelay, Impact, other);
             m_Targets.Add(other, schedule);
         }
 
@@ -98,7 +98,7 @@ namespace Opsive.UltimateCharacterController.Demo
 
             // Apply the damage again if the object still has health remaining.
             if (health == null || health.Value > 0) {
-                m_Targets[collider] = SchedulerBase.Schedule(m_ImpactInterval, Impact, collider);
+                m_Targets[collider] = Scheduler.Schedule(m_ImpactInterval, Impact, collider);
             }
 
             if (collider.gameObject.activeInHierarchy == false) {
@@ -117,7 +117,7 @@ namespace Opsive.UltimateCharacterController.Demo
             }
             
             // The object has left the trigger - stop applying damage.
-            SchedulerBase.Cancel(scheduledEvent);
+            Scheduler.Cancel(scheduledEvent);
             m_Targets.Remove(other);
         }
 

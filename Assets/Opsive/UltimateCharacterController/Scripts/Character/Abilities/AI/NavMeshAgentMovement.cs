@@ -184,11 +184,11 @@ namespace Opsive.UltimateCharacterController.Character.Abilities.AI
                         direction = m_NavMeshAgent.destination - m_Rigidbody.position;
                     }
                     Vector3 velocity;
-                    if ((m_NavMeshAgent.updateRotation && m_RotationOverride == RotationOverrideMode.NoOverride) || m_RotationOverride == RotationOverrideMode.NavMesh) {
+                    if (direction.sqrMagnitude > 0 && 
+                        ((m_NavMeshAgent.updateRotation && m_RotationOverride == RotationOverrideMode.NoOverride) || m_RotationOverride == RotationOverrideMode.NavMesh)) {
                         lookRotation = Quaternion.LookRotation(direction.normalized, m_CharacterLocomotion.Up);
                         // The normalized velocity should be relative to the target rotation.
                         velocity = Quaternion.Inverse(lookRotation) * direction.normalized;
-                        Debug.DrawLine(m_Transform.position, m_NavMeshAgent.destination);
                     } else {
                         velocity = m_Rigidbody.InverseTransformDirection(direction);
                     }

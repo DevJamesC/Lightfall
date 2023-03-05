@@ -17,7 +17,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
     /// </summary>
     public interface IActionModule
     {
-        public int ModuleID { get; }
+        public int ID { get; }
 
         /// <summary>
         /// Initialize the Character Item Action Module use the Item Action and the module Group. 
@@ -327,5 +327,28 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
         /// Switch to the next index.
         /// </summary>
         void SwitchToNext();
+    }
+
+    /// <summary>
+    /// A Character Item Action Module interface specifying that the module consumes an Item Definition.
+    /// </summary>
+    public interface IModuleItemDefinitionConsumer
+    {
+        /// <summary>
+        /// The Item Definition used by the module.
+        /// </summary>
+        Shared.Inventory.ItemDefinitionBase ItemDefinition { get; set; }
+
+        /// <summary>
+        /// Returns the remaining Item Definition count.
+        /// </summary>
+        /// <returns>The remaining Item Definition count.</returns>
+        int GetItemDefinitionRemainingCount();
+
+        /// <summary>
+        /// Sets the remaining Item Definition count.
+        /// </summary>
+        /// <param name="count">The amount to set.</param>
+        void SetItemDefinitionRemainingCount(int count);
     }
 }

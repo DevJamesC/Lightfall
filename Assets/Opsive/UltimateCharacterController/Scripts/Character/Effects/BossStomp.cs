@@ -69,7 +69,7 @@ namespace Opsive.UltimateCharacterController.Character.Effects
             m_StopEvent = null;
 
             if (m_RepeatCount == -1 || m_StopCount < m_RepeatCount) {
-                m_StopEvent = SchedulerBase.ScheduleFixed(m_RepeatDelay, Stomp);
+                m_StopEvent = Scheduler.ScheduleFixed(m_RepeatDelay, Stomp);
             } else {
                 StopEffect();
             }
@@ -82,7 +82,7 @@ namespace Opsive.UltimateCharacterController.Character.Effects
         {
             base.EffectStopped();
 
-            SchedulerBase.Cancel(m_StopEvent);
+            Scheduler.Cancel(m_StopEvent);
             m_StopEvent = null;
         }
     }

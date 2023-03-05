@@ -17,24 +17,16 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
     {
         protected Vector3 m_FirePoint;
         protected Vector3 m_FireDirection;
-        protected ShootableProjectileData m_ProjectileData;
         
         public Vector3 FirePoint { get => m_FirePoint; set => m_FirePoint = value; }
         public Vector3 FireDirection { get => m_FireDirection; set => m_FireDirection = value; }
-        public ShootableProjectileData ProjectileData { get => m_ProjectileData; set => m_ProjectileData = value; }
-        public Transform TracerTransform { get; set; }
-        public Transform FireTransform { get; set; }
-        public Vector3 TrajectoryOffset { get; set; }
-        public int ImpactLayers { get; set; }
-        public Vector3 Velocity { get; set; }
     }
     
     /// <summary>
     /// The base class for the shooter modules, used to fire projectiles, hitscan, etc with a shootable weapon.
     /// </summary>
     [Serializable]
-    public abstract class ShootableShooterModule : ShootableActionModule,
-        IModuleCanStartUseItem, IModuleStartItemUse, IModuleStopItemUse
+    public abstract class ShootableShooterModule : ShootableActionModule, IModuleCanStartUseItem, IModuleStartItemUse, IModuleStopItemUse
     {
         public override bool IsActiveOnlyIfFirstEnabled => true;
        
@@ -74,7 +66,6 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
         /// </summary>
         /// <param name="useAbility">The use ability that starts the item use.</param>
         public abstract void StartItemUse(Use useAbility);
-
 
         /// <summary>
         /// Stop the item use.

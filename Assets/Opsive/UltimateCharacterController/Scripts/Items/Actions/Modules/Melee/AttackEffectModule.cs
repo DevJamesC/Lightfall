@@ -11,10 +11,33 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Melee
     using System;
     using UnityEngine;
 
+    /// <summary>
+    /// Base class for the melee attack effects.
+    /// </summary>
     [Serializable]
     public abstract class MeleeAttackEffectModule : MeleeActionModule
-    { }
-    
+    {
+        /// <summary>
+        /// Called when the attack starts its active state.
+        /// </summary>
+        /// <param name="meleeUseDataStream">The use data stream.</param>
+        public override void OnActiveAttackStart(MeleeUseDataStream meleeUseDataStream)
+        {
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+            if (m_CharacterItemAction.NetworkInfo != null && m_CharacterItemAction.NetworkInfo.IsLocalPlayer()) {
+                m_CharacterItemAction.NetworkCharacter.InvokeMeleeAttackEffectModule(this, meleeUseDataStream);
+            }
+#endif
+
+            StartEffects();
+        }
+
+        /// <summary>
+        /// Starts the attack effects.
+        /// </summary>
+        public abstract void StartEffects();
+    }
+
     /// <summary>
     /// A generic item effect module for melee attacks.
     /// </summary>
@@ -58,15 +81,15 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Melee
         }
 
         /// <summary>
-        /// Called when the Attack starts its active state.
+        /// Called when the attack starts its active state.
         /// </summary>
         /// <param name="meleeUseDataStream">The use data stream.</param>
         public override void OnActiveAttackStart(MeleeUseDataStream meleeUseDataStream)
         {
             if (!m_OnStartAttack) { return; }
-            if (CanInvoke(meleeUseDataStream) == false) { return; }
+            if (!CanInvoke(meleeUseDataStream)) { return; }
 
-            m_EffectGroup.InvokeEffects();
+            base.OnActiveAttackStart(meleeUseDataStream);
         }
 
         /// <summary>
@@ -76,8 +99,16 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Melee
         public override void OnActiveAttackComplete(MeleeUseDataStream meleeUseDataStream)
         {
             if (!m_OnCompleteAttack) { return; }
-            if (CanInvoke(meleeUseDataStream) == false) { return; }
-            
+            if (!CanInvoke(meleeUseDataStream)) { return; }
+
+            StartEffects();
+        }
+
+        /// <summary>
+        /// Starts the attack effect.
+        /// </summary>
+        public override void StartEffects()
+        {
             m_EffectGroup.InvokeEffects();
         }
 
@@ -147,15 +178,23 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Melee
 
             return true;
         }
-        
+
         /// <summary>
-        /// Called when the Attack starts its active state.
+        /// Called when the attack starts its active state.
         /// </summary>
         /// <param name="meleeUseDataStream">The use data stream.</param>
         public override void OnActiveAttackStart(MeleeUseDataStream meleeUseDataStream)
         {
-            if (CanInvoke(meleeUseDataStream) == false) { return; }
+            if (@CanInvoke(meleeUseDataStream)) { return; }
 
+            base.OnActiveAttackStart(meleeUseDataStream);
+        }
+
+        /// <summary>
+        /// Starts the attack effect.
+        /// </summary>
+        public override void StartEffects()
+        {
             var enableObject = m_Enable.GetValue();
             if (enableObject != null) {
                 enableObject.SetActive(true);
@@ -172,8 +211,8 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Melee
         /// <param name="meleeUseDataStream">The use data stream.</param>
         public override void OnActiveAttackComplete(MeleeUseDataStream meleeUseDataStream)
         {
-            if (CanInvoke(meleeUseDataStream) == false) { return; }
-            
+            if (!CanInvoke(meleeUseDataStream)) { return; }
+
             var enableObject = m_Enable.GetValue();
             if (enableObject != null) {
                 enableObject.SetActive(false);

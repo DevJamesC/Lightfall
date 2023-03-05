@@ -274,7 +274,7 @@ namespace Opsive.UltimateCharacterController.Objects
         private void UpdatePath()
         {
             if (GetRemainingDistance() < 0.01f && m_NextWaypointEvent == null && (m_MovementType != PathMovementType.Target || m_NextWaypoint != m_TargetWaypoint)) {
-                m_NextWaypointEvent = SchedulerBase.ScheduleFixed(m_Waypoints[m_NextWaypoint].Delay, UpdateWaypoint);
+                m_NextWaypointEvent = Scheduler.ScheduleFixed(m_Waypoints[m_NextWaypoint].Delay, UpdateWaypoint);
             }
         }
 
@@ -527,7 +527,7 @@ namespace Opsive.UltimateCharacterController.Objects
         protected virtual void OnDisable()
         {
             if (m_NextWaypointEvent != null) {
-                SchedulerBase.Cancel(m_NextWaypointEvent);
+                Scheduler.Cancel(m_NextWaypointEvent);
                 m_NextWaypointEvent = null;
             }
         }

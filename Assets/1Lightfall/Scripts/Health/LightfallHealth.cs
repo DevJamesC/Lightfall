@@ -2,6 +2,8 @@ namespace MBS.Lightfall
 {
     using MBS.DamageSystem;
     using MBS.ForceSystem;
+    using MBS.ModifierSystem;
+    using MBS.StatsAndTags;
     using Opsive.Shared.Audio;
     using Opsive.Shared.Game;
     using Opsive.Shared.StateSystem;
@@ -56,11 +58,11 @@ namespace MBS.Lightfall
         [Tooltip("The layer that the GameObject should switch to upon death.")]
         [SerializeField] protected LayerMask m_DeathLayer;
         [Tooltip("A set of AudioClips that can be played when the object takes damage.")]
-        [HideInInspector][SerializeField] protected AudioClipSet m_TakeDamageAudioClipSet = new AudioClipSet();
+        [HideInInspector] [SerializeField] protected AudioClipSet m_TakeDamageAudioClipSet = new AudioClipSet();
         [Tooltip("A set of AudioClips that can be played when the object is healed.")]
-        [HideInInspector][SerializeField] protected AudioClipSet m_HealAudioClipSet = new AudioClipSet();
+        [HideInInspector] [SerializeField] protected AudioClipSet m_HealAudioClipSet = new AudioClipSet();
         [Tooltip("A set of AudioClips that can be played when the object dies.")]
-        [HideInInspector][SerializeField] protected AudioClipSet m_DeathAudioClipSet = new AudioClipSet();
+        [HideInInspector] [SerializeField] protected AudioClipSet m_DeathAudioClipSet = new AudioClipSet();
         [Tooltip("The ID of the Damage Pop up Manager.")]
         [SerializeField] protected int m_DamagePopupManagerID = -1;
         [Tooltip("Unity event invoked when taking damage.")]
@@ -151,12 +153,15 @@ namespace MBS.Lightfall
         protected DamagePopupMonitor m_DamagePopupMonitor;
         protected GameObject m_GameObject;
         protected Transform m_Transform;
+        protected ModifierHandler m_ModifierHandler;
         private IForceObject m_ForceObject;
         private Rigidbody m_Rigidbody;
         private AttributeManager m_AttributeManager;
         private Attribute m_HealthAttribute;
         private Attribute m_ShieldAttribute;
         private Attribute m_ArmorAttribute;
+        private float m_ShieldBaseMaxValue;
+        private float m_HealthBaseMaxValue;
 #if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
         private INetworkInfo m_NetworkInfo;
         private INetworkHealthMonitor m_NetworkHealthMonitor;
@@ -185,13 +190,20 @@ namespace MBS.Lightfall
             m_ForceObject = m_GameObject.GetCachedComponent<IForceObject>();
             m_Rigidbody = m_GameObject.GetCachedComponent<Rigidbody>();
             m_AttributeManager = GetComponent<AttributeManager>();
+            m_ModifierHandler = GetComponent<ModifierHandler>();
             if (!string.IsNullOrEmpty(m_HealthAttributeName))
             {
                 m_HealthAttribute = m_AttributeManager.GetAttribute(m_HealthAttributeName);
+                m_HealthBaseMaxValue = m_HealthAttribute.MaxValue;
+                if (m_ModifierHandler != null)
+                    m_ModifierHandler.GetStatModifier(StatName.MaxHealth).OnValueChanged += LightfallMaxHealth_OnValueChanged;
             }
             if (!string.IsNullOrEmpty(m_ShieldAttributeName))
             {
                 m_ShieldAttribute = m_AttributeManager.GetAttribute(m_ShieldAttributeName);
+                m_ShieldBaseMaxValue = m_ShieldAttribute.MaxValue;
+                if (m_ModifierHandler != null)
+                    m_ModifierHandler.GetStatModifier(StatName.MaxShield).OnValueChanged += LightfallMaxShield_OnValueChanged; ;
             }
             if (!string.IsNullOrEmpty(m_ArmorAttributeName))
             {
@@ -218,6 +230,36 @@ namespace MBS.Lightfall
             }
 
             EventHandler.RegisterEvent(m_GameObject, "OnRespawn", OnRespawn);
+        }
+
+        private void LightfallMaxShield_OnValueChanged(float maxShieldMultiplier)
+        {
+            ChangeAttributeMaxValue(m_ShieldAttribute, maxShieldMultiplier, m_ShieldBaseMaxValue);
+        }
+
+        private void LightfallMaxHealth_OnValueChanged(float maxHealthMultiplier)
+        {
+            ChangeAttributeMaxValue(m_HealthAttribute, maxHealthMultiplier, m_HealthBaseMaxValue);
+        }
+
+        private void ChangeAttributeMaxValue(Attribute attribute, float newMultiplier, float baseMaxValue)
+        {
+            if (attribute == null)
+                return;
+
+            float newMax = baseMaxValue * newMultiplier;
+            float difference = newMax - attribute.MaxValue;
+            float percentMissing = attribute.Value / attribute.MaxValue;
+
+            attribute.MaxValue = newMax;
+
+            if (difference > 0)
+                attribute.Value += difference;
+            else
+                attribute.Value = attribute.MaxValue * percentMissing;
+
+            if (attribute.Value > newMax)
+                attribute.Value = newMax;
         }
 
         /// <summary>
@@ -371,6 +413,13 @@ namespace MBS.Lightfall
         {
             if (damageData == null) { return; }
             MBSExtraDamageData extraDamageFields = damageData.GetUserData<MBSExtraDamageData>();
+            //reduce damage by DamageResistance
+            if (m_ModifierHandler != null)
+            {
+                float damageResistance = m_ModifierHandler.GetStatModifierValue(StatName.DamageReduction);
+                damageData.Amount -= (damageData.Amount * damageResistance) - damageData.Amount;
+            }
+
             // Add a multiplier if a particular collider was hit. Do not apply a multiplier if the damage is applied through a radius because multiple
             // collider are hit.
             if (damageData.Radius == 0 && damageData.Direction != Vector3.zero && damageData.HitCollider != null)

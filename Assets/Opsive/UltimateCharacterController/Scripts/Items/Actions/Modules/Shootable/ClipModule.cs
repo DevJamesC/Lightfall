@@ -51,6 +51,12 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
         }
 
         /// <summary>
+        /// Set the clip remaining manually.
+        /// </summary>
+        /// <param name="targetClipRemainingCount">The clip remaining count to set.</param>
+        public abstract void SetClipRemaining(int targetClipRemainingCount);
+
+        /// <summary>
         /// Reload the clip.
         /// </summary>
         /// <param name="fullClip">Reload the clip completely?</param>
@@ -88,8 +94,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
         /// </summary>
         public virtual void NotifyClipChange()
         {
-            Shared.Events.EventHandler.ExecuteEvent<CharacterItem, ShootableClipModule>(Character,
-                "OnShootableItemClipChange", CharacterItem, this);
+            Shared.Events.EventHandler.ExecuteEvent<CharacterItem, ShootableClipModule>(Character, "OnShootableItemClipChange", CharacterItem, this);
         }
     }
 
@@ -188,17 +193,53 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
         }
 
         /// <summary>
+        /// Set the clip remaining manually.
+        /// </summary>
+        /// <param name="targetClipRemainingCount">The clip remaining count to set.</param>
+        public override void SetClipRemaining(int targetClipRemainingCount)
+        {
+            var currentRemainingCount = ClipRemaining.Count;
+            if (currentRemainingCount == targetClipRemainingCount) {
+                return;
+            }
+
+            if (currentRemainingCount > targetClipRemainingCount) {
+                ClipRemaining.RemoveRange(targetClipRemainingCount, currentRemainingCount - targetClipRemainingCount);
+                NotifyClipChange();
+                return;
+            }
+            
+            // Add more.
+            var reloadAmount = targetClipRemainingCount - currentRemainingCount;
+            var ammoModule = ShootableAction.MainAmmoModule;
+            if (ammoModule == null) {
+                for (int i = 0; i < reloadAmount; i++) {
+                    ClipRemaining.Add(new ShootableAmmoData(null, i +currentRemainingCount,0,null,null));
+                }
+            } else {
+                ShootableAction.MainAmmoModule.LoadAmmoIntoList(ClipRemaining, reloadAmount, false);
+            }
+            
+            NotifyClipChange();
+        }
+
+        /// <summary>
         /// Reload the clip.
         /// </summary>
         /// <param name="fullClip">Reload the clip completely?</param>
         public override void ReloadClip(bool fullClip)
         {
-            var ammoLeft = ShootableAction.MainAmmoModule.GetAmmoRemainingCount();
-
+            var mainAmmoModule = ShootableAction.MainAmmoModule;
+            if (mainAmmoModule == null) {
+                // The weapon can not be reloaded without an ammo module
+                return;
+            }
+            
+            var remainingAmmo = mainAmmoModule.GetAmmoRemainingCount();
             int reloadAmount;
             var clipRemainingCount = ClipRemainingCount;
 
-            if (ShootableAction.MainAmmoModule.IsAmmoShared()) {
+            if (mainAmmoModule.IsAmmoShared()) {
                 DetermineTotalReloadAmount();
 
                 if (m_TotalReloadAmount > m_TotalAmmoAmount) {
@@ -210,8 +251,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
                     var targetAmount = fullClip
                         ? Mathf.CeilToInt(totalAmount / (float)activeSharedInstances)
                         : clipRemainingCount + 1;
-                    reloadAmount = Mathf.Min(ammoLeft,
-                        Mathf.Min(m_ClipSize - clipRemainingCount, targetAmount - clipRemainingCount));
+                    reloadAmount = Mathf.Min(remainingAmmo, Mathf.Min(m_ClipSize - clipRemainingCount, targetAmount - clipRemainingCount));
                     
                 } else {
                     // The Consumable ItemIdentifier doesn't need to be shared if there is plenty of ammo for all weapons.
@@ -220,7 +260,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
                 }
             } else {
                 // The consumable ItemIdentifier doesn't share with any other objects.
-                reloadAmount = Mathf.Min(ammoLeft,
+                reloadAmount = Mathf.Min(remainingAmmo,
                     (fullClip ? (m_ClipSize - clipRemainingCount) : 1));
             }
 
@@ -229,7 +269,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
                 return;
             }
             
-            ShootableAction.MainAmmoModule.LoadAmmoIntoList(ClipRemaining, reloadAmount, true);
+            mainAmmoModule.LoadAmmoIntoList(ClipRemaining, reloadAmount, true);
             NotifyClipChange();
         }
 
@@ -238,9 +278,10 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
         /// </summary>
         protected virtual void DetermineTotalReloadAmount()
         {
+            var mainAmmoModule = ShootableAction.MainAmmoModule;
             m_TotalReloadAmount = m_ClipSize - ClipRemainingCount;
             m_TotalClipAmount = ClipRemainingCount;
-            if (ShootableAction.MainAmmoModule.IsAmmoShared()) {
+            if (mainAmmoModule?.IsAmmoShared() ?? false) {
                 for (int i = 0; i < Inventory.SlotCount; ++i) {
                     var item = Inventory.GetActiveCharacterItem(i);
                     if (item != null) {
@@ -259,7 +300,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
                 }
             }
 
-            m_TotalAmmoAmount = ShootableAction.MainAmmoModule.GetAmmoRemainingCount();
+            m_TotalAmmoAmount = mainAmmoModule?.GetAmmoRemainingCount() ?? 0;
         }
         
         /// <summary>
@@ -269,6 +310,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
         public int GetNumberOfSharedInstances()
         {
             var ammoModule = ShootableAction.MainAmmoModule;
+            if (ammoModule == null) { return 1; }
             var isAmmoShared = ammoModule.IsAmmoShared();
             if (isAmmoShared == false) { return 1; }
             

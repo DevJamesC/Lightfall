@@ -24,8 +24,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
     /// The reloader defines the clip size and how to reload.
     /// </summary>
     [Serializable]
-    public abstract class ShootableReloaderModule : ShootableActionModule, IReloadableItemModule,
-        IModuleCanStartUseItem
+    public abstract class ShootableReloaderModule : ShootableActionModule, IReloadableItemModule, IModuleCanStartUseItem
     {
         public override bool IsActiveOnlyIfFirstEnabled => true;
 
@@ -38,13 +37,13 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
         public abstract bool CanStartUseItem(Use useAbility, UsableAction.UseAbilityState abilityState);
 
         /// <summary>
-        /// Is the shootable action reloading.
+        /// Is the shootable action reloading?
         /// </summary>
         /// <returns>True if it is currently reloading the item.</returns>
         public abstract bool IsReloading();
 
         /// <summary>
-        /// Has the shootable action reloaded the clip.
+        /// Has the shootable action reloaded the clip?
         /// </summary>
         /// <returns>True if the item has added the ammo to the clip.</returns>
         public abstract bool HasReloaded();
@@ -77,9 +76,10 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
         /// <summary>
         /// Should the item be reloaded?
         /// </summary>
+        /// <param name="ammoItemIdentifier">The ItemIdentifier that is being reloaded.</param>
         /// <param name="fromPickup">Was the item identifier added from pickup?</param>
         /// <returns>True if the item should reload.</returns>
-        public abstract bool ShouldReload(bool fromPickup);
+        public abstract bool ShouldReload(IItemIdentifier ammoItemIdentifier, bool fromPickup);
 
         /// <summary>
         /// Get the reload item substate index used to animate the item.
@@ -121,6 +121,12 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
         [SerializeField] protected AnimationSlotEventTrigger m_ReloadCompleteEvent = new AnimationSlotEventTrigger(true, 0);
         [Tooltip("The clip that should be played after the item has finished reloading.")]
         [SerializeField] protected AudioClipSet m_ReloadCompleteAudioClipSet;
+        [Tooltip("Should the reload clip be used as the drop clip?")]
+        [SerializeField] protected bool m_InstantiateReloadClip;
+        [Tooltip("Should the reload clip be reset to its parent position and rotation when detached?")]
+        [SerializeField] protected bool m_ResetClipTransformOnDetach;
+        [Tooltip("The animation event used to now when to make the clip reapear when faking the drop clip.")]
+        [SerializeField] protected AnimationSlotEventTrigger m_ReactivateClipEvent = new AnimationSlotEventTrigger(true, 0.1f);
         [Tooltip("Should the weapon clip be detached and attached when reloaded?")]
         [SerializeField] protected bool m_ReloadDetachAttachClip;
         [Tooltip("Specifies if the item should wait for the OnAnimatorItemReloadDetachClip animation event or wait for the specified duration before detaching the clip from the weapon.")]
@@ -167,6 +173,8 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
         public AnimationSlotEventTrigger ReloadEvent { get { return m_ReloadEvent; } set { m_ReloadEvent.CopyFrom(value); } }
         public AnimationSlotEventTrigger ReloadCompleteEvent { get { return m_ReloadCompleteEvent; } set { m_ReloadCompleteEvent.CopyFrom(value); } }
         public AudioClipSet ReloadCompleteAudioClipSet { get { return m_ReloadCompleteAudioClipSet; } set { m_ReloadCompleteAudioClipSet = value; } }
+        public bool InstantiateReloadClip { get { return m_InstantiateReloadClip; } set { m_InstantiateReloadClip = value; } }
+        public AnimationSlotEventTrigger ReactivateClipEvent { get { return m_ReactivateClipEvent; } set { m_ReactivateClipEvent.CopyFrom(value); } }
         public bool ReloadDetachAttachClip
         {
             get { return m_ReloadDetachAttachClip; }
@@ -192,6 +200,10 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
         /// </summary>
         public override void OnAllModulesPreInitialized()
         {
+            if (m_AllModulesPreInitialized) {
+                return;
+            }
+
             base.OnAllModulesPreInitialized();
 
             if ((m_AutoReload & Reload.AutoReloadType.Equip) != 0) {
@@ -267,24 +279,20 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
         }
 
         /// <summary>
-        /// Register to events while the item is equipped and the module is enabled.
+        /// Updates the registered events when the item is equipped and the module is enabled.
         /// </summary>
-        protected override void RegisterEventsWhileEquippedAndEnabledInternal(bool register)
+        protected override void UpdateRegisteredEventsInternal(bool register)
         {
-            base.RegisterEventsWhileEquippedAndEnabledInternal(register);
+            base.UpdateRegisteredEventsInternal(register);
 
             var eventTarget = Character;
 
-            m_ReloadEvent.RegisterUnregisterEvent(
-                register, eventTarget, "OnAnimatorItemReload", SlotID, HandleReloadItemAnimationSlotEvent);
-            m_ReloadCompleteEvent.RegisterUnregisterEvent(
-                register, eventTarget, "OnAnimatorItemReloadComplete", SlotID, HandleReloadItemCompleteAnimationSlotEvent);
-            m_ReloadDetachClipEvent.RegisterUnregisterAnimationEvent(
-                register, eventTarget, "OnAnimatorItemReloadDetachClip", DetachClip);
-            m_ReloadAttachClipEvent.RegisterUnregisterAnimationEvent(
-                register, eventTarget, "OnAnimatorItemReloadAttachClip", AttachClip);
-            m_ReloadDropClipEvent.RegisterUnregisterAnimationEvent(
-                register, eventTarget, "OnAnimatorItemReloadDropClip", DropClip);
+            m_ReloadEvent.RegisterUnregisterEvent(register, eventTarget, "OnAnimatorItemReload", SlotID, HandleReloadItemAnimationSlotEvent);
+            m_ReloadCompleteEvent.RegisterUnregisterEvent(register, eventTarget, "OnAnimatorItemReloadComplete", SlotID, HandleReloadItemCompleteAnimationSlotEvent);
+            m_ReloadDetachClipEvent.RegisterUnregisterAnimationEvent(register, eventTarget, "OnAnimatorItemReloadDetachClip", DetachClip);
+            m_ReloadAttachClipEvent.RegisterUnregisterAnimationEvent(register, eventTarget, "OnAnimatorItemReloadAttachClip", AttachClip);
+            m_ReloadDropClipEvent.RegisterUnregisterAnimationEvent(register, eventTarget, "OnAnimatorItemReloadDropClip", DropClip);
+            m_ReactivateClipEvent.RegisterUnregisterAnimationEvent(register, eventTarget, "OnAnimatorItemReactivateClip", ReactivateClip);
         }
 
         /// <summary>
@@ -348,7 +356,6 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
 
             // When the weapon is equipped for the first time it needs to reload so it doesn't need to be reloaded manually.
             if (!m_ReloadInitialized) {
-
                 var inventory = Inventory;
                 var itemSetManager = inventory.gameObject.GetCachedComponent<ItemSetManagerBase>();
                 var ammoModule = ShootableAction.MainAmmoModule;
@@ -416,15 +423,19 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
         /// <summary>
         /// Should the item be reloaded? An IReloadableItem reference will be returned if the item can be reloaded.
         /// </summary>
-        /// <param name="fromPickup">Is the item being reloaded from a pickup?</param>
-        /// <returns>A reference to the IReloadableItem if the item can be reloaded. Null if the item cannot be reloaded.</returns>
-        public override bool ShouldReload(bool fromPickup)
+        /// <param name="ammoItemIdentifier">The ItemIdentifier that is being reloaded.</param>
+        /// <param name="fromPickup">Was the item identifier added from pickup?</param>
+        /// <returns>True if the item should reload.</returns>
+        public override bool ShouldReload(IItemIdentifier ammoItemIdentifier, bool fromPickup)
         {
-            if (m_Initialized == false) { return false; }
-            if (ShootableAction.MainAmmoModule == null) { return false; }
-
-            if (ShootableAction.MainAmmoModule.HasAmmoRemaining() == false) {
-                return false;
+            if (!m_Initialized || ShootableAction.MainAmmoModule == null || !ShootableAction.MainAmmoModule.HasAmmoRemaining()) { return false; }
+            
+            if (fromPickup) {
+                // The Ammo Item Definition has to match.
+                if ( !(ammoItemIdentifier == null && ShootableAction.MainAmmoModule.AmmoItemDefinition == null )
+                     && ShootableAction.MainAmmoModule.AmmoItemDefinition != ammoItemIdentifier?.GetItemDefinition()) {
+                    return false;
+                }
             }
 
             var autoReload = false;
@@ -509,14 +520,6 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
             m_Reloading = true;
             m_DroppedClip = false;
 
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
-            if (m_NetworkInfo == null || m_NetworkInfo.IsLocalPlayer()) {
-                if (m_NetworkCharacter != null) {
-                    m_NetworkCharacter.StartItemReload(this);
-                }
-            }
-#endif
-
             var detachClip = false;
 #if FIRST_PERSON_CONTROLLER
             detachClip = GetReloadableClip(true) != null;
@@ -544,7 +547,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
             }
 
             // Using Force Change true.
-            // This makes sure the weapon isn't stuck within the Reload Animation if the transitions are set properly.
+            // This makes sure the weapon isn't stuck within the reload animation if the transitions are set properly.
             // If your item gets stuck while spamming the button, add a transition using the SlotXItemStatChange Trigger.
             UpdateItemAbilityAnimatorParameters(true);
 
@@ -614,6 +617,10 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
                     }
                 }
                 clip.parent = GetReloadableClipAttachment(firstPerson);
+                if (m_ResetClipTransformOnDetach) {
+                    clip.localPosition = Vector3.zero;
+                    clip.localRotation = Quaternion.identity;
+                }
             } else {
                 if (firstPerson) {
                     if (m_FirstPersonReloadableClipParent != null) {
@@ -650,12 +657,13 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
 
             if (m_ReloadDetachAttachClip) {
                 clip.gameObject.SetActive(false);
+                ReactivateClipEvent.WaitForEvent(true);
             }
 
             var dropClip = ObjectPoolBase.Instantiate(m_ReloadDropClip, clip.position, clip.rotation);
             // The first person perspective requires the clip to be on the overlay layer so the fingers won't render in front of the clip.
             dropClip.transform.SetLayerRecursively(CharacterLocomotion.FirstPersonPerspective ? LayerManager.Overlay : clip.gameObject.layer);
-            SchedulerBase.Schedule(m_ReloadClipLayerChangeDelay, UpdateDropClipLayer, dropClip);
+            Scheduler.Schedule(m_ReloadClipLayerChangeDelay, UpdateDropClipLayer, dropClip);
 
             // If the clip has a trajectory object attached then it needs to be initialized.
             var trajectoryClipObject = dropClip.GetCachedComponent<TrajectoryObject>();
@@ -666,6 +674,21 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
             // Cleanup from the event.
             m_ReloadDropClipEvent.CancelWaitForEvent();
             m_DroppedClip = true;
+        }
+
+        /// <summary>
+        /// Reactivate the clip after is was deactivated.
+        /// </summary>
+        private void ReactivateClip()
+        {
+            var clip = GetReloadableClip();
+            if (clip == null) {
+                return;
+            }
+            if (!m_InstantiateReloadClip) {
+                clip.gameObject.SetActive(true);
+            }
+            m_ReactivateClipEvent.CancelWaitForEvent();
         }
 
         /// <summary>
@@ -707,18 +730,11 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
         {
             m_ReloadEvent.CancelWaitForEvent();
 
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
-            if (m_NetworkInfo == null || m_NetworkInfo.IsLocalPlayer()) {
-                if (m_NetworkCharacter != null) {
-                    m_NetworkCharacter.ReloadItem(this, fullClip);
-                }
-            }
-#endif
             if (!fullClip) {
                 EventHandler.ExecuteEvent(Character, "OnAddCrosshairsSpread", false, false);
             }
 
-            //Reload the clip.
+            // Reload the clip.
             ShootableAction.ReloadClip(true, fullClip || m_ReloadType == ReloadClipType.Full);
 
             if (!fullClip && m_ReloadType == ReloadClipType.Single) {
@@ -742,7 +758,6 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
             if (CanReloadItem(true)) {
                 UpdateItemAbilityAnimatorParameters();
                 StartItemReload();
-                //ReloadEvent.WaitForEvent(false);
             } else {
                 m_Reloaded = true;
                 UpdateItemAbilityAnimatorParameters();
@@ -769,6 +784,10 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
             }
 
             var reloadableClip = GetReloadableClip(firstPerson);
+            if (reloadableClip == null) {
+                return;
+            }
+
             var reloadableClipAttachment = GetReloadableClipAttachment(firstPerson);
             if (add) {
                 var clip = ObjectPoolBase.Instantiate(m_ReloadDropClip, reloadableClip.position, reloadableClip.rotation);
@@ -809,14 +828,6 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
         public override void ItemReloadComplete(bool success, bool immediateReload)
         {
             m_ReloadCompleteEvent.CancelWaitForEvent();
-
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
-            if (m_NetworkInfo == null || m_NetworkInfo.IsLocalPlayer()) {
-                if (m_NetworkCharacter != null) {
-                    m_NetworkCharacter.ItemReloadComplete(this, success, immediateReload);
-                }
-            }
-#endif
 
             if (!success) {
                 // The weapon will not be successfully reloaded if the Reload ability stopped early.
@@ -862,7 +873,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
         {
             // When the clip is empty the weapon should be reloaded if specified.
             if (ShootableAction.ClipRemainingCount == 0 && (m_AutoReload & Reload.AutoReloadType.Empty) != 0) {
-                EventHandler.ExecuteEvent<int, IItemIdentifier, bool, bool>(Character, "OnItemTryReload", CharacterItem.SlotID, null, false, false);
+                EventHandler.ExecuteEvent<int, IItemIdentifier, IItemIdentifier, bool, bool>(Character, "OnItemTryReload", CharacterItem.SlotID, CharacterItem.ItemIdentifier, null, false, true);
             }
         }
     }

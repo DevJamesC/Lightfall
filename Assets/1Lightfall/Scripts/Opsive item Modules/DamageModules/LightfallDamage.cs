@@ -7,6 +7,8 @@
 namespace MBS.Lightfall
 {
     using MBS.DamageSystem;
+    using MBS.ModifierSystem;
+    using MBS.StatsAndTags;
     using Opsive.Shared.Game;
     using Opsive.Shared.Utility;
     using Opsive.UltimateCharacterController.Items.Actions.Impact;
@@ -23,6 +25,8 @@ namespace MBS.Lightfall
     [Serializable]
     public class LightfallDamage : ImpactAction
     {
+        [SerializeField]
+        protected DamageSourceType damageSourceType;
         [SerializeField] protected MBSDamageForInspector damageFields;
 
         public bool UseContextData { get => damageFields.UseContextData; set => damageFields.UseContextData = value; }
@@ -33,6 +37,15 @@ namespace MBS.Lightfall
 
         protected DamageSystem.ImpactDamageData m_CachedImpactDamageData;
 
+        protected ModifierHandler modifierHandler;
+
+        protected override void InitializeInternal()
+        {
+            base.InitializeInternal();
+            if (BoundGameObject != null)
+                modifierHandler = BoundGameObject.GetComponentInParent<ModifierHandler>();
+
+        }
         /// <summary>
         /// Default constructor.
         /// </summary>
@@ -51,6 +64,7 @@ namespace MBS.Lightfall
         protected override void OnImpactInternal(ImpactCallbackContext ctx)
         {
             var impactData = ctx.ImpactCollisionData;
+            damageFields.UserData.BaseDamage = damageFields.DamageAmount;
 
             var damageAmount = damageFields.DamageAmount;
             var damageProcessor = damageFields.DamageProcessor;
@@ -68,6 +82,25 @@ namespace MBS.Lightfall
                 if (mbsImpactDamageData != null)
                     damageFields.UserData = mbsImpactDamageData.UserData as MBSExtraDamageData;
             }
+
+            if (modifierHandler != null)
+            {
+                float modifier = 0;
+                switch (damageSourceType)
+                {
+                    case DamageSourceType.AbilityDamage:
+                        modifier = modifierHandler.GetStatModifierValue(StatName.AbilityDamage);
+                        break;
+                    case DamageSourceType.WeaponDamage:
+                        modifier = modifierHandler.GetStatModifierValue(StatName.WeaponDamage);
+                        break;
+                    case DamageSourceType.MeleeDamage:
+                        modifier = modifierHandler.GetStatModifierValue(StatName.MeleeDamage);
+                        break;
+                }
+                damageAmount += (modifier - 1) * damageFields.UserData.BaseDamage;
+            }
+
 
             // The shield can absorb some (or none) of the damage from the hitscan. (I beleive this is a handheld shield, not sci-fy force shield)
             var shieldCollider = impactData.ImpactCollider.gameObject.GetCachedComponent<ShieldCollider>();
@@ -98,7 +131,7 @@ namespace MBS.Lightfall
                     pooledDamageData.UserData = damageFields.UserData.Copy();
 
                     // Then find how to apply this damage data, through a damage processor or processor module.
-                    var damageProcessorModule = impactData.SourceRootOwner?.GetCachedComponent<DamageProcessorModule>();
+                    var damageProcessorModule = impactData.SourceCharacterLocomotion?.gameObject?.GetCachedComponent<DamageProcessorModule>();
                     if (damageProcessorModule != null)
                     {
                         damageProcessorModule.ProcessDamage(damageProcessor, damageTarget, pooledDamageData);
@@ -115,7 +148,7 @@ namespace MBS.Lightfall
             }
             else
             {
-                var forceObject = impactData.TargetGameObject.GetCachedParentComponent<IForceObject>();
+                var forceObject = impactData.ImpactGameObject.GetCachedParentComponent<IForceObject>();
                 if (forceObject != null)
                 {
                     forceObject.AddForce(impactDirectionalForce);

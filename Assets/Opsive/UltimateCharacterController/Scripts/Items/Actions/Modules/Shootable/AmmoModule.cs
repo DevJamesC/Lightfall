@@ -77,11 +77,11 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
         public virtual ItemDefinitionBase AmmoItemDefinition { get { return null; } set { } }
 
         /// <summary>
-        /// Register to events while the item is equipped and the module is enabled.
+        /// Updates the registered events when the item is equipped and the module is enabled.
         /// </summary>
-        protected override void RegisterEventsWhileEquippedAndEnabledInternal(bool register)
+        protected override void UpdateRegisteredEventsInternal(bool register)
         {
-            base.RegisterEventsWhileEquippedAndEnabledInternal(register);
+            base.UpdateRegisteredEventsInternal(register);
             
             // Notify the ammo change as the ammo module could have been switched at runtime.
             if (register) {
@@ -195,8 +195,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
         /// <param name="clipRemaining">The clip remaining list of ammo.</param>
         /// <param name="reloadAmount">The number of ammo to reload inside the clip list.</param>
         /// <param name="removeAmmoWhenLoaded">Remove the ammo when it is loaded in the clip list?</param>
-        public override void LoadAmmoIntoList(List<ShootableAmmoData> clipRemaining, int reloadAmount,
-            bool removeAmmoWhenLoaded)
+        public override void LoadAmmoIntoList(List<ShootableAmmoData> clipRemaining, int reloadAmount, bool removeAmmoWhenLoaded)
         {
             for (int i = 0; i < reloadAmount; i++) {
                 var ammoData = CreateAmmoData();
@@ -218,7 +217,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
     /// Uses Items inside the Inventory to get ammo for the shootable action.
     /// </summary>
     [Serializable]
-    public class ItemAmmo : ShootableAmmoModule, IModuleGetItemsToDrop
+    public class ItemAmmo : ShootableAmmoModule, IModuleGetItemsToDrop, IModuleItemDefinitionConsumer
     {
         /// <summary>
         /// Specifies the quantity of ammo that gets dropped when the character item is dropped.
@@ -258,14 +257,13 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
         }
 
         /// <summary>
-        /// Register to events while the item is equipped and the module is enabled.
+        /// Updates the registered events when the item is equipped and the module is enabled.
         /// </summary>
-        protected override void RegisterEventsWhileEquippedAndEnabledInternal(bool register)
+        protected override void UpdateRegisteredEventsInternal(bool register)
         {
-            base.RegisterEventsWhileEquippedAndEnabledInternal(register);
+            base.UpdateRegisteredEventsInternal(register);
             Shared.Events.EventHandler.RegisterUnregisterEvent<IItemIdentifier, int, int>(register,
-                Character, "OnInventoryAdjustItemIdentifierAmount",
-                OnAdjustItemIdentifierAmount);
+                Character, "OnInventoryAdjustItemIdentifierAmount", OnAdjustItemIdentifierAmount);
         }
 
         /// <summary>
@@ -354,8 +352,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
         /// <returns>The new shootable ammo data to cache.</returns>
         public override ShootableAmmoData CreateAmmoData()
         {
-            return new ShootableAmmoData(this,
-                -1, -1, m_AmmoItemIdentifier, null);
+            return new ShootableAmmoData(this, -1, -1, m_AmmoItemIdentifier, null);
         }
 
         /// <summary>
@@ -364,11 +361,10 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
         /// <param name="clipRemaining">The clip remaining list of ammo.</param>
         /// <param name="reloadAmount">The number of ammo to reload inside the clip list.</param>
         /// <param name="removeAmmoWhenLoaded">Remove the ammo when it is loaded in the clip list?</param>
-        public override void LoadAmmoIntoList(List<ShootableAmmoData> clipRemaining, int reloadAmount,
-            bool removeAmmoWhenLoaded)
+        public override void LoadAmmoIntoList(List<ShootableAmmoData> clipRemaining, int reloadAmount, bool removeAmmoWhenLoaded)
         {
-            if(reloadAmount <= 0){ return; }
-            
+            if (reloadAmount <= 0) { return; }
+
             for (int i = 0; i < reloadAmount; i++) {
                 var ammoData = CreateAmmoData();
                 clipRemaining.Add(ammoData);
@@ -417,5 +413,10 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
             
             itemsToDrop.Add(new ItemIdentifierAmount(m_AmmoItemDefinition, amount));
         }
+
+        // IModuleItemDefinitionConsumer implementation:
+        public ItemDefinitionBase ItemDefinition { get => m_AmmoItemDefinition; set => m_AmmoItemDefinition = value; }
+        public int GetItemDefinitionRemainingCount() { return GetAmmoRemainingCount(); }
+        public void SetItemDefinitionRemainingCount(int count) { var diff = count - GetAmmoRemainingCount(); AdjustAmmoAmount(diff); }
     }
 }

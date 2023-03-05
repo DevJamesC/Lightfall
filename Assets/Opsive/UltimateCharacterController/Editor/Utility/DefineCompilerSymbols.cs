@@ -22,6 +22,7 @@ namespace Opsive.UltimateCharacterController.Editor.Utility
         private static string s_VRSymbol = "ULTIMATE_CHARACTER_CONTROLLER_VR";
         private static string s_AgilitySymbol = "ULTIMATE_CHARACTER_CONTROLLER_AGILITY";
         private static string s_ClimbingSymbol = "ULTIMATE_CHARACTER_CONTROLLER_CLIMBING";
+        private static string s_SwimmingSymbol = "ULTIMATE_CHARACTER_CONTROLLER_SWIMMING";
         private static string s_UniversalRPSymbol = "ULTIMATE_CHARACTER_CONTROLLER_UNIVERSALRP";
         private static string s_HDRPSymbol = "ULTIMATE_CHARACTER_CONTROLLER_HDRP";
         private static string s_TextMeshProSymbol = "TEXTMESH_PRO_PRESENT";
@@ -91,14 +92,26 @@ namespace Opsive.UltimateCharacterController.Editor.Utility
             }
 #endif
 
-            // Climbing Add-On Inspector will exist if the Agility Pack is imported.
+            // Climbing Add-On Inspector will exist if the Climbing Pack is imported.
             var climbingExists = TypeUtility.GetType("Opsive.UltimateCharacterController.AddOns.Climbing.Editor.ClimbingAddOnInspector") != null;
 #if ULTIMATE_CHARACTER_CONTROLLER_CLIMBING
             if (!climbingExists) {
-                RemoveSymbol(s_ClimbingSymbol);
+                RemoveSymbol(s_SwimmingSymbol);
             }
 #else
             if (climbingExists) {
+                AddSymbol(s_SwimmingSymbol);
+            }
+#endif
+
+            // Swimming Add-On Inspector will exist if the Swimming Pack is imported.
+            var swimmingExists = TypeUtility.GetType("Opsive.UltimateCharacterController.AddOns.Climbing.Editor.SwimmingAddOnInspector") != null;
+#if ULTIMATE_CHARACTER_CONTROLLER_SWIMMING
+            if (!swimmingExists) {
+                RemoveSymbol(s_ClimbingSymbol);
+            }
+#else
+            if (swimmingExists) {
                 AddSymbol(s_ClimbingSymbol);
             }
 #endif

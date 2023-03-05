@@ -68,9 +68,9 @@ namespace Opsive.UltimateCharacterController.Items.Actions
         /// Should the item be reloaded? An IReloadableItem reference will be returned if the item can be reloaded.
         /// </summary>
         /// <param name="characterItem">The item which may need to be reloaded.</param>
-        /// <param name="itemIdentifier">The ItemIdentifier that is being reloaded.</param>
+        /// <param name="ammoItemIdentifier">The ItemIdentifier that is being reloaded.</param>
         /// <param name="fromPickup">Is the item being reloaded from a pickup?</param>
         /// <returns>A reference to the IReloadableItem if the item can be reloaded. Null if the item cannot be reloaded.</returns>
-        bool ShouldReload(CharacterItem characterItem, IItemIdentifier itemIdentifier, bool fromPickup);
+        bool ShouldReload(CharacterItem characterItem, IItemIdentifier ammoItemIdentifier, bool fromPickup);
     }
 }

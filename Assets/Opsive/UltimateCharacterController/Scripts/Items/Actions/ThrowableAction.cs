@@ -275,9 +275,20 @@ namespace Opsive.UltimateCharacterController.Items.Actions
                 DebugLogger.SetInfo(InfoKey_ThrowData, throwData?.ToString());
             }
 
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+            int invokedBitmask = 0;
+#endif
             for (int i = 0; i < m_ThrowEffectGroup.EnabledModules.Count; i++) {
                 m_ThrowEffectGroup.EnabledModules[i].InvokeEffect(m_ThrowableUseDataStream);
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+                invokedBitmask |= 1 << m_ThrowEffectGroup.EnabledModules[i].ID;
+#endif
             }
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+            if (m_NetworkInfo != null && m_NetworkInfo.IsLocalPlayer()) {
+                m_NetworkCharacter.InvokeThrowableEffectModules(this, m_ThrowEffectGroup, invokedBitmask, m_ThrowableUseDataStream);
+            }
+#endif
 
             OnThrowE?.Invoke(throwData);
 

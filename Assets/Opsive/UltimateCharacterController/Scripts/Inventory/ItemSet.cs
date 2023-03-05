@@ -83,7 +83,7 @@ namespace Opsive.UltimateCharacterController.Inventory
             m_CanSwitchTo = itemSet.CanSwitchTo;
             m_DisabledIndex = itemSet.DisabledIndex;
             if (itemSet.ItemIdentifiers != null && itemSet.ItemIdentifiers.Length > 0) {
-                m_ItemIdentifiers = new IItemIdentifier[itemSet.m_ItemIdentifiers.Length];
+                m_ItemIdentifiers = new IItemIdentifier[itemSet.ItemIdentifiers.Length];
                 System.Array.Copy(itemSet.ItemIdentifiers, m_ItemIdentifiers, itemSet.ItemIdentifiers.Length);
             } else {
                 m_ItemIdentifiers = Array.Empty<IItemIdentifier>();

@@ -435,17 +435,17 @@ namespace Opsive.Shared.StateSystem
             if (m_DisableStateTimerMap.TryGetValue(stateGameObject, out var stateNameEventMap)) {
                 if (stateNameEventMap.TryGetValue(stateName, out var disableEvent)) {
                     // The state name exists. This means that the timer is currently active and should first been cancelled.
-                    SchedulerBase.Cancel(disableEvent);
-                    disableEvent = SchedulerBase.Schedule(time, DeactivateState, stateGameObject, stateName);
+                    Scheduler.Cancel(disableEvent);
+                    disableEvent = Scheduler.Schedule(time, DeactivateState, stateGameObject, stateName);
                 } else {
                     // The state name hasn't been added yet. Add it to the map.
-                    disableEvent = SchedulerBase.Schedule(time, DeactivateState, stateGameObject, stateName);
+                    disableEvent = Scheduler.Schedule(time, DeactivateState, stateGameObject, stateName);
                     stateNameEventMap.Add(stateName, disableEvent);
                 }
             } else {
                 // Neither the GameObject nor the state has been activated. Create the maps.
                 stateNameEventMap = new Dictionary<string, ScheduledEventBase>();
-                var disableEvent = SchedulerBase.Schedule(time, DeactivateState, stateGameObject, stateName);
+                var disableEvent = Scheduler.Schedule(time, DeactivateState, stateGameObject, stateName);
                 stateNameEventMap.Add(stateName, disableEvent);
                 m_DisableStateTimerMap.Add(stateGameObject, stateNameEventMap);
             }

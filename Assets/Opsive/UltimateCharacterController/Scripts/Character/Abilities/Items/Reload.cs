@@ -67,7 +67,7 @@ namespace Opsive.UltimateCharacterController.Character.Abilities.Items
 
             EventHandler.RegisterEvent(m_GameObject, "OnItemPickupStartPickup", OnStartPickup);
             EventHandler.RegisterEvent<IItemIdentifier, int, bool, bool>(m_GameObject, "OnInventoryPickupItemIdentifier", OnPickupItemIdentifier);
-            EventHandler.RegisterEvent<int, IItemIdentifier, bool, bool>(m_GameObject, "OnItemTryReload", OnTryReload);
+            EventHandler.RegisterEvent<int, IItemIdentifier, IItemIdentifier, bool, bool>(m_GameObject, "OnItemTryReload", OnTryReload);
             EventHandler.RegisterEvent<IReloadableItem>(m_GameObject, "OnItemReload", OnItemReload);
             EventHandler.RegisterEvent<IReloadableItem>(m_GameObject, "OnItemReloadComplete", OnItemReloadComplete);
         }
@@ -95,7 +95,7 @@ namespace Opsive.UltimateCharacterController.Character.Abilities.Items
 
                     var itemAction = item.GetItemAction(m_ActionID);
                     if (itemAction == null) {
-                        Debug.LogWarning("Warning: The item " + item.name + " must have an ItemAction component attached to it in order to be reloaded.");
+                        Debug.LogWarning($"Warning: The item {item.name} must have an ItemAction component attached to it in order to be reloaded.");
                         continue;
                     }
 
@@ -113,7 +113,7 @@ namespace Opsive.UltimateCharacterController.Character.Abilities.Items
                 if (item != null) {
                     var itemAction = item.GetItemAction(m_ActionID);
                     if (itemAction == null) {
-                        Debug.LogWarning("Warning: The item " + item.name + " must have an ItemAction component attached to it in order to be used.");
+                        Debug.LogWarning($"Warning: The item {item.name} must have an ItemAction component attached to it in order to be reloaded.");
                     } else {
                         m_ReloadableItems[0] = itemAction as IReloadableItem;
                         canReload = m_ReloadableItems[0] != null && m_ReloadableItems[0].CanReloadItem(true);
@@ -343,17 +343,18 @@ namespace Opsive.UltimateCharacterController.Character.Abilities.Items
         private void OnPickupItemIdentifier(IItemIdentifier itemIdentifier, int amount, bool immediatePickup, bool forceEquip)
         {
             // Determine if the equipped item should be reloaded.
-            OnTryReload(-1, itemIdentifier, immediatePickup, true);
+            OnTryReload(-1, null, itemIdentifier, immediatePickup, true);
         }
 
         /// <summary>
         /// Tries the reload the item with the specified ItemIdentifier.
         /// </summary>
         /// <param name="slotID">The SlotID of the item trying to reload.</param>
-        /// <param name="itemIdentifier">The ItemIdentifier which should be reloaded.</param>
+        /// <param name="weaponItemIdentifier">The weapon ItemIdentifier which should be reloaded.</param>
+        /// <param name="ammoItemIdentifier">The ammo ItemIdentifier which should be reloaded.</param>
         /// <param name="immediateReload">Should the item be reloaded immediately?</param>
         /// <param name="equipCheck">Should the equipped items be checked.</param>
-        private void OnTryReload(int slotID, IItemIdentifier itemIdentifier, bool immediateReload, bool equipCheck)
+        private void OnTryReload(int slotID, IItemIdentifier weaponItemIdentifier, IItemIdentifier ammoItemIdentifier, bool immediateReload, bool equipCheck)
         {
             if (m_SlotID != -1 && slotID != -1 && m_SlotID != slotID) {
                 return;
@@ -361,21 +362,40 @@ namespace Opsive.UltimateCharacterController.Character.Abilities.Items
 
             RefreshCachedEquippedItems();
 
-            var allItems = m_Inventory.GetAllCharacterItems();
             var canReloadCount = 0;
-            for (int i = 0; i < allItems.Count; ++i) {
-                var item = allItems[i];
-                if (slotID != -1 && item.SlotID != slotID) {
-                    continue;
-                }
-
-                IReloadableItem reloadableItem;
-                if ((reloadableItem = ShouldReload(item, itemIdentifier, slotID == -1)) != null) { // -1 indicates that the item is being picked up.
-                    if (m_CanReloadItems == null || m_CanReloadItems.Length == canReloadCount) {
-                        System.Array.Resize(ref m_CanReloadItems, canReloadCount + 1);
+            
+            // If no weapon is specified check all Items.
+            if (weaponItemIdentifier == null) {
+                var allItems = m_Inventory.GetAllCharacterItems();
+                for (int i = 0; i < allItems.Count; ++i) {
+                    var item = allItems[i];
+                    if (slotID != -1 && item.SlotID != slotID) {
+                        continue;
                     }
-                    m_CanReloadItems[canReloadCount] = reloadableItem;
-                    canReloadCount++;
+
+                    IReloadableItem reloadableItem;
+                    if ((reloadableItem = ShouldReload(item, ammoItemIdentifier, slotID == -1)) != null) { // -1 indicates that the item is being picked up.
+                        if (m_CanReloadItems == null || m_CanReloadItems.Length == canReloadCount) {
+                            System.Array.Resize(ref m_CanReloadItems, canReloadCount + 1);
+                        }
+                        m_CanReloadItems[canReloadCount] = reloadableItem;
+                        canReloadCount++;
+                    }
+                }
+            } else {
+                // If a weapon is specified check only that weapon.
+                var item = m_Inventory.GetCharacterItem(weaponItemIdentifier, slotID);
+                if (slotID == -1 || item.SlotID == slotID) {
+                    IReloadableItem reloadableItem;
+                    if ((reloadableItem = ShouldReload(item, ammoItemIdentifier, slotID == -1)) != null) {
+                        // -1 indicates that the item is being picked up.
+                        if (m_CanReloadItems == null || m_CanReloadItems.Length == canReloadCount) {
+                            System.Array.Resize(ref m_CanReloadItems, canReloadCount + 1);
+                        }
+
+                        m_CanReloadItems[canReloadCount] = reloadableItem;
+                        canReloadCount++;
+                    }
                 }
             }
 
@@ -408,10 +428,10 @@ namespace Opsive.UltimateCharacterController.Character.Abilities.Items
         /// Should the item be reloaded? An IReloadableItem reference will be returned if the item can be reloaded.
         /// </summary>
         /// <param name="characterItem">The item which may need to be reloaded.</param>
-        /// <param name="itemIdentifier">The ItemIdentifier that is being reloaded.</param>
+        /// <param name="ammoItemIdentifier">The ItemIdentifier that is being reloaded.</param>
         /// <param name="fromPickup">Is the item being reloaded from a pickup?</param>
         /// <returns>A reference to the IReloadableItem if the item can be reloaded. Null if the item cannot be reloaded.</returns>
-        private IReloadableItem ShouldReload(CharacterItem characterItem, IItemIdentifier itemIdentifier, bool fromPickup)
+        private IReloadableItem ShouldReload(CharacterItem characterItem, IItemIdentifier ammoItemIdentifier, bool fromPickup)
         {
             var itemAction = characterItem.GetItemAction(m_ActionID);
 
@@ -421,7 +441,7 @@ namespace Opsive.UltimateCharacterController.Character.Abilities.Items
                 return null;
             }
 
-            if (!reloadableItem.ShouldReload(characterItem, itemIdentifier, fromPickup)) {
+            if (!reloadableItem.ShouldReload(characterItem, ammoItemIdentifier, fromPickup)) {
                 return null;
             }
             
@@ -455,7 +475,7 @@ namespace Opsive.UltimateCharacterController.Character.Abilities.Items
 
             EventHandler.UnregisterEvent(m_GameObject, "OnItemPickupStartPickup", OnStartPickup);
             EventHandler.UnregisterEvent<IItemIdentifier, int, bool, bool>(m_GameObject, "OnInventoryPickupItemIdentifier", OnPickupItemIdentifier);
-            EventHandler.UnregisterEvent<int, IItemIdentifier, bool, bool>(m_GameObject, "OnItemTryReload", OnTryReload);
+            EventHandler.UnregisterEvent<int, IItemIdentifier, IItemIdentifier, bool, bool>(m_GameObject, "OnItemTryReload", OnTryReload);
             EventHandler.UnregisterEvent<IReloadableItem>(m_GameObject, "OnItemReload", OnItemReload);
             EventHandler.UnregisterEvent<IReloadableItem>(m_GameObject, "OnItemReloadComplete", OnItemReloadComplete);
         }

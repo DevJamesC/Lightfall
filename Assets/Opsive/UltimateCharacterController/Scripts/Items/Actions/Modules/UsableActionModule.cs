@@ -66,6 +66,8 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
         [Tooltip("The item effects to invoke.")]
         [SerializeField] protected ItemEffectGroup m_EffectGroup;
 
+        public ItemEffectGroup EffectGroup => m_EffectGroup;
+
         /// <summary>
         /// Initialize the module.
         /// </summary>
@@ -83,6 +85,12 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
         {
             if (!m_OnStartUse) { return; }
             m_EffectGroup.InvokeEffects();
+
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+            if (CharacterItemAction.NetworkInfo != null && CharacterItemAction.NetworkInfo.IsLocalPlayer()) {
+                CharacterItemAction.NetworkCharacter.InvokeGenericEffectModule(this);
+            }
+#endif
         }
 
         /// <summary>
@@ -168,25 +176,25 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
         public bool DropWhenUseDepleted { get { return m_DropWhenUseDepleted; } set { m_DropWhenUseDepleted = value; } }
 
         /// <summary>
-        /// Register to events while the item is equipped and the module is enabled.
+        /// Updates the registered events when the item is equipped and the module is enabled.
         /// </summary>
-        protected override void RegisterEventsWhileEquippedAndEnabledInternal(bool register)
+        protected override void UpdateRegisteredEventsInternal(bool register)
         {
-            base.RegisterEventsWhileEquippedAndEnabledInternal(register);
-            if (register) {
-                m_AttributeManager = GameObject.GetComponent<AttributeManager>();
-                if (m_AttributeManager != null) {
-                    m_UseAttribute = m_AttributeManager.GetAttribute(m_UseAttributeName);
+            base.UpdateRegisteredEventsInternal(register);
 
-                    if (m_UseAttribute != null) {
-                        EventHandler.RegisterEvent(m_UseAttribute, "OnAttributeReachedDestinationValue", UseDepleted);
-                    } else {
-                        Debug.LogWarning($"The Use Attribute Module, Attribute Name '{m_UseAttributeName}' does not match any attributes on the AttributeManager.", m_AttributeManager);
-                    }
-                } else {
-                    Debug.LogWarning("The item does not have an AttributeManager component, please add one.");
-                }
+            m_AttributeManager = GameObject.GetComponent<AttributeManager>();
+            if (m_AttributeManager == null) {
+                Debug.LogWarning("The item does not have an AttributeManager component", CharacterItem);
+                return;
             }
+            m_UseAttribute = m_AttributeManager.GetAttribute(m_UseAttributeName);
+
+            if (m_UseAttribute == null) {
+                Debug.LogWarning($"The Use Attribute Module, Attribute Name '{m_UseAttributeName}' does not match any attributes on the AttributeManager.", m_AttributeManager);
+                return;
+            }
+
+            EventHandler.RegisterUnregisterEvent(register, m_UseAttribute, "OnAttributeReachedDestinationValue", UseDepleted);
         }
 
         /// <summary>
@@ -300,7 +308,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
                 return false;
             }
 
-            return (m_CharacterUseAttribute != null && !m_CharacterUseAttribute.IsValid(-m_CharacterUseAttributeAmount));
+            return (m_CharacterUseAttribute != null && m_CharacterUseAttribute.IsValid(-m_CharacterUseAttributeAmount));
         }
 
         /// <summary>
@@ -367,11 +375,11 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
         }
 
         /// <summary>
-        /// Register to events while the item is equipped and the module is enabled.
+        /// Updates the registered events when the item is equipped and the module is enabled.
         /// </summary>
-        protected override void RegisterEventsWhileEquippedAndEnabledInternal(bool register)
+        protected override void UpdateRegisteredEventsInternal(bool register)
         {
-            base.RegisterEventsWhileEquippedAndEnabledInternal(register);
+            base.UpdateRegisteredEventsInternal(register);
             Shared.Events.EventHandler.RegisterUnregisterEvent<bool, bool>(register, Character, "OnAimAbilityStart", OnAim);
         }
 
@@ -510,7 +518,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
         /// <summary>
         /// Toggle the object on or off.
         /// </summary>
-        /// <param name="on">Toggle it on?</param>
+        /// <param name="on">Should the toggle be turned on?</param>
         public virtual void Toggle(bool on)
         {
             m_On = on;
@@ -534,15 +542,21 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
         /// <summary>
         /// Toggle the gameobjects active state.
         /// </summary>
-        public virtual void ToggleGameObjects(bool toggleOn)
+        /// <param name="on">Should the toggle be turned on?</param>
+        public virtual void ToggleGameObjects(bool on)
         {
-           
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+            if (CharacterItemAction.NetworkInfo != null && CharacterItemAction.NetworkInfo.IsLocalPlayer()) {
+                CharacterItemAction.NetworkCharacter.InvokeUseAttributeModifierToggleModule(this, on);
+            }
+#endif
+
             for (int i = 0; i < m_GameObjectToggle.Length; i++) {
                 var gameObject = m_GameObjectToggle[i].GetValue();
                 if (gameObject == null) { continue; }
 
                 var defaultState = m_GameObjectToggle[i].On == false;
-                gameObject.SetActive(toggleOn ? !defaultState : defaultState);
+                gameObject.SetActive(on ? !defaultState : defaultState);
             }
         }
 
@@ -630,7 +644,9 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
         {
             base.OnAllModulesPreInitialized();
 
-            SwitchTo(m_Index);
+            if (Application.isPlaying) {
+                SwitchTo(m_Index);
+            }
         }
 
         /// <summary>
@@ -838,11 +854,11 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
         }
 
         /// <summary>
-        /// Register to events while the item is equipped and the module is enabled.
+        /// Updates the registered events when the item is equipped and the module is enabled.
         /// </summary>
-        protected override void RegisterEventsWhileEquippedAndEnabledInternal(bool register)
+        protected override void UpdateRegisteredEventsInternal(bool register)
         {
-            base.RegisterEventsWhileEquippedAndEnabledInternal(register);
+            base.UpdateRegisteredEventsInternal(register);
             ActivateStateNames(register, m_StateNames);
         }
         

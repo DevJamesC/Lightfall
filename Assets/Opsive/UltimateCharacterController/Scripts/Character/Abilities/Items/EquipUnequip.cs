@@ -6,12 +6,11 @@
 
 namespace Opsive.UltimateCharacterController.Character.Abilities.Items
 {
-    using System;
-    using Opsive.Shared.Game;
     using Opsive.Shared.Inventory;
     using Opsive.UltimateCharacterController.Items;
     using Opsive.UltimateCharacterController.Items.Actions;
     using Opsive.UltimateCharacterController.Utility;
+    using System;
     using System.Collections.Generic;
     using UnityEngine;
     using EventHandler = Opsive.Shared.Events.EventHandler;
@@ -164,6 +163,12 @@ namespace Opsive.UltimateCharacterController.Character.Abilities.Items
             if (!m_ItemSetManager.IsCategoryMember(characterItem.ItemDefinition, m_ItemSetGroupIndex) || !Enabled) {
                 return;
             }
+
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+            if (m_NetworkInfo != null && !m_NetworkInfo.IsLocalPlayer()) {
+                return;
+            }
+#endif
 
             // If another EquipUnequip ability exists with an exact category match then that ability should be used instead.
             if (m_ItemSetManager.ItemSetGroups[m_ItemSetGroupIndex].ItemCategory.ID != characterItem.ItemDefinition.GetItemCategory().ID) {
@@ -524,15 +529,13 @@ namespace Opsive.UltimateCharacterController.Character.Abilities.Items
             base.Update();
 
             if (m_StartEquipUnequip) {
-
                 m_StartEquipUnequip = false;
                 
                 // The ActiveItemIndexSetIndex may have been changed due to the EquipUnequipAction above.
                 m_ActiveItemSetIndex = m_StartEquipUnequipIndex;
 
                 // The ItemSet may no longer be valid between the time it was first checked and when the ability actually started.
-                var isItemSetValid =
-                    m_ItemSetManager.IsItemSetValid(m_ItemSetGroupIndex, m_ActiveItemSetIndex, false);
+                var isItemSetValid = m_ItemSetManager.IsItemSetValid(m_ItemSetGroupIndex, m_ActiveItemSetIndex, false);
                 if (m_ActiveItemSetIndex != -1 && !isItemSetValid) {
                     StopAbility();
                     return;
@@ -579,8 +582,9 @@ namespace Opsive.UltimateCharacterController.Character.Abilities.Items
                     // ForceEquipUnequip may be unequipping the item.
                     if (m_UnequipItems[i] != null) {
                         unequip = true;
-                    } else if (currentCharacterItem != targetCharacterItem && currentCharacterItem != null && currentCharacterItem.IsActive() &&
-                                    m_ItemSetManager.IsCategoryMember(currentCharacterItem.ItemIdentifier.GetItemDefinition(), m_ItemSetGroupIndex)) {
+                    } else if (currentCharacterItem != targetCharacterItem && currentCharacterItem != null && 
+                                m_Inventory.GetActiveCharacterItem(currentCharacterItem.SlotID) == currentCharacterItem && 
+                                m_ItemSetManager.IsCategoryMember(currentCharacterItem.ItemIdentifier.GetItemDefinition(), m_ItemSetGroupIndex)) {
                         // The item first needs to be unequipped before another item can be equipped.
                         SetUnequipItem(i, currentCharacterItem);
                         m_UnequippingItems[i] = true;
@@ -733,7 +737,6 @@ namespace Opsive.UltimateCharacterController.Character.Abilities.Items
         private void ForceEquipUnequip(int slotID, bool startAbility)
         {
             if (m_EquipItems[slotID] != null || m_UnequipItems[slotID] != null) {
-
                 // Cancel the pending events.
                 if (m_EquipItems[slotID] != null) {
                     m_EquipItems[slotID].EquipEvent.CancelWaitForEvent();
@@ -1100,7 +1103,6 @@ namespace Opsive.UltimateCharacterController.Character.Abilities.Items
             m_ImmediateEquipUnequip = false;
             
             if (force) {
-
                 // If the ability was forced to stop when it wasn't even able to start force an immediate equip/unequip.
                 if (m_StartEquipUnequip) {
                     m_ImmediateEquipUnequip = true;
@@ -1141,8 +1143,9 @@ namespace Opsive.UltimateCharacterController.Character.Abilities.Items
             if (!m_ItemSetManager.IsCategoryMember(characterItem.ItemDefinition, m_ItemSetGroupIndex)) { return; }
 
             // The item may not be included in the active ItemSet.
-            if (m_ActiveItemSetIndex == -1 || m_ActiveItemSetIndex !=
-                m_ItemSetManager.GetItemSetIndex(characterItem, m_ItemSetGroupIndex, false)) { return; }
+            if (m_ActiveItemSetIndex == -1 || m_ActiveItemSetIndex != m_ItemSetManager.GetItemSetIndex(characterItem, m_ItemSetGroupIndex, false)) { 
+                return;
+            }
 
             var prevImmediateEquipUnequip = m_ImmediateEquipUnequip;
             // If the ItemSet contains an item that isn't being removed then the character should animate moving to the next ItemSet.

@@ -36,7 +36,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Magic.StartSt
 
         private int m_ColorID;
         private bool m_Active;
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
         private ScheduledEventBase m_UpdateEvent;
 #endif
 
@@ -92,10 +92,10 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Magic.StartSt
             }
             m_Active = true;
 
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
             // Update isn't called automatically for the remote players.
-            if (m_MagicItem.NetworkInfo != null && !m_MagicItem.NetworkInfo.IsLocalPlayer()) {
-                m_UpdateEvent = SchedulerBase.Schedule(0.001f, Update);
+            if (NetworkInfo != null && !NetworkInfo.IsLocalPlayer()) {
+                m_UpdateEvent = Scheduler.Schedule<MagicUseDataStream>(0.001f, Update, null);
             }
 #endif
         }
@@ -149,6 +149,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Magic.StartSt
         /// <summary>
         /// Updates the action.
         /// </summary>
+        /// <param name="useDataStream">The data stream with information about the magic cast.</param>
         public override void Update(MagicUseDataStream useDataStream)
         {
             if (!m_Active) {
@@ -165,10 +166,10 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Magic.StartSt
                 }
             }
 
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
             // Update isn't called automatically for the remote players.
-            if (active && m_MagicItem.NetworkInfo != null && !m_MagicItem.NetworkInfo.IsLocalPlayer()) {
-                m_UpdateEvent = SchedulerBase.Schedule(0.001f, Update);
+            if (active && NetworkInfo != null && !NetworkInfo.IsLocalPlayer()) {
+                m_UpdateEvent = Scheduler.Schedule<MagicUseDataStream>(0.001f, Update, null);
             }
 #endif
 
@@ -184,9 +185,9 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Magic.StartSt
                 return;
             }
 
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
-            if (m_MagicItem.NetworkInfo != null && !m_MagicItem.NetworkInfo.IsLocalPlayer()) {
-                SchedulerBase.Cancel(m_UpdateEvent);
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+            if (NetworkInfo != null && !NetworkInfo.IsLocalPlayer()) {
+                Scheduler.Cancel(m_UpdateEvent);
                 m_UpdateEvent = null;
             }
 #endif

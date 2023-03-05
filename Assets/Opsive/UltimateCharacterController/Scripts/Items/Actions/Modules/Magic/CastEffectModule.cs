@@ -10,7 +10,6 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Magic
     using Opsive.UltimateCharacterController.Items.Actions.Effect;
     using System;
     using System.Collections.Generic;
-    using System.Reflection;
     using UnityEngine;
 
     /// <summary>
@@ -70,7 +69,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Magic
         /// <returns>True if the cast is complete.</returns>
         public virtual bool IsCastComplete(MagicUseDataStream useDataStream)
         {
-            return CurrentState == EffectState.Complete;
+            return m_CurrentState == EffectState.Complete;
         }
 
         /// <summary>
@@ -91,16 +90,10 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Magic
         /// <param name="useDataStream">The use data stream.</param>
         public virtual void StartCast(MagicUseDataStream useDataStream)
         {
-            var previousCastID = m_CastID;
             m_CastID = useDataStream.CastData.CastID;
             m_CastCount = 0;
             m_LastCastTime = -1;
             m_LastCompletedTime = -1;
-
-            if (previousCastID == m_CastID && m_CurrentState != EffectState.None) {
-                // The cast is starting when it hasn't finished yet. In most cases that's not a problem, override if it is.
-            }
-            
             m_CurrentState = EffectState.Pending;
         }
         
@@ -155,7 +148,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Magic
         public virtual bool CanDoCast(MagicUseDataStream useDataStream)
         {
             // Do not cast if the cast effect hasn't started.
-            if (CurrentState == EffectState.None) { return false; }
+            if (m_CurrentState == EffectState.None) { return false; }
 
             // If complete and there is no repeat delay, then it cannot be casted any longer.
             var isComplete = IsCastComplete(useDataStream);
@@ -182,15 +175,14 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Magic
         /// <param name="useDataStream">The use data stream.</param>
         public virtual void TryCast(MagicUseDataStream useDataStream)
         {
-            if (CanDoCast(useDataStream) == false) { return; }
+            if (!CanDoCast(useDataStream)) { return; }
             
-            // The initial pending for the first cast
+            // The initial pending for the first cast.
             if (IsInitialPendingDoCast(useDataStream)) { return; }
             
             // The delay can make the cast pending.
             if (IsRepeatPendingDoCast(useDataStream)) { return; }
 
-            // Don't do this
             DoCast(useDataStream);
         }
 
@@ -213,7 +205,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Magic
         /// <param name="useDataStream">The use data stream.</param>
         protected virtual void DoCastInternal(MagicUseDataStream useDataStream)
         {
-           // to be overriden.
+           // To be overriden.
         }
 
         /// <summary>

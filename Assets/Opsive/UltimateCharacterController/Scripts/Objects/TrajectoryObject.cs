@@ -202,13 +202,13 @@ namespace Opsive.UltimateCharacterController.Objects
         /// <summary>
         /// Runs a simulation of the parabolic trajectory with the given start and end position. The trajectory will then be displayed with the attached LineRenderer.
         /// </summary>
-        /// <param name="originator">The object that instantiated the trajectory object.</param>
+        /// <param name="owner">The object that instantiated the trajectory object.</param>
         /// <param name="startPosition">The starting position.</param>
         /// <param name="endPosition">The ending position.</param>
-        public void SimulateTrajectory(GameObject originator, Vector3 startPosition, Vector3 endPosition)
+        public void SimulateTrajectory(GameObject owner, Vector3 startPosition, Vector3 endPosition)
         {
             var velocity = CalculateVelocity(startPosition, endPosition);
-            Initialize(velocity, Vector3.zero, originator);
+            Initialize(velocity, Vector3.zero, owner);
             if (m_Collider != null) {
                 m_Collider.enabled = false;
             }
@@ -239,14 +239,14 @@ namespace Opsive.UltimateCharacterController.Objects
         /// <summary>
         /// Runs a simulation of the parabolic trajectory.  The trajectory will then be displayed with the attached LineRenderer.
         /// </summary>
-        /// <param name="originator">The object that instantiated the trajectory object.</param>
+        /// <param name="owner">The object that instantiated the trajectory object.</param>
         /// <param name="position">The starting position.</param>
         /// <param name="rotation">The starting rotation.</param>
         /// <param name="velocity">The starting velocity.</param>
         /// <param name="torque">The starting torque.</param>
-        public void SimulateTrajectory(GameObject originator, Vector3 position, Quaternion rotation, Vector3 velocity, Vector3 torque)
+        public void SimulateTrajectory(GameObject owner, Vector3 position, Quaternion rotation, Vector3 velocity, Vector3 torque)
         {
-            Initialize(velocity, torque, originator, false);
+            Initialize(velocity, torque, owner, false);
             if (m_Collider != null) {
                 m_Collider.enabled = false;
             }
@@ -305,14 +305,14 @@ namespace Opsive.UltimateCharacterController.Objects
         /// <summary>
         /// Runs a simulation of the parabolic trajectory. Will save off the positions in the positions list.
         /// </summary>
-        /// <param name="originator">The object that instantiated the trajectory object.</param>
+        /// <param name="owner">The object that instantiated the trajectory object.</param>
         /// <param name="velocity">The starting velocity.</param>
         /// <param name="torque">The starting torque.</param>
         /// <param name="positions">The list of positions that the object will move through.</param>
         /// <param name="positionsSkip">Reduce the number of saved positions by skipping a specified number of positions.</param>
-        public void SimulateTrajectory(GameObject originator, Vector3 velocity, Vector3 torque, List<Vector3> positions, int positionsSkip)
+        public void SimulateTrajectory(GameObject owner, Vector3 velocity, Vector3 torque, List<Vector3> positions, int positionsSkip)
         {
-            Initialize(velocity, torque, originator, false);
+            Initialize(velocity, torque, owner, false);
 
             SimulateTrajectory(m_Transform.position, m_Transform.rotation, positions, positionsSkip);
             if (m_Collider != null) {
@@ -378,10 +378,10 @@ namespace Opsive.UltimateCharacterController.Objects
         /// <param name="velocity">The starting velocity.</param>
         /// <param name="torque">The starting torque.</param>
         /// <param name="owner">The object that instantiated the trajectory object.</param>
-        /// <param name="originatorCollisionCheck">Should a collision check against the originator be performed?</param>
-        public virtual void Initialize(Vector3 velocity, Vector3 torque, GameObject owner, bool originatorCollisionCheck)
+        /// <param name="ownerCollisionCheck">Should a collision check against the owner be performed?</param>
+        public virtual void Initialize(Vector3 velocity, Vector3 torque, GameObject owner, bool ownerCollisionCheck)
         {
-            Initialize(velocity, torque, owner, null, originatorCollisionCheck, Vector3.down);
+            Initialize(velocity, torque, owner, null, ownerCollisionCheck, Vector3.down);
         }
 
         /// <summary>
@@ -391,9 +391,9 @@ namespace Opsive.UltimateCharacterController.Objects
         /// <param name="torque">The starting torque.</param>
         /// <param name="owner">The object that instantiated the trajectory object.</param>
         /// <param name="ownerSource">The owner damage source in case it is nested.</param>
-        /// <param name="originatorCollisionCheck">Should a collision check against the originator be performed?</param>
-        /// <param name="defaultNormalizedGravity">The normalized gravity direction if a character isn't specified for the originator.</param>
-        public virtual void Initialize(Vector3 velocity, Vector3 torque, GameObject owner, IDamageSource ownerSource, bool originatorCollisionCheck, Vector3 defaultNormalizedGravity)
+        /// <param name="ownerCollisionCheck">Should a collision check against the owner be performed?</param>
+        /// <param name="defaultNormalizedGravity">The normalized gravity direction if a character isn't specified for the owner.</param>
+        public virtual void Initialize(Vector3 velocity, Vector3 torque, GameObject owner, IDamageSource ownerSource, bool ownerCollisionCheck, Vector3 defaultNormalizedGravity)
         {
             InitializeComponentReferences();
 
@@ -418,12 +418,12 @@ namespace Opsive.UltimateCharacterController.Objects
             m_GameObject.layer = LayerManager.IgnoreRaycast;
 
             // The object could start in a collision state.
-            if (originatorCollisionCheck && OverlapCast(m_Transform.position, m_Transform.rotation)) {
+            if (ownerCollisionCheck && OverlapCast(m_Transform.position, m_Transform.rotation)) {
                 OnCollision(null);
                 if (m_CollisionMode == CollisionMode.Collide) {
                     m_MovementSettled = m_RotationSettled = true;
                 } else if (m_CollisionMode != CollisionMode.Ignore) { // Reflect and Random Reflection.
-                    // Update the velocity to the reflection direction. Use the originator's forward direction as the normal because the actual collision point is not determined.
+                    // Update the velocity to the reflection direction. Use the owner's forward direction as the normal because the actual collision point is not determined.
                     m_Velocity = Vector3.Reflect(m_Velocity, -m_OwnerTransform.forward) * m_ReflectMultiplier;
                 }
             }
@@ -432,9 +432,9 @@ namespace Opsive.UltimateCharacterController.Objects
         }
 
         /// <summary>
-        /// Sets the originator of the TrajectoryObject.
+        /// Sets the owner of the TrajectoryObject.
         /// </summary>
-        /// <param name="owner">The originator that should be set.</param>
+        /// <param name="owner">The owner that should be set.</param>
         /// <param name="ownerSource">The owner damage source in case it is nested.</param>
         /// <param name="defaultNormalizedGravity">The default gravity direction.</param>
         protected void SetOwner(GameObject owner, IDamageSource ownerSource, Vector3 defaultNormalizedGravity)
@@ -469,7 +469,6 @@ namespace Opsive.UltimateCharacterController.Objects
                 m_OwnerCharacterLocomotion = null;
                 m_NormalizedGravity = defaultNormalizedGravity;
                 m_TimeScale = 1;
-               
             }
         }
 
@@ -481,7 +480,7 @@ namespace Opsive.UltimateCharacterController.Objects
         /// <returns>True if any objects are overlapping with the Trajectory Object.</returns>
         private bool OverlapCast(Vector3 position, Quaternion rotation)
         {
-            // No need to do a cast if the originator is null.
+            // No need to do a cast if the owner is null.
             if (m_OwnerTransform == null) {
                 return false;
             }
@@ -695,7 +694,7 @@ namespace Opsive.UltimateCharacterController.Objects
             }
 
             var index = 0;
-            // The object should not collide with the originator to prevent the character from hitting themself.
+            // The object should not collide with the owner to prevent the character from hitting themself.
             if (m_OwnerCollisionCheck && m_OwnerTransform != null) {
                 if (hitCount > 0) {
                     for (int i = 0; i < hitCount; ++i) {

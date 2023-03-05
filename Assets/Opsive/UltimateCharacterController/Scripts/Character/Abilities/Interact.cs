@@ -7,8 +7,8 @@
 namespace Opsive.UltimateCharacterController.Character.Abilities
 {
     using Opsive.Shared.Game;
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
-using Opsive.UltimateCharacterController.Networking;
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+using Opsive.Shared.Networking;
 #endif
     using Opsive.UltimateCharacterController.Traits;
     using Opsive.UltimateCharacterController.Objects.CharacterAssist;
@@ -45,7 +45,7 @@ using Opsive.UltimateCharacterController.Networking;
 
         private CharacterIKBase m_CharacterIK;
         protected Interactable m_Interactable;
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
         private INetworkInfo m_NetworkInfo;
 #endif
 
@@ -79,9 +79,14 @@ using Opsive.UltimateCharacterController.Networking;
         {
             base.Awake();
 
-            m_CharacterIK = m_GameObject.GetCachedComponent<CharacterIKBase>();
+            var modelManager = m_GameObject.GetCachedComponent<ModelManager>();
+            if (modelManager == null) {
+                m_CharacterIK = m_GameObject.GetComponentInChildren<CharacterIKBase>();
+            } else {
+                m_CharacterIK = modelManager.ActiveModel.GetCachedComponent<CharacterIKBase>();
+            }
 
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
             m_NetworkInfo = m_GameObject.GetCachedComponent<INetworkInfo>();
 #endif
 
@@ -189,7 +194,7 @@ using Opsive.UltimateCharacterController.Networking;
                 for (int i = 0; i < m_Interactable.IKTargets.Length; ++i) {
                     var ikTarget = m_Interactable.IKTargets[i];
                     if (ikTarget.Goal != CharacterIKBase.IKGoal.Last) {
-                        SchedulerBase.ScheduleFixed<AbilityIKTarget, Transform>(ikTarget.Delay, SetIKTarget, ikTarget, ikTarget.Transform);
+                        Scheduler.ScheduleFixed<AbilityIKTarget, Transform>(ikTarget.Delay, SetIKTarget, ikTarget, ikTarget.Transform);
                     }
                 }
             }
@@ -212,7 +217,7 @@ using Opsive.UltimateCharacterController.Networking;
                 }
                 for (int i = 0; i < m_DisableIKInteractionEvents.Length; ++i) {
                     if (m_DisableIKInteractionEvents[i] == null) {
-                        m_DisableIKInteractionEvents[i] = SchedulerBase.ScheduleFixed<AbilityIKTarget, Transform>(ikTarget.Duration, (AbilityIKTarget abilityIKTarget, Transform target) =>
+                        m_DisableIKInteractionEvents[i] = Scheduler.ScheduleFixed<AbilityIKTarget, Transform>(ikTarget.Duration, (AbilityIKTarget abilityIKTarget, Transform target) =>
                         {
                             SetIKTarget(ikTarget, target);
                             m_DisableIKInteractionEvents[i] = null;
@@ -234,7 +239,7 @@ using Opsive.UltimateCharacterController.Networking;
                 return;
             }
 
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
             // The Interact event will be sent through a message. The ability does not need to call the interaction.
             if (m_NetworkInfo != null && !m_NetworkInfo.IsLocalPlayer()) {
                 return;
@@ -246,7 +251,18 @@ using Opsive.UltimateCharacterController.Networking;
 
             m_InteractCompleteEvent.WaitForEvent();
         }
-        
+
+        /// <summary>
+        /// The character's model has switched.
+        /// </summary>
+        /// <param name="activeModel">The active character model.</param>
+        protected override void OnSwitchModels(GameObject activeModel)
+        {
+            base.OnSwitchModels(activeModel);
+
+            m_CharacterIK = activeModel.GetCachedComponent<CharacterIKBase>();
+        }
+
         /// <summary>
         /// Completes the ability.
         /// </summary>
@@ -306,7 +322,7 @@ using Opsive.UltimateCharacterController.Networking;
                         continue;
                     }
                     m_DisableIKInteractionEvents[i].Invoke();
-                    SchedulerBase.Cancel(m_DisableIKInteractionEvents[i]);
+                    Scheduler.Cancel(m_DisableIKInteractionEvents[i]);
                     m_DisableIKInteractionEvents[i] = null;
                 }
             }

@@ -238,7 +238,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
         {
             // Spawn a shell.
             if (m_Shell != null) {
-                SchedulerBase.Schedule(m_ShellEjectDelay, EjectShell);
+                Scheduler.Schedule(m_ShellEjectDelay, EjectShell);
             }
         }
         
@@ -335,7 +335,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
         {
             // Spawn the smoke.
             if (m_Smoke != null) {
-                SchedulerBase.Schedule(m_SmokeSpawnDelay, SpawnSmoke);
+                Scheduler.Schedule(m_SmokeSpawnDelay, SpawnSmoke);
             }
         }
         

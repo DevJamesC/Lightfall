@@ -94,7 +94,7 @@ namespace Opsive.UltimateCharacterController.Character.Abilities
             }
 
             m_ReviveTypeIndex = GetReviveTypeIndex(position, force, attacker);
-            SchedulerBase.ScheduleFixed(m_DeathStartDelay, StartRevive);
+            Scheduler.ScheduleFixed(m_DeathStartDelay, StartRevive);
         }
 
         /// <summary>

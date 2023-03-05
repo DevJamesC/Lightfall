@@ -9,11 +9,13 @@ namespace Opsive.UltimateCharacterController.Traits
     using Opsive.Shared.Audio;
     using Opsive.Shared.Events;
     using Opsive.Shared.Game;
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+    using Opsive.Shared.Networking;
+#endif
     using Opsive.Shared.StateSystem;
     using Opsive.UltimateCharacterController.Character;
     using Opsive.UltimateCharacterController.Game;
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
-    using Opsive.UltimateCharacterController.Networking;
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
     using Opsive.UltimateCharacterController.Networking.Traits;
 #endif
     using UnityEngine;
@@ -63,7 +65,7 @@ namespace Opsive.UltimateCharacterController.Traits
         protected GameObject m_GameObject;
         private Transform m_Transform;
         protected UltimateCharacterLocomotion m_CharacterLocomotion;
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
         private INetworkInfo m_NetworkInfo;
         private INetworkRespawnerMonitor m_NetworkRespawnerMonitor;
 #endif
@@ -82,7 +84,7 @@ namespace Opsive.UltimateCharacterController.Traits
             m_GameObject = gameObject;
             m_Transform = transform;
             m_CharacterLocomotion = m_GameObject.GetCachedComponent<UltimateCharacterLocomotion>();
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
             m_NetworkInfo = m_GameObject.GetCachedComponent<INetworkInfo>();
             m_NetworkRespawnerMonitor = m_GameObject.GetCachedComponent<INetworkRespawnerMonitor>();
             if (m_NetworkInfo != null && m_NetworkRespawnerMonitor == null) {
@@ -108,7 +110,7 @@ namespace Opsive.UltimateCharacterController.Traits
                 return;
             }
 
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
             // The local player will control when the object respawns.
             if (m_NetworkInfo != null && !m_NetworkInfo.IsLocalPlayer()) {
                 return;
@@ -116,10 +118,10 @@ namespace Opsive.UltimateCharacterController.Traits
 #endif
 
             if (m_ScheduledRespawnEvent != null) {
-                SchedulerBase.Cancel(m_ScheduledRespawnEvent);
+                Scheduler.Cancel(m_ScheduledRespawnEvent);
                 m_ScheduledRespawnEvent = null;
             }
-            m_ScheduledRespawnEvent = SchedulerBase.Schedule(Random.Range(m_MinRespawnTime, m_MaxRespawnTime), Respawn);
+            m_ScheduledRespawnEvent = Scheduler.Schedule(Random.Range(m_MinRespawnTime, m_MaxRespawnTime), Respawn);
         }
 
         /// <summary>
@@ -137,14 +139,14 @@ namespace Opsive.UltimateCharacterController.Traits
         /// </summary>
         protected virtual void OnDisable()
         {
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
             if (m_NetworkInfo != null && !m_NetworkInfo.IsLocalPlayer()) {
                 return;
             }
 #endif
 
             if (ScheduleRespawnOnDisable && m_ScheduledRespawnEvent == null) {
-                m_ScheduledRespawnEvent = SchedulerBase.Schedule(Random.Range(m_MinRespawnTime, m_MaxRespawnTime), Respawn);
+                m_ScheduledRespawnEvent = Scheduler.Schedule(Random.Range(m_MinRespawnTime, m_MaxRespawnTime), Respawn);
             }
         }
 
@@ -163,7 +165,7 @@ namespace Opsive.UltimateCharacterController.Traits
                     rotation = m_Transform.rotation;
                     // If the object can't be spawned then try again in the future.
                     if (!SpawnPointManager.GetPlacement(m_GameObject, m_Grouping, ref position, ref rotation)) {
-                        m_ScheduledRespawnEvent = SchedulerBase.Schedule(Random.Range(m_MinRespawnTime, m_MaxRespawnTime), Respawn);
+                        m_ScheduledRespawnEvent = Scheduler.Schedule(Random.Range(m_MinRespawnTime, m_MaxRespawnTime), Respawn);
                         return;
                     }
                 } else { // Spawn Location.
@@ -211,7 +213,7 @@ namespace Opsive.UltimateCharacterController.Traits
                 }
             }
 
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
             if (m_NetworkInfo != null && m_NetworkInfo.IsLocalPlayer()) {
                 m_NetworkRespawnerMonitor.Respawn(position, rotation, transformChange);
             }
@@ -224,7 +226,7 @@ namespace Opsive.UltimateCharacterController.Traits
         public void CancelRespawn()
         {
             if (m_ScheduledRespawnEvent != null) {
-                SchedulerBase.Cancel(m_ScheduledRespawnEvent);
+                Scheduler.Cancel(m_ScheduledRespawnEvent);
                 m_ScheduledRespawnEvent = null;
             }
         }

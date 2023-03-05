@@ -40,7 +40,7 @@ namespace Opsive.UltimateCharacterController.Character.Effects
 
             var audioSource = m_AudioClipSet.PlayAudioClip(m_GameObject).AudioSource;
             if (audioSource != null) {
-                SchedulerBase.ScheduleFixed(audioSource.clip.length, StopEffect);
+                Scheduler.ScheduleFixed(audioSource.clip.length, StopEffect);
             }
         }
     }

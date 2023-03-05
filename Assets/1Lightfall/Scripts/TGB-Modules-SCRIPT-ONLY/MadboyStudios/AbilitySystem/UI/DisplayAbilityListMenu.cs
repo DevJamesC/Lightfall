@@ -24,13 +24,14 @@ namespace MBS.AbilitySystem
         protected UnityInputSystem opsiveUnityInput;
         private List<AbilityAndUpgradePair> abilityUpgradePair;
         private List<AbilityOverviewButton> displayedAbilityElements;
-
+        private bool isOpen;
 
         protected override void Awake()
         {
             base.Awake();
             abilityUpgradePair = new List<AbilityAndUpgradePair>();
             displayedAbilityElements = new List<AbilityOverviewButton>();
+            isOpen = false;
         }
 
         protected override void OnAttachCharacter(GameObject character)
@@ -42,10 +43,23 @@ namespace MBS.AbilitySystem
                 PlayerInputProxy inputProxy = character.GetComponentInChildren<PlayerInputProxy>();
                 playerInput = inputProxy.PlayerInput.gameObject.GetComponent<UnityEngine.InputSystem.PlayerInput>();
                 opsiveUnityInput = inputProxy.PlayerInput.gameObject.GetComponent<UnityInputSystem>();
-                Scheduler.Schedule(1f, () => { EventHandler.ExecuteEvent(gameObject, "OnOpenCloseAbilityMenu", true); });
+                //Scheduler.Schedule(1f, () => { EventHandler.ExecuteEvent(gameObject, "OnOpenCloseAbilityMenu", true); });
             }
 
 
+        }
+
+        private void Update()
+        {
+            if (Keyboard.current[Key.M].wasPressedThisFrame)
+            {
+                EventHandler.ExecuteEvent(gameObject, "OnOpenCloseAbilityMenu", !isOpen);
+            }
+        }
+
+        public void TriggerOpenCloseForUIButtons(bool open)
+        {
+            EventHandler.ExecuteEvent(gameObject, "OnOpenCloseAbilityMenu", open);
         }
 
         private void OpenCloseAbilityMenu(bool open)
@@ -56,12 +70,14 @@ namespace MBS.AbilitySystem
                 DrawAbilityList();
                 playerInput.SwitchCurrentActionMap("UI");
                 opsiveUnityInput.DisableCursor = false;
+                isOpen = true;
             }
             else
             {
                 ClearUI();
                 playerInput.SwitchCurrentActionMap("Gameplay");
                 opsiveUnityInput.DisableCursor = true;
+                isOpen = false;
                 Debug.Log("the 'enable-disable cursor and UI Input Mode' logic will need to be moved to a more centralized location.");
             }
 

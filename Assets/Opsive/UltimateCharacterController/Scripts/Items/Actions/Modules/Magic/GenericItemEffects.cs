@@ -43,7 +43,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Magic
         /// <param name="useDataStream">The data stream with information about the magic cast.</param>
         public override void Start(MagicUseDataStream useDataStream)
         {
-            if(!m_OnStart){ return; }
+            if (!m_OnStart) { return; }
             m_EffectGroup.InvokeEffects();
         }
 
@@ -53,7 +53,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Magic
         /// <param name="useDataStream">The data stream with information about the magic cast.</param>
         public override void Stop(MagicUseDataStream useDataStream)
         {
-            if(!m_OnStop){ return; }
+            if (!m_OnStop) { return; }
             m_EffectGroup.InvokeEffects();
         }
 
@@ -75,7 +75,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Magic
             if (m_EffectGroup == null || m_EffectGroup.Effects == null) {
                 return base.ToString();
             }
-            return GetToStringPrefix()+$"Generic ({m_EffectGroup.Effects.Length}): " + ListUtility.ToStringDeep(m_EffectGroup.Effects, true);
+            return GetToStringPrefix() + $"Generic ({m_EffectGroup.Effects.Length}): " + ListUtility.ToStringDeep(m_EffectGroup.Effects, true);
         }
     }
 }

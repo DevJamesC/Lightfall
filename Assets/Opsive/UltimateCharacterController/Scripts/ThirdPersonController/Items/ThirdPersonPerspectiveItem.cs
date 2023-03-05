@@ -143,6 +143,17 @@ namespace Opsive.UltimateCharacterController.ThirdPersonController.Items
         /// <param name="hasItem">Does the inventory contain the item?</param>
         public override void SetActive(bool active, bool hasItem)
         {
+            SetActive(active, hasItem, true);
+        }
+
+        /// <summary>
+        /// Activates or deactivates the VisibleItem.
+        /// </summary>
+        /// <param name="active">Should the VisibleItem be activated?</param>
+        /// <param name="hasItem">Does the inventory contain the item?</param>
+        /// <param name="setIKTargets">Should the IK targets be set?</param>
+        private void SetActive(bool active, bool hasItem, bool setIKTargets)
+        {
             // If a holster target is specified then deactivating the VisibleItem will mean setting the parent transform of the object to that holster target.
             if (HolsterTarget != null && hasItem) {
                 if (active) {
@@ -166,7 +177,7 @@ namespace Opsive.UltimateCharacterController.ThirdPersonController.Items
             }
 
             // When the item activates or deactivates it should specify the IK target of the non-dominant hand (if any).
-            if (m_CharacterIK != null) {
+            if (m_CharacterIK != null && setIKTargets) {
                 m_CharacterIK.SetItemIKTargets(active ? m_ObjectTransform : null, m_ParentBone, active ? NonDominantHandIKTarget : null, active ? NonDominantHandIKTargetHint : null);
             }
         }
@@ -261,14 +272,15 @@ namespace Opsive.UltimateCharacterController.ThirdPersonController.Items
             m_ObjectTransform.localPosition = m_StartLocalPosition;
             m_ObjectTransform.localRotation = m_StartLocalRotation;
             m_ObjectTransform.localScale = m_LocalSpawnScale;
-            
-            // Call set active to make sure that the IK or holster are positioned correctly.
-            var active = m_CharacterItem.IsItemActiveInInventory();
-            var hasItem = m_CharacterItem.HasItemInInventory();
-            
+            m_ParentBone = m_StartParentTransform.parent; // Represents the bone that the item is equipped to.
             m_CharacterItem.SetPerspectiveAnimatorMonitors(this);
-            
-            SetActive(active, hasItem);
+
+            // Call set active to make sure that the IK or holster are positioned correctly.
+            var hasItem = m_CharacterItem.HasItemInInventory();
+            if (hasItem) {
+                var active = m_CharacterItem.IsItemActiveInInventory();
+                SetActive(active, hasItem, active);
+            }
         }
 
         /// <summary>

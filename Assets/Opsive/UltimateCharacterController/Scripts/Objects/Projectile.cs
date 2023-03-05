@@ -22,7 +22,6 @@ namespace Opsive.UltimateCharacterController.Objects
         
         private ScheduledEventBase m_ScheduledDeactivation;
 
-
         /// <summary>
         /// Initializes the object with the specified velocity and torque.
         /// </summary>
@@ -30,17 +29,17 @@ namespace Opsive.UltimateCharacterController.Objects
         /// <param name="torque">The starting torque.</param>
         /// <param name="owner">The object that instantiated the trajectory object.</param>
         /// <param name="ownerSource">The owner damage source in case it is nested.</param>
-        /// <param name="originatorCollisionCheck">Should a collision check against the originator be performed?</param>
-        /// <param name="defaultNormalizedGravity">The normalized gravity direction if a character isn't specified for the originator.</param>
-        public override void Initialize(Vector3 velocity, Vector3 torque, GameObject owner, IDamageSource ownerSource, bool originatorCollisionCheck, Vector3 defaultNormalizedGravity)
+        /// <param name="ownerCollisionCheck">Should a collision check against the owner be performed?</param>
+        /// <param name="defaultNormalizedGravity">The normalized gravity direction if a character isn't specified for the owner.</param>
+        public override void Initialize(Vector3 velocity, Vector3 torque, GameObject owner, IDamageSource ownerSource, bool ownerCollisionCheck, Vector3 defaultNormalizedGravity)
         {
             // The projectile can deactivate after it comes in contact with another object or after a specified amount of time. Do the scheduling here to allow
             // it to activate after a set amount of time.
             if (m_Lifespan > 0) {
-                m_ScheduledDeactivation = SchedulerBase.Schedule(m_Lifespan, Deactivate);
+                m_ScheduledDeactivation = Scheduler.Schedule(m_Lifespan, Deactivate);
             }
 
-            base.Initialize(velocity, torque, owner, ownerSource, originatorCollisionCheck, defaultNormalizedGravity);
+            base.Initialize(velocity, torque, owner, ownerSource, ownerCollisionCheck, defaultNormalizedGravity);
         }
 
         /// <summary>
@@ -49,7 +48,7 @@ namespace Opsive.UltimateCharacterController.Objects
         private void Deactivate()
         {
             if (m_ScheduledDeactivation != null) {
-                SchedulerBase.Cancel(m_ScheduledDeactivation);
+                Scheduler.Cancel(m_ScheduledDeactivation);
                 m_ScheduledDeactivation = null;
             }
             OnCollision(null);
@@ -62,7 +61,7 @@ namespace Opsive.UltimateCharacterController.Objects
         protected override void OnCollision(RaycastHit? hit)
         {
             if (m_ScheduledDeactivation != null) {
-                SchedulerBase.Cancel(m_ScheduledDeactivation);
+                Scheduler.Cancel(m_ScheduledDeactivation);
                 m_ScheduledDeactivation = null;
             }
             base.OnCollision(hit);
@@ -76,7 +75,7 @@ namespace Opsive.UltimateCharacterController.Objects
             base.OnDisable();
 
             if (m_ScheduledDeactivation != null) {
-                SchedulerBase.Cancel(m_ScheduledDeactivation);
+                Scheduler.Cancel(m_ScheduledDeactivation);
                 m_ScheduledDeactivation = null;
             }
         }

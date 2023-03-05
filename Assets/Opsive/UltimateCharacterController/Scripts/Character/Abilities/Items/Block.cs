@@ -174,7 +174,7 @@ namespace Opsive.UltimateCharacterController.Character.Abilities.Items
             StartAbility();
 
             if (!shieldAction.ImpactCompleteEvent.WaitForAnimationEvent) {
-                m_BlockEvents[slotID] = SchedulerBase.ScheduleFixed(shieldAction.ImpactCompleteEvent.Duration, ImpactComplete, slotID);
+                m_BlockEvents[slotID] = Scheduler.ScheduleFixed(shieldAction.ImpactCompleteEvent.Duration, ImpactComplete, slotID);
             }
             UpdateItemAbilityAnimatorParameters();
         }
@@ -244,7 +244,7 @@ namespace Opsive.UltimateCharacterController.Character.Abilities.Items
                     m_Shields[i].StopBlockImpact();
                     m_Shields[i] = null;
                     if (m_BlockEvents[i] != null) {
-                        SchedulerBase.Cancel(m_BlockEvents[i]);
+                        Scheduler.Cancel(m_BlockEvents[i]);
                         m_BlockEvents[i] = null;
                     }
                 }

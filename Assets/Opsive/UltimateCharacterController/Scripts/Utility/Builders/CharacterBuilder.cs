@@ -571,7 +571,7 @@ namespace Opsive.UltimateCharacterController.Utility.Builders
             var firstPersonObjects = character.GetComponentInChildren<FirstPersonController.Character.FirstPersonObjects>();
             if (firstPersonObjects == null) {
                 var firstPersonObjectsGameObject = new GameObject("FirstPersonObjects");
-                firstPersonObjectsGameObject.transform.parent = character.transform;
+                firstPersonObjectsGameObject.transform.SetParentOrigin(character.transform);
                 firstPersonObjectsGameObject.AddComponent<FirstPersonController.Character.FirstPersonObjects>();
             }
         }
@@ -608,7 +608,7 @@ namespace Opsive.UltimateCharacterController.Utility.Builders
 
             if (character.GetComponentInChildren<Items.ItemPlacement>() == null) {
                 var items = new GameObject("Items");
-                items.transform.parent = character.transform;
+                items.transform.SetParentOrigin(character.transform);
                 items.AddComponent<Items.ItemPlacement>();
             }
 

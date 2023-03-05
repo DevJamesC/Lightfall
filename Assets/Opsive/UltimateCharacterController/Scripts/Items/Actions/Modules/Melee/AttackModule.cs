@@ -128,11 +128,11 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Melee
         public override bool IsActiveAttacking => m_ActiveAttacking;
 
         /// <summary>
-        /// Register to events while the item is equipped and the module is enabled.
+        /// Updates the registered events when the item is equipped and the module is enabled.
         /// </summary>
-        protected override void RegisterEventsWhileEquippedAndEnabledInternal(bool register)
+        protected override void UpdateRegisteredEventsInternal(bool register)
         {
-            base.RegisterEventsWhileEquippedAndEnabledInternal(register);
+            base.UpdateRegisteredEventsInternal(register);
 
             m_ActiveAttackStartEventTrigger.RegisterUnregisterEvent(register, Character, "OnAnimatorActiveAttackStart", SlotID, HandleActiveAttackStartAnimationEvent);
             m_ActiveAttackCompleteEventTrigger.RegisterUnregisterEvent(register, Character, "OnAnimatorMeleeAttackComplete", SlotID, HandleActiveAttackCompleteAnimationEvent);
@@ -325,11 +325,11 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Melee
         public override bool IsActiveAttacking => m_ActiveAttacking;
 
         /// <summary>
-        /// Register to events while the item is equipped and the module is enabled.
+        /// Updates the registered events when the item is equipped and the module is enabled.
         /// </summary>
-        protected override void RegisterEventsWhileEquippedAndEnabledInternal(bool register)
+        protected override void UpdateRegisteredEventsInternal(bool register)
         {
-            base.RegisterEventsWhileEquippedAndEnabledInternal(register);
+            base.UpdateRegisteredEventsInternal(register);
 
             m_AttackIndex = -1;
 

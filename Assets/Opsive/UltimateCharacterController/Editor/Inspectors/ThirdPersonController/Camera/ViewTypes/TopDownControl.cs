@@ -43,9 +43,10 @@ namespace Opsive.UltimateCharacterController.Editor.Controls.Types.ViewTypeDrawe
             var cameraRotationContainer = new VisualElement();
             FieldInspectorView.AddField(unityObject, target, "m_AllowDynamicCameraRotation", container, (object obj) => {
                 onChangeEvent(obj);
-                cameraRotationContainer.style.display = (bool)obj ? DisplayStyle.Flex : DisplayStyle.None;
+                cameraRotationContainer.style.display = (obj as TopDown).AllowDynamicCameraRotation ? DisplayStyle.Flex : DisplayStyle.None;
                 }, onValidateChange);
             container.Add(cameraRotationContainer);
+            cameraRotationContainer.AddToClassList("indent");
             cameraRotationContainer.style.display = InspectorUtility.GetFieldValue<bool>(target, "m_AllowDynamicCameraRotation") ? DisplayStyle.Flex : DisplayStyle.None;
             FieldInspectorView.AddField(unityObject, target, "m_DesiredAngle", cameraRotationContainer, onChangeEvent, onValidateChange);
             FieldInspectorView.AddField(unityObject, target, "m_ChangeAngleSpeed", cameraRotationContainer, onChangeEvent, onValidateChange);
@@ -54,26 +55,28 @@ namespace Opsive.UltimateCharacterController.Editor.Controls.Types.ViewTypeDrawe
             var dynamicPitchContainer = new VisualElement();
             FieldInspectorView.AddField(unityObject, target, "m_AllowDynamicPitchAdjustment", container, (object obj) => {
                 onChangeEvent(obj);
-                dynamicPitchContainer.style.display = (bool)obj ? DisplayStyle.Flex : DisplayStyle.None;
+                dynamicPitchContainer.style.display = (obj as TopDown).AllowDynamicPitchAdjustment ? DisplayStyle.Flex : DisplayStyle.None;
             }, onValidateChange);
             container.Add(dynamicPitchContainer);
+            dynamicPitchContainer.AddToClassList("indent");
             dynamicPitchContainer.style.display = InspectorUtility.GetFieldValue<bool>(target, "m_AllowDynamicPitchAdjustment") ? DisplayStyle.Flex : DisplayStyle.None;
-            FieldInspectorView.AddField(unityObject, target, "m_DesiredPitch", cameraRotationContainer, onChangeEvent, onValidateChange);
-            FieldInspectorView.AddField(unityObject, target, "m_ChangePitchSpeed", cameraRotationContainer, onChangeEvent, onValidateChange);
-            FieldInspectorView.AddField(unityObject, target, "m_UseIndependentPitchTransition", cameraRotationContainer, onChangeEvent, onValidateChange);
-            FieldInspectorView.AddField(unityObject, target, "m_PitchTransitionCurve", cameraRotationContainer, onChangeEvent, onValidateChange);
+            FieldInspectorView.AddField(unityObject, target, "m_DesiredPitch", dynamicPitchContainer, onChangeEvent, onValidateChange);
+            FieldInspectorView.AddField(unityObject, target, "m_ChangePitchSpeed", dynamicPitchContainer, onChangeEvent, onValidateChange);
+            FieldInspectorView.AddField(unityObject, target, "m_UseIndependentPitchTransition", dynamicPitchContainer, onChangeEvent, onValidateChange);
+            FieldInspectorView.AddField(unityObject, target, "m_PitchTransitionCurve", dynamicPitchContainer, onChangeEvent, onValidateChange);
 
             var dynamicDistanceContainer = new VisualElement();
             FieldInspectorView.AddField(unityObject, target, "m_AllowDynamicDistanceAdjustment", container, (object obj) => {
                 onChangeEvent(obj);
-                dynamicDistanceContainer.style.display = (bool)obj ? DisplayStyle.Flex : DisplayStyle.None;
+                dynamicDistanceContainer.style.display = (obj as TopDown).AllowDynamicDistanceAdjustment ? DisplayStyle.Flex : DisplayStyle.None;
             }, onValidateChange);
             container.Add(dynamicDistanceContainer);
+            dynamicDistanceContainer.AddToClassList("indent");
             dynamicDistanceContainer.style.display = InspectorUtility.GetFieldValue<bool>(target, "m_AllowDynamicDistanceAdjustment") ? DisplayStyle.Flex : DisplayStyle.None;
-            FieldInspectorView.AddField(unityObject, target, "m_DesiredDistance", cameraRotationContainer, onChangeEvent, onValidateChange);
-            FieldInspectorView.AddField(unityObject, target, "m_ChangeDistanceSpeed", cameraRotationContainer, onChangeEvent, onValidateChange);
-            FieldInspectorView.AddField(unityObject, target, "m_UseIndependentDistanceTransition", cameraRotationContainer, onChangeEvent, onValidateChange);
-            FieldInspectorView.AddField(unityObject, target, "m_DistanceTransitionCurve", cameraRotationContainer, onChangeEvent, onValidateChange);
+            FieldInspectorView.AddField(unityObject, target, "m_DesiredDistance", dynamicDistanceContainer, onChangeEvent, onValidateChange);
+            FieldInspectorView.AddField(unityObject, target, "m_ChangeDistanceSpeed", dynamicDistanceContainer, onChangeEvent, onValidateChange);
+            FieldInspectorView.AddField(unityObject, target, "m_UseIndependentDistanceTransition", dynamicDistanceContainer, onChangeEvent, onValidateChange);
+            FieldInspectorView.AddField(unityObject, target, "m_DistanceTransitionCurve", dynamicDistanceContainer, onChangeEvent, onValidateChange);
 
             var foldout = new Foldout();
             foldout.text = "Secondary Spring";

@@ -304,7 +304,9 @@ namespace Opsive.UltimateCharacterController.Editor.Managers
             base.Refresh();
 
             m_ManagerContentContainer.Clear();
+            var selectedIndex = m_ReorderableList.SelectedIndex;
             BuildVisualElements();
+            m_ReorderableList.SelectedIndex = selectedIndex;
         }
 
         /// <summary>

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   icon: {fileID: 0}
   title: Frag Grenade
-  description: Frag grenade
+  description: Throw a Frag grenade
   possibleUpgrades:
     Upgrade1:
       Icon: {fileID: 0}

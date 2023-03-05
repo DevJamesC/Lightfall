@@ -7,7 +7,6 @@
 namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
 {
     using Opsive.Shared.Game;
-    using Opsive.Shared.Inventory;
     using Opsive.UltimateCharacterController.Character;
     using Opsive.UltimateCharacterController.Character.Abilities.Items;
     using Opsive.UltimateCharacterController.Game;
@@ -23,18 +22,24 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
     /// </summary>
     public class ShootableProjectileData
     {
-        public ShootableProjectileModule ProjectileModule;
-        public ShootableAmmoData AmmoData;
-        public GameObject SpawnedProjectileGO;
-        public bool WasPrespawnedProjectile;
+        private ShootableProjectileModule m_ProjectileModule;
+        private ShootableAmmoData m_AmmoData;
+        private GameObject m_ProjectilePrefab;
+        private GameObject m_SpawnedProjectile;
+        private bool m_WasPrespawnedProjectile;
+
+        public ShootableProjectileModule ProjectileModule { get => m_ProjectileModule; set => m_ProjectileModule = value; }
+        public ShootableAmmoData AmmoData { get => m_AmmoData; set => m_AmmoData = value; }
+        public GameObject ProjectilePrefab { get => m_ProjectilePrefab; set => m_ProjectilePrefab = value; }
+        public GameObject SpawnedProjectile { get => m_SpawnedProjectile; set => m_SpawnedProjectile = value; }
+        public bool WasPrespawnedProjectile { get => m_WasPrespawnedProjectile; set => m_WasPrespawnedProjectile = value; }
     }
     
     /// <summary>
     /// This module defines what projectile object gets spawned and when.
     /// </summary>
     [Serializable]
-    public abstract class ShootableProjectileModule : ShootableActionModule, 
-        IModuleStartItemReload, IModuleReloadItem, IModuleItemReloadComplete
+    public abstract class ShootableProjectileModule : ShootableActionModule, IModuleReloadItem, IModuleItemReloadComplete
     {
         public override bool IsActiveOnlyIfFirstEnabled => true;
         
@@ -46,8 +51,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
         /// <param name="fireDirection">The fire direction.</param>
         /// <param name="index">The projectile index.</param>
         /// <returns>The preview of the shootable projectile data to fire next.</returns>
-        public abstract ShootableProjectileData GetPreviewProjectileData(ShootableUseDataStream dataStream, Vector3 firePoint,
-            Vector3 fireDirection, int index);
+        public abstract ShootableProjectileData GetPreviewProjectileData(ShootableUseDataStream dataStream, Vector3 firePoint, Vector3 fireDirection, int index);
         
         /// <summary>
         /// Get the projectile data to fire next.
@@ -61,11 +65,6 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
         /// <returns>The shootable projectile data to fire next.</returns>
         public abstract ShootableProjectileData GetProjectileDataToFire(ShootableUseDataStream dataStream, Vector3 firePoint,
             Vector3 fireDirection, ShootableAmmoData ammoData, bool remove, bool destroy);
-
-        /// <summary>
-        /// Starts to reload the item.
-        /// </summary>
-        public abstract void StartItemReload();
 
         /// <summary>
         /// Reloads the item.
@@ -116,8 +115,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
         /// <param name="fireDirection">The fire direction.</param>
         /// <param name="index">The projectile index.</param>
         /// <returns>The preview of the shootable projectile data to fire next.</returns>
-        public override ShootableProjectileData GetPreviewProjectileData(ShootableUseDataStream dataStream, Vector3 firePoint,
-            Vector3 fireDirection, int index)
+        public override ShootableProjectileData GetPreviewProjectileData(ShootableUseDataStream dataStream, Vector3 firePoint, Vector3 fireDirection, int index)
         {
             m_ShootableProjectileData.WasPrespawnedProjectile = false;
             m_ShootableProjectileData.AmmoData = ShootableAction.GetAmmoDataInClip(0);
@@ -143,11 +141,6 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
 
             return m_ShootableProjectileData;
         }
-
-        /// <summary>
-        /// Starts to reload the item.
-        /// </summary>
-        public override void StartItemReload() { }
 
         /// <summary>
         /// Reloads the item.
@@ -220,8 +213,8 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
             {
                 m_ProjectileStartLayer = value;
                 if (m_SpawnedProjectile != null) {
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
-                    if (m_NetworkInfo != null && !m_NetworkInfo.IsLocalPlayer()) {
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+                    if (NetworkInfo != null && !NetworkInfo.IsLocalPlayer()) {
                         return;
                     }
 #endif
@@ -254,30 +247,25 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
         {
             m_ShootableProjectileData = new ShootableProjectileData();
             m_ShootableProjectileData.ProjectileModule = this;
-            m_ShootableProjectileData.SpawnedProjectileGO = m_SpawnedProjectile;
+            m_ShootableProjectileData.SpawnedProjectile = m_SpawnedProjectile;
         }
 
         /// <summary>
-        /// Register to events while the item is equipped and the module is enabled.
+        /// Updates the registered events when the item is equipped and the module is enabled.
         /// </summary>
-        protected override void RegisterEventsWhileEquippedAndEnabledInternal(bool register) {
-            base.RegisterEventsWhileEquippedAndEnabledInternal(register);
+        protected override void UpdateRegisteredEventsInternal(bool register)
+        {
+            base.UpdateRegisteredEventsInternal(register);
             
-            var eventTarget = Character;
-            
-            m_StartVisibleProjectileEvent.RegisterUnregisterAnimationEvent(
-                register,eventTarget, "OnAnimatorStartVisibleProjectile", OnStartVisibleProjectile);
-            m_ReloadShowProjectileEvent.RegisterUnregisterAnimationEvent(
-                register,eventTarget, "OnAnimatorItemReloadShowProjectile", OnShowReloadProjectile);
-            m_ReloadAttachProjectileEvent.RegisterUnregisterAnimationEvent(
-                register,eventTarget,"OnAnimatorItemReloadAttachProjectile", OnAttachReloadProjectile);
-            
-            
+            m_StartVisibleProjectileEvent.RegisterUnregisterAnimationEvent(register, Character, "OnAnimatorStartVisibleProjectile", OnStartVisibleProjectile);
+            m_ReloadShowProjectileEvent.RegisterUnregisterAnimationEvent(register, Character, "OnAnimatorItemReloadShowProjectile", OnShowReloadProjectile);
+            m_ReloadAttachProjectileEvent.RegisterUnregisterAnimationEvent(register, Character, "OnAnimatorItemReloadAttachProjectile", OnAttachReloadProjectile);
+
             Shared.Events.EventHandler.RegisterUnregisterEvent(register, Character, "OnStartReload", StartItemReload);
         }
 
         /// <summary>
-        /// The item was Equipped.
+        /// The item was equipped.
         /// </summary>
         public override void Equip()
         {
@@ -287,7 +275,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
         }
 
         /// <summary>
-        /// The item will start Unequipping.
+        /// The item will start unequipping.
         /// </summary>
         public override void StartUnequip()
         {
@@ -299,7 +287,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
         }
 
         /// <summary>
-        /// The Item was Unequipped.
+        /// The item was unequipped.
         /// </summary>
         public override void Unequip()
         {
@@ -362,20 +350,16 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
         /// <param name="fireDirection">The fire direction.</param>
         /// <param name="index">The projectile index.</param>
         /// <returns>The preview of the shootable projectile data to fire next.</returns>
-        public override ShootableProjectileData GetPreviewProjectileData(ShootableUseDataStream dataStream, Vector3 firePoint,
-            Vector3 fireDirection, int index)
+        public override ShootableProjectileData GetPreviewProjectileData(ShootableUseDataStream dataStream, Vector3 firePoint, Vector3 fireDirection, int index)
         {
-            //Index is the projectile index within the clip, index 0 is the next projectile to fire
-            //If remove is set to true remove the projectile ammo from the clip
-
+            // Index is the projectile index within the clip, index 0 is the next projectile to fire.
+            // If remove is set to true remove the projectile ammo from the clip.
             var ammoData = ShootableAction.GetAmmoDataInClip(index);
-
             var projectileData = GetProjectileDataToFire(dataStream, firePoint, fireDirection, ammoData);
             projectileData.AmmoData = ammoData;
 
             return m_ShootableProjectileData;
         }
-
 
         /// <summary>
         /// Get the projectile data to fire next.
@@ -388,11 +372,10 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
         /// <param name="destroy">Destroy the projectile?</param>
         /// <returns>The shootable projectile data to fire next.</returns>
         public override ShootableProjectileData GetProjectileDataToFire(ShootableUseDataStream dataStream, Vector3 firePoint,
-            Vector3 fireDirection, ShootableAmmoData ammoData, bool remove, bool destroy)
+                                                                        Vector3 fireDirection, ShootableAmmoData ammoData, bool remove, bool destroy)
         {
-            //Index is the projectile index within the clip, index 0 is the next projectile to fire
-            //If remove is set to true remove the projectile ammo from the clip
-
+            // Index is the projectile index within the clip, index 0 is the next projectile to fire.
+            // If remove is set to true remove the projectile ammo from the clip.
             var projectileData = GetProjectileDataToFire(dataStream, firePoint, fireDirection, ammoData);
             projectileData.AmmoData = ammoData;
 
@@ -407,7 +390,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
         /// <summary>
         /// Starts to reload the item.
         /// </summary>
-        public override void StartItemReload()
+        private void StartItemReload()
         {
             // The projectile may become visible when the item is reloaded.
             if (m_ProjectileVisibility == ProjectileVisiblityType.OnReload || m_ProjectileVisibility == ProjectileVisiblityType.Always) {
@@ -488,7 +471,6 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
                         m_SpawnedProjectile.transform.SetParentOrigin(firePointLocation);
                         m_SpawnedProjectile.transform.SetLayerRecursively(firePointLocation.gameObject.layer);
                     }
-                    
                 } else if (m_ShowReloadProjectile == ShowProjectileStatus.FirePointLocation) {
                     var firePointLocation = ShootableAction.ShooterModuleGroup.FirstEnabledModule.GetFirePointLocation();
                     m_SpawnedProjectile.transform.parent = firePointLocation;
@@ -500,11 +482,18 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
                     m_SpawnedProjectile.transform.SetParentOrigin(reloadProjectileAttachment);
                     m_SpawnedProjectile.transform.SetLayerRecursively(reloadProjectileAttachment.gameObject.layer);
                 }
-                
+                var spawnedProjectileParticles = m_SpawnedProjectile.GetComponentInChildren<ParticleSystem>();
+                if (spawnedProjectileParticles != null) {
+                    spawnedProjectileParticles.Stop(true);
+                }
+                var projectile = m_SpawnedProjectile.GetComponent<ProjectileBase>();
+                if (projectile) {
+                    projectile.enabled = false;
+                }
+
                 m_ProjectileLayer = m_SpawnedProjectile.layer;
                 EventHandler.ExecuteEvent(Character, "OnShootableWeaponShowProjectile", m_SpawnedProjectile, true);
             } else if (m_SpawnedProjectile != null) {
-                
                 m_ProjectileLayer = m_SpawnedProjectile.layer;
                 EventHandler.ExecuteEvent(Character, "OnShootableWeaponShowProjectile", m_SpawnedProjectile, false);
                 
@@ -521,13 +510,12 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
         /// <param name="fireDirection">The fire direction.</param>
         /// <param name="ammoData">The ammo data of the projectile.</param>
         /// <returns>The shootable projectile data to fire.</returns>
-        protected ShootableProjectileData GetProjectileDataToFire(ShootableUseDataStream dataStream, Vector3 firePoint,
-            Vector3 fireDirection, ShootableAmmoData ammoData)
+        protected ShootableProjectileData GetProjectileDataToFire(ShootableUseDataStream dataStream, Vector3 firePoint, Vector3 fireDirection, ShootableAmmoData ammoData)
         {
             var rotation = Quaternion.LookRotation(fireDirection);
 
-            if (ammoData.Valid == false) {
-                m_ShootableProjectileData.SpawnedProjectileGO = null;
+            if (!ammoData.Valid) {
+                m_ShootableProjectileData.SpawnedProjectile = null;
                 m_ShootableProjectileData.AmmoData = ammoData;
 
                 if (m_SpawnedProjectile != null) {
@@ -536,12 +524,16 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
                 
                 return m_ShootableProjectileData;
             }
-            
+
+            if (m_Projectile == null) {
+                Debug.LogError("Error: The projectile is empty on the Projectile Module.", CharacterItemAction);
+                return m_ShootableProjectileData;
+            }
+
             // The projectile will already be spawned if it is always visible.
             if (m_SpawnedProjectile == null) {
                 m_ShootableProjectileData.WasPrespawnedProjectile = false;
-                m_SpawnedProjectile =
-                    ObjectPoolBase.Instantiate(m_Projectile, firePoint, rotation * m_Projectile.transform.rotation);
+                m_SpawnedProjectile = ObjectPoolBase.Instantiate(m_Projectile, firePoint, rotation * m_Projectile.transform.rotation);
                 m_SpawnedProjectile.transform.SetLayerRecursively(m_ProjectileLayer);
             } else {
                 m_ShootableProjectileData.WasPrespawnedProjectile = true;
@@ -553,7 +545,8 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
                 projectile.InitializeProjectileProperties();
             }
 
-            m_ShootableProjectileData.SpawnedProjectileGO = m_SpawnedProjectile;
+            m_ShootableProjectileData.ProjectilePrefab = m_Projectile;
+            m_ShootableProjectileData.SpawnedProjectile = m_SpawnedProjectile;
             m_ShootableProjectileData.AmmoData = ammoData;
 
             return m_ShootableProjectileData;
@@ -566,7 +559,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
         /// <returns>The projectile to remove.</returns>
         public ShootableProjectileData RemoveProjectileToFire(bool destroyProjectile)
         {
-            m_ShootableProjectileData.SpawnedProjectileGO = m_SpawnedProjectile;
+            m_ShootableProjectileData.SpawnedProjectile = m_SpawnedProjectile;
 
             if (destroyProjectile) {
                 if (ObjectPool.IsPooledObject(m_SpawnedProjectile)) {

@@ -55,18 +55,13 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Magic.CastEff
         protected override void DoCastInternal(MagicUseDataStream useDataStream)
         {
             m_DrawGizmos = true;
-            Transform origin = useDataStream.CastData.CastOrigin;
-            Vector3 direction = useDataStream.CastData.Direction;
-            Vector3 targetPosition = useDataStream.CastData.CastTargetPosition;
+
             m_CastID = (uint)useDataStream.CastData.CastID;
+            m_Direction = useDataStream.CastData.Direction.normalized;
+            m_Origin = useDataStream.CastData.CastTargetPosition - m_Direction.normalized * 0.1f;
+            m_Distance = m_Direction.magnitude + 0.1f;
 
-            var detectLayers = useDataStream.CastData.DetectLayers;
-
-            m_Origin = targetPosition - direction.normalized * 0.1f;
-            m_Direction = direction.normalized;
-            m_Distance = direction.magnitude + 0.1f;
-
-            if (Physics.Raycast(m_Origin,m_Direction, out var hit, m_Distance, detectLayers)) {
+            if (Physics.Raycast(m_Origin,m_Direction, out var hit, m_Distance, useDataStream.CastData.DetectLayers)) {
                 MagicAction.PerformImpact(m_CastID, GameObject, hit.transform.gameObject, hit);
             }
         }

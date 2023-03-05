@@ -10,7 +10,7 @@ namespace Opsive.UltimateCharacterController.Objects.CharacterAssist
     using Opsive.Shared.Events;
     using Opsive.Shared.Game;
     using Opsive.UltimateCharacterController.Game;
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
     using Opsive.UltimateCharacterController.Networking.Game;
 #endif
     using UnityEngine;
@@ -105,12 +105,12 @@ namespace Opsive.UltimateCharacterController.Objects.CharacterAssist
                     // the event should be scheduled immediately.
                     if (m_Rigidbody != null) {
                         if (m_TriggerEnableEvent != null) {
-                            SchedulerBase.Cancel(m_TriggerEnableEvent);
+                            Scheduler.Cancel(m_TriggerEnableEvent);
                             m_TriggerEnableEvent = null;
                         }
-                        SchedulerBase.Schedule(0.2f, CheckVelocity);
+                        Scheduler.Schedule(0.2f, CheckVelocity);
                     } else {
-                        m_TriggerEnableEvent = SchedulerBase.Schedule(m_TriggerEnableDelay, EnableTrigger);
+                        m_TriggerEnableEvent = Scheduler.Schedule(m_TriggerEnableDelay, EnableTrigger);
                     }
                 } else {
                     // If the object isn't initialized yet then this is the first time the object has spawned.
@@ -126,11 +126,11 @@ namespace Opsive.UltimateCharacterController.Objects.CharacterAssist
         private void CheckVelocity()
         {
             if (m_Rigidbody.velocity.sqrMagnitude < 0.01f) {
-                m_TriggerEnableEvent = SchedulerBase.Schedule(m_TriggerEnableDelay, EnableTrigger);
+                m_TriggerEnableEvent = Scheduler.Schedule(m_TriggerEnableDelay, EnableTrigger);
                 return;
             }
             // The Rigidbody hasn't settled yet - check the velocity again in the future.
-            SchedulerBase.Schedule(0.2f, CheckVelocity);
+            Scheduler.Schedule(0.2f, CheckVelocity);
         }
 
         /// <summary>
@@ -201,7 +201,7 @@ namespace Opsive.UltimateCharacterController.Objects.CharacterAssist
             }
 
             if (ObjectPoolBase.InstantiatedWithPool(m_GameObject)) {
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
                 if (NetworkObjectPool.IsNetworkActive()) {
                     NetworkObjectPool.Destroy(m_GameObject);
                     return;

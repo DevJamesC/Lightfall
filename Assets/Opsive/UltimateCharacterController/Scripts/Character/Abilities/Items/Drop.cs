@@ -202,7 +202,7 @@ namespace Opsive.UltimateCharacterController.Character.Abilities.Items
             }
             for (int i = 0; i < m_Items.Length; ++i) {
                 if (m_Items[i] != null) {
-                    var droppedItem = m_Inventory.RemoveItemIdentifier(m_Items[i].ItemIdentifier, m_Items[i].SlotID, 1, true);
+                    var (amount, droppedItem) = m_Inventory.RemoveItemIdentifierAmount(m_Items[i].ItemIdentifier, m_Items[i].SlotID, 1, true, true);
                     if (droppedItem != null) {
                         m_DroppedItems.Add(droppedItem);
                     }
@@ -225,7 +225,7 @@ namespace Opsive.UltimateCharacterController.Character.Abilities.Items
             }
 
             // Once the item has been unequipped it can be removed from the inventory. This will trigger the drop.
-            m_Inventory.RemoveItemIdentifier(m_Items[slotID].ItemIdentifier, m_Items[slotID].SlotID, 1, true);
+            m_Inventory.RemoveItemIdentifierAmount(m_Items[slotID].ItemIdentifier, m_Items[slotID].SlotID, 1, true, true);
             m_Items[slotID] = null;
 
             // The ability can be stopped as soon as all items are removed.

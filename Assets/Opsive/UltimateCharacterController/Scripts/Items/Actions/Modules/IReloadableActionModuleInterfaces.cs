@@ -6,6 +6,8 @@
 
 namespace Opsive.UltimateCharacterController.Items.Actions.Modules
 {
+    using Opsive.Shared.Inventory;
+
     /// <summary>
     /// Interface for modules that can reload.
     /// </summary>
@@ -87,8 +89,9 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
         /// <summary>
         /// Should the item be reloaded? An IReloadableItem reference will be returned if the item can be reloaded.
         /// </summary>
+        /// <param name="ammoItemIdentifier">The ItemIdentifier that is being reloaded.</param>
         /// <param name="fromPickup">Is the item being reloaded from a pickup?</param>
         /// <returns>A reference to the IReloadableItem if the item can be reloaded. Null if the item cannot be reloaded.</returns>
-        public bool ShouldReload(bool fromPickup);
+        public bool ShouldReload(IItemIdentifier ammoItemIdentifier, bool fromPickup);
     }
 }

@@ -32,7 +32,7 @@ namespace Opsive.UltimateCharacterController.Utility
                 m_WaitForAnimationEvent = value;
                 // Schedule the event again in case wait for animation event changes.
                 if (m_IsWaiting && m_ScheduledEvent == null && !m_WaitForAnimationEvent) {
-                    m_ScheduledEvent = SchedulerBase.ScheduleFixed(m_Duration, InvokeScheduledEvent);
+                    m_ScheduledEvent = Scheduler.ScheduleFixed(m_Duration, InvokeScheduledEvent);
                 }
             }
         }
@@ -134,10 +134,10 @@ namespace Opsive.UltimateCharacterController.Utility
 
             m_IsWaiting = true;
             if (m_ScheduledEvent != null) {
-                SchedulerBase.Cancel(m_ScheduledEvent);
+                Scheduler.Cancel(m_ScheduledEvent);
                 m_ScheduledEvent = null;
             }
-            m_ScheduledEvent = SchedulerBase.ScheduleFixed(m_Duration, InvokeScheduledEvent);
+            m_ScheduledEvent = Scheduler.ScheduleFixed(m_Duration, InvokeScheduledEvent);
 
             return m_ScheduledEvent;
         }
@@ -178,7 +178,7 @@ namespace Opsive.UltimateCharacterController.Utility
             m_IsWaiting = false;
             var scheduledEvent = m_ScheduledEvent;
             if (m_ScheduledEvent != null) {
-                SchedulerBase.Cancel(m_ScheduledEvent);
+                Scheduler.Cancel(m_ScheduledEvent);
                 m_ScheduledEvent = null;
             }
 

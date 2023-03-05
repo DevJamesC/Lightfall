@@ -66,8 +66,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions
             if (itemAction is MagicAction MagicCharacterItemAction) {
                 m_MagicAction = MagicCharacterItemAction;
             } else {
-                Debug.LogError(
-                    $"The Module Type {GetType()} does not match the character item action type {itemAction?.GetType()} ");
+                Debug.LogError($"The Module Type {GetType()} does not match the character item action type {itemAction?.GetType()}.");
             }
 
             base.Initialize(itemAction);
@@ -90,13 +89,13 @@ namespace Opsive.UltimateCharacterController.Items.Actions
             End         // The magic item is in the End phase which happens after finishing casting.
         }
 
-        //Editor Icons
+        // Editor Icons
         public const string CasterIconGuid = "30db3c82fdb5e484198ede32bd0ddbb9";
         public const string StartIconGuid = "bad628101ee5c9943abd3c7698cc1bb4";
         public const string StopIconGuid = "e67c115206aa31c4a9a8679e9c84426a";
         public const string CastEffectIconGuid = "6879a65286b100b4690b3be311a6a06f";
 
-        //Info keys for debugging.
+        // Info keys for debugging.
         public const string InfoKey_CastState  = "Magic/CastState";
         public const string InfoKey_CastData  = "Magic/CastData";
         public const string InfoKey_ActionsCasted  = "Magic/ActionsCasted";
@@ -125,7 +124,6 @@ namespace Opsive.UltimateCharacterController.Items.Actions
         [SerializeField] protected UnityItemBoolBoolEvent m_OnStartStopBeginEndActionsEvent;
         [Tooltip("Unity event invoked when the magic item casts its actions.")]
         [SerializeField] protected UnityItemEvent m_OnCastEvent;
-
         
         protected MagicUseDataStream m_MagicUseDataStream;
         public MagicUseDataStream MagicUseDataStream
@@ -145,8 +143,8 @@ namespace Opsive.UltimateCharacterController.Items.Actions
 
         public ActionModuleGroup<MagicStartStopModule> BeginModuleGroup { get => m_BeginModuleGroup; set => m_BeginModuleGroup = value; }
         public ActionModuleGroup<MagicCasterModule> CasterModuleGroup { get => m_CasterModuleGroup; set => m_CasterModuleGroup = value; }
-        public ActionModuleGroup<MagicImpactModule> ImpactModuleGroup { get => m_ImpactModuleGroup; set => m_ImpactModuleGroup = value; }
         public ActionModuleGroup<MagicCastEffectModule> CastEffectsModuleGroup { get => m_CastEffectsModuleGroup; set => m_CastEffectsModuleGroup = value; }
+        public ActionModuleGroup<MagicImpactModule> ImpactModuleGroup { get => m_ImpactModuleGroup; set => m_ImpactModuleGroup = value; }
         public ActionModuleGroup<MagicStartStopModule> EndModuleGroup { get => m_EndModuleGroup; set => m_EndModuleGroup = value; }
         public ActionModuleGroup<MagicExtraModule> ExtraModuleGroup { get => m_ExtraModuleGroup; set => m_ExtraModuleGroup = value; }
 
@@ -261,13 +259,13 @@ namespace Opsive.UltimateCharacterController.Items.Actions
             DebugLogger.SetInfo(InfoKey_CastState, "Trigger Cast");
             DebugLogger.Log("Trigger Cast");
 
-            //The item has started to be used.
+            // The item has started to be used.
             TriggeredUseItemAction();
             
             // Set the trigger data first in case it is used by the Begin stop actions.
             m_MagicUseDataStream.TriggerData = triggerData;
 
-            // The Shooter will take care of removing the Mana when getting the projectile data.
+            // The shooter will take care of removing the mana when getting the projectile data.
             // It will also call OnCast when it has done firing.
             MainMagicCaster.Cast(m_MagicUseDataStream);
 
@@ -307,7 +305,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions
                         enabledActionModules[i].Update(m_MagicUseDataStream);
                     }
                 }
-            }else if (m_CastState == CastState.Casting) {
+            } else if (m_CastState == CastState.Casting) {
                 MainMagicCaster.CastUpdate();
             }
         }
@@ -343,16 +341,21 @@ namespace Opsive.UltimateCharacterController.Items.Actions
         public override void ItemUseComplete()
         {
             base.ItemUseComplete();
-            var castEffectModules = m_CastEffectsModuleGroup.EnabledModules;
-            
-            for (int i = 0; i < castEffectModules.Count; ++i) {
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
-                if (m_NetworkInfo != null && m_NetworkInfo.IsLocalPlayer()) {
-                    m_NetworkCharacter.StopMagicCast(this, i, m_CastActions[i].CastID);
-                }
+
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+            int invokedBitmask = 0;
 #endif
-                castEffectModules[i].StopCast();
+            for (int i = 0; i < m_CastEffectsModuleGroup.EnabledModules.Count; ++i) {
+                m_CastEffectsModuleGroup.EnabledModules[i].StopCast();
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+                invokedBitmask |= 1 << m_CastEffectsModuleGroup.EnabledModules[i].ID;
+#endif
             }
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+            if (m_NetworkInfo != null && m_NetworkInfo.IsLocalPlayer()) {
+                m_NetworkCharacter.InvokeMagicCastEffectsModules(this, m_CastEffectsModuleGroup, invokedBitmask, Networking.Character.INetworkCharacter.CastEffectState.End, m_MagicUseDataStream);
+            }
+#endif
         }
 
         /// <summary>
@@ -459,28 +462,30 @@ namespace Opsive.UltimateCharacterController.Items.Actions
         /// <param name="impactCallbackContext">The impact callback.</param>
         public virtual void OnCastImpact(ImpactCallbackContext impactCallbackContext)
         {
-            if (!IsValidCollisionObject(impactCallbackContext.ImpactCollisionData.TargetGameObject)) {
+            if (!IsValidCollisionObject(impactCallbackContext.ImpactCollisionData.ImpactGameObject)) {
                 return;
             }
             
             if (IsDebugging) {
                 DebugLogger.SetInfo(InfoKey_ImpactData, impactCallbackContext?.ToString());
             }
-            
+
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+            int invokedBitmask = 0;
+#endif
             for (int i = 0; i < m_ImpactModuleGroup.EnabledModules.Count; i++) {
-                var impactModule = m_ImpactModuleGroup.EnabledModules[i];
-                impactModule.OnImpact(impactCallbackContext);
+                m_ImpactModuleGroup.EnabledModules[i].OnImpact(impactCallbackContext);
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+                invokedBitmask |= 1 << m_ImpactModuleGroup.EnabledModules[i].ID;
+#endif
             }
-            
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
-            // For SpawnProjectiles, it is important to check if m_NetworkInfo.IsServer() to handle collisions only there.
-            // Otherwise impacts may not be spawned for one/many of the players depending which MagicProjectile instace triggers the collision.
-            if (m_NetworkInfo != null && m_NetworkInfo.IsServer()) {
-                m_NetworkCharacter.MagicImpact(this, castID, source, target, hit.point, hit.normal);
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+            if (m_NetworkInfo != null && m_NetworkInfo.IsLocalPlayer()) {
+                m_NetworkCharacter.InvokeMagicImpactModules(this, m_ImpactModuleGroup, invokedBitmask, impactCallbackContext);
             }
 #endif
         }
-        
+
         /// <summary>
         /// Stops the item use.
         /// </summary>
@@ -525,12 +530,6 @@ namespace Opsive.UltimateCharacterController.Items.Actions
         /// <param name="networkEvent">Should the event be sent over the network?</param>
         public virtual void StartStopBeginEndActions(bool beginActions, bool start, bool networkEvent)
         {
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
-            if (networkEvent && m_NetworkInfo != null && m_NetworkInfo.IsLocalPlayer()) {
-                m_NetworkCharacter.StartStopBeginEndMagicActions(this, beginActions, start);
-            }
-#endif
-
             // On start preview the cast data since it does not exist yet.
             if (start) {
                 m_MagicUseDataStream.CastData = GetCastPreviewData();
@@ -538,14 +537,24 @@ namespace Opsive.UltimateCharacterController.Items.Actions
 
             var actionModuleGroup = beginActions ? m_BeginModuleGroup : m_EndModuleGroup;
             if (actionModuleGroup != null) {
-                var enabledActionModules = actionModuleGroup.EnabledModules;
-                for (int i = 0; i < enabledActionModules.Count; ++i) {
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+                int invokedBitmask = 0;
+#endif
+                for (int i = 0; i < actionModuleGroup.EnabledModules.Count; ++i) {
                     if (start) {
-                        enabledActionModules[i].Start(m_MagicUseDataStream);
+                        actionModuleGroup.EnabledModules[i].Start(m_MagicUseDataStream);
                     } else {
-                        enabledActionModules[i].Stop(m_MagicUseDataStream);
+                        actionModuleGroup.EnabledModules[i].Stop(m_MagicUseDataStream);
                     }
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+                    invokedBitmask |= 1 << actionModuleGroup.EnabledModules[i].ID;
+#endif
                 }
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+                if (m_NetworkInfo != null && m_NetworkInfo.IsLocalPlayer()) {
+                    m_NetworkCharacter.InvokeMagicBeginEndModules(this, actionModuleGroup, invokedBitmask, start, m_MagicUseDataStream);
+                }
+#endif
             }
 
             // Notify those interested that the actions have been started or stopped.

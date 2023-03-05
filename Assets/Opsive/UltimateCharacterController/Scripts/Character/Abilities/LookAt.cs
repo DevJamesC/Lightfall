@@ -36,7 +36,13 @@ namespace Opsive.UltimateCharacterController.Character.Abilities
         {
             base.Awake();
 
-            m_CharacterIK = m_GameObject.GetCachedComponent<CharacterIKBase>();
+            var modelManager = m_GameObject.GetCachedComponent<ModelManager>();
+            if (modelManager == null) {
+                m_CharacterIK = m_GameObject.GetComponentInChildren<CharacterIKBase>();
+            } else {
+                m_CharacterIK = modelManager.ActiveModel.GetCachedComponent<CharacterIKBase>();
+            }
+
             if (m_Origin == null) {
                 var animator = m_GameObject.GetCachedComponent<Animator>();
                 if (animator != null) {
@@ -102,6 +108,17 @@ namespace Opsive.UltimateCharacterController.Character.Abilities
             }
 
             m_CharacterIK.SetLookAtPosition(closestObject != null, targetPosition);
+        }
+
+        /// <summary>
+        /// The character's model has switched.
+        /// </summary>
+        /// <param name="activeModel">The active character model.</param>
+        protected override void OnSwitchModels(GameObject activeModel)
+        {
+            base.OnSwitchModels(activeModel);
+
+            m_CharacterIK = activeModel.GetCachedComponent<CharacterIKBase>();
         }
 
         /// <summary>

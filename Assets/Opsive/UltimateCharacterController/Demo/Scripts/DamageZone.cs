@@ -60,7 +60,7 @@ namespace Opsive.UltimateCharacterController.Demo
 
             m_Health = health;
             m_HealthTransform = health.transform;
-            m_ScheduledDamageEvent = SchedulerBase.Schedule(m_InitialDamageDelay, Damage);
+            m_ScheduledDamageEvent = Scheduler.Schedule(m_InitialDamageDelay, Damage);
         }
 
         /// <summary>
@@ -72,7 +72,7 @@ namespace Opsive.UltimateCharacterController.Demo
 
             // Apply the damage again if the object still has health remaining.
             if (m_Health.Value > 0) {
-                m_ScheduledDamageEvent = SchedulerBase.Schedule(m_DamageInterval, Damage);
+                m_ScheduledDamageEvent = Scheduler.Schedule(m_DamageInterval, Damage);
             }
         }
 
@@ -90,7 +90,7 @@ namespace Opsive.UltimateCharacterController.Demo
             var health = other.GetComponentInParent<Health>();
             if (health == m_Health) {
                 // The object has left the trigger - stop applying damage.
-                SchedulerBase.Cancel(m_ScheduledDamageEvent);
+                Scheduler.Cancel(m_ScheduledDamageEvent);
                 m_Health = null;
             }
         }
@@ -116,7 +116,7 @@ namespace Opsive.UltimateCharacterController.Demo
         private void OnDisable()
         {
             if (m_ScheduledDamageEvent != null) {
-                SchedulerBase.Cancel(m_ScheduledDamageEvent);
+                Scheduler.Cancel(m_ScheduledDamageEvent);
                 m_ScheduledDamageEvent = null;
             }
         }

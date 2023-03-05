@@ -32,7 +32,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Effect
         protected CharacterItemAction m_CharacterItemAction;
 
         protected Action m_CachedInvokeInternalAction;
-        protected ScheduledEventBase m_ScheduledEvent;
+        protected ScheduledEventBase m_DelayScheduledEvent;
 
         /// <summary>
         /// Initializes the ImpactAction.
@@ -87,7 +87,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Effect
                 if (m_CachedInvokeInternalAction == null) {
                     m_CachedInvokeInternalAction = InvokeEffectInternal;
                 }
-                m_ScheduledEvent = Scheduler.Schedule(m_Delay, m_CachedInvokeInternalAction);
+                m_DelayScheduledEvent = Scheduler.Schedule(m_Delay, m_CachedInvokeInternalAction);
             }
         }
 
@@ -96,7 +96,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Effect
         /// </summary>
         protected virtual void InvokeEffectInternal()
         {
-            m_ScheduledEvent = null;
+            m_DelayScheduledEvent = null;
         }
 
         /// <summary>
@@ -104,8 +104,8 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Effect
         /// </summary>
         public virtual void OnDestroy()
         {
-            if (m_ScheduledEvent != null) {
-                Scheduler.Cancel(m_ScheduledEvent);
+            if (m_DelayScheduledEvent != null) {
+                Scheduler.Cancel(m_DelayScheduledEvent);
             }
         }
 
@@ -171,7 +171,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Effect
             for (int i = 0; i < m_Effects.Length; i++) {
                 if (m_Effects[i] == null) { continue; }
 
-                if (m_Effects[i].CanInvokeEffect() == false) {
+                if (!m_Effects[i].CanInvokeEffect()) {
                     return false;
                 }
             }
@@ -186,7 +186,6 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Effect
         {
             for (int i = 0; i < m_Effects.Length; i++) {
                 if (m_Effects[i] == null) { continue; }
-
                 m_Effects[i].TryInvokeEffect();
             }
         }

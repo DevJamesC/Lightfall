@@ -85,15 +85,12 @@ namespace Opsive.UltimateCharacterController.Items.Actions
             get => m_UsableActionModuleGroup;
             set => m_UsableActionModuleGroup = value;
         }
-
         public ActionModuleGroup<TriggerModule> TriggerActionModuleGroup
         {
             get => m_TriggerActionModuleGroup;
             set => m_TriggerActionModuleGroup = value;
         }
-
         public TriggerModule MainTriggerModule => TriggerActionModuleGroup.FirstEnabledModule;
-
         public ILookSource LookSource => m_LookSource;
 
         protected Use m_UseItemAbility;
@@ -260,7 +257,8 @@ namespace Opsive.UltimateCharacterController.Items.Actions
         public void OnAim(bool aim, bool inputStart)
         {
             DebugLogger.SetInfo(InfoKey_IsAiming, aim.ToString());
-            
+
+            m_Aiming = aim;
             InvokeOnModulesWithType(aim, inputStart, (IModuleOnAim module, bool i1, bool i2)=> module.OnAim(i1,i2));
         }
 
@@ -449,7 +447,6 @@ namespace Opsive.UltimateCharacterController.Items.Actions
             }
 
             m_InUse = true;
-
             m_UseCompleted = false;
 
             if (ForceRootMotionPosition) {
@@ -468,8 +465,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions
             ResetCanStopEvent();
             
             if (IsItemInUse()) {
-                InvokeOnModulesWithType(useAbility,
-                    (IModuleStartItemUse module, Use i1) => module.StartItemUse(i1));
+                InvokeOnModulesWithType(useAbility, (IModuleStartItemUse module, Use i1) => module.StartItemUse(i1));
             }
 
             EventHandler.ExecuteEvent<IUsableItem, bool>(m_Character, "OnItemStartUse", this, true);
@@ -568,8 +564,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions
         /// <returns>Returns true if the item is waiting to be used.</returns>
         public virtual bool IsItemUsePending()
         {
-            var (modulesUsePending, moduleThatStopped) = InvokeOnModulesWithTypeConditional(
-                (IModuleIsItemUsePending module) => module.IsItemUsePending(), true);
+            var (modulesUsePending, moduleThatStopped) = InvokeOnModulesWithTypeConditional((IModuleIsItemUsePending module) => module.IsItemUsePending(), true);
 
             if (modulesUsePending) {
                 if (IsDebugging) {
@@ -599,13 +594,11 @@ namespace Opsive.UltimateCharacterController.Items.Actions
             InvokeOnModulesWithType(m_UseItemSubstateIndexStreamData,
                 (IModuleGetUseItemSubstateIndex module, ItemSubstateIndexStreamData i1) => module.GetUseItemSubstateIndex(i1));
 
-            int substateIndex = m_UseItemSubstateIndexStreamData.SubstateIndex;
-            
+            var substateIndex = m_UseItemSubstateIndexStreamData.SubstateIndex;
             if (m_UseItemSubstateIndexStreamData.Priority > -1) {
                 if (IsDebugging) {
-
                     var dataList = m_UseItemSubstateIndexStreamData.SubstateIndexModuleDataList;
-                    var message = $"{substateIndex} thanks to modules:";
+                    var message = $"{substateIndex} from modules:";
 
                     for (int i = 0; i < dataList.Count; i++) {
                         message += "\n\t"+dataList[i];
@@ -620,7 +613,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions
             substateIndex = -1;
             
             if (IsDebugging) {
-                DebugLogger.SetInfo(InfoKey_UseItemSubstateIndex, $"{substateIndex} thanks to no modules with substate index");
+                DebugLogger.SetInfo(InfoKey_UseItemSubstateIndex, $"{substateIndex} due to no modules with a substate index");
             }
 
             return substateIndex;
@@ -640,10 +633,10 @@ namespace Opsive.UltimateCharacterController.Items.Actions
         }
 
         /// <summary>
-        /// Checks if the Item should start being used or be used.
+        /// Checks if the item should start being used or be used.
         /// </summary>
-        /// <param name="useItemAbility">The use Item Ability.</param>
-        /// <returns>Return False if the item is is trying to stop.</returns>
+        /// <param name="useItemAbility">The use item ability.</param>
+        /// <returns>Return false if the item is is trying to stop.</returns>
         private bool UseItemUpdateInternal(Use useItemAbility)
         {
             var useInputIsTryingToStop = useItemAbility.IsUseInputTryingToStop();
@@ -661,7 +654,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions
                 return false;
             }
 
-            // Try to see if the Item Can be used
+            // The item may not be able to be used.
             if (CanUseItem()) {
                 UseItem();
                 EventHandler.ExecuteEvent<IUsableItem>(m_Character, "OnUseAbilityUsedItem", this);
@@ -674,17 +667,10 @@ namespace Opsive.UltimateCharacterController.Items.Actions
                 // A custom use animation should be played.
                 UpdateItemAbilityAnimatorParameters();
             }
-
-            if (useInputIsTryingToStop) {
-                //The input is trying to stop the item, but the item cannot be stopped yet.
-                //Even though the item cannot be stopped, it shouldn't start again.
-                return true;
-            }
             
             if (CanStartUseItem(useItemAbility, UseAbilityState.Update)) {
-                
-                //In some cases the item can start without having finished complete. (Example Melee combo)
-                //In that case complete early and wait for the next frame.
+                // In some cases the item can start without having finished complete (such as the melee combo).
+                // In that case complete early and wait for the next frame.
                 if (m_UseCompleteEvent.IsWaiting) {
                     ItemUseComplete();
                     return true;
@@ -737,12 +723,12 @@ namespace Opsive.UltimateCharacterController.Items.Actions
             m_UseCompleted = true;
 
             if (m_StopUseAbilityOnCompleteDelay < 0) {
-                // Don't schedule stop ability
+                // Don't schedule stop ability.
             } else if (m_StopUseAbilityOnCompleteDelay == 0) {
                 SetCanStopAbility(true);
             } else {
                 ResetCanStopEvent();
-                m_CanStopEvent = SchedulerBase.ScheduleFixed(m_StopUseAbilityOnCompleteDelay, SetCanStopAbility, true);
+                m_CanStopEvent = Scheduler.ScheduleFixed(m_StopUseAbilityOnCompleteDelay, SetCanStopAbility, true);
             }
             
             InvokeOnModulesWithType<IModuleItemUseComplete>(module => module.ItemUseComplete());
@@ -762,7 +748,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions
             var stop = m_UseItemAbility.StopType == Ability.AbilityStopType.Manual && m_UseItemAbility.AIAgent;
             SetCanStopAbility(stop);
             if (m_CanStopEvent != null) {
-                SchedulerBase.Cancel(m_CanStopEvent);
+                Scheduler.Cancel(m_CanStopEvent);
                 m_CanStopEvent = null;
             }
         }
@@ -824,7 +810,6 @@ namespace Opsive.UltimateCharacterController.Items.Actions
 
                 return false;
             }
-            
             
             DebugLogger.SetInfo(InfoKey_CanStopItemUse, "(Yes)");
             return true;

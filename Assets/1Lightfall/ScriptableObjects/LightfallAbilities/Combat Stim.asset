@@ -1,0 +1,259 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 34ae144dffdfcff4f8ac98ef54423866, type: 3}
+  m_Name: Combat Stim
+  m_EditorClassIdentifier: 
+  icon: {fileID: 0}
+  title: Combat Stim
+  description: Use an automatic hypodermic syringe to administer a small dose of
+    stimulant formula.
+  possibleUpgrades:
+    Upgrade1:
+      Icon: {fileID: 0}
+      Title: Recharge
+      Description: +25% recharge
+      Effects:
+      - rid: 4699784487517290496
+    Upgrade2:
+      Icon: {fileID: 0}
+      Title: Duration
+      Description: +30% Duration
+      Effects:
+      - rid: 4699784487517290497
+    Upgrade3a:
+      Icon: {fileID: 0}
+      Title: Damage Reduction
+      Description: +40% Damage Reduction
+      Effects:
+      - rid: 4699784487517290498
+    Upgrade3b:
+      Icon: {fileID: 0}
+      Title: Damage
+      Description: +25% Damage
+      Effects:
+      - rid: 4699784487517290499
+    Upgrade4a:
+      Icon: {fileID: 0}
+      Title: Duration
+      Description: +40% Duration
+      Effects:
+      - rid: 4699784487517290500
+    Upgrade4b:
+      Icon: {fileID: 0}
+      Title: Rush
+      Description: +30% movement speed
+      Effects:
+      - rid: 4699784487517290501
+    Upgrade5a:
+      Icon: {fileID: 0}
+      Title: Shield
+      Description: +100% max shield
+      Effects:
+      - rid: 4699784487517290502
+    Upgrade5b:
+      Icon: {fileID: 0}
+      Title: Power Use
+      Description: '+25% Ability Damage
+
+        Can Use 1 Power while Combat Stim
+        is active'
+      Effects:
+      - rid: 4699784487517290503
+      - rid: 4699784487517290504
+  abilityType: 0
+  timeToUse: 0
+  onActivateFX:
+  - rid: 4699784470509125632
+  abilityConditions:
+  - rid: 4699784425979772932
+  abilityEffects:
+  - rid: 4699784425979772935
+  - rid: 4699784425979772933
+  references:
+    version: 2
+    RefIds:
+    - rid: 4699784425979772932
+      type: {class: RechargeCondition, ns: MBS.AbilitySystem, asm: Assembly-CSharp}
+      data:
+        subclassName: MBS.AbilitySystem.RechargeCondition
+    - rid: 4699784425979772933
+      type: {class: HasRechargeAbilityEffect, ns: MBS.AbilitySystem, asm: Assembly-CSharp}
+      data:
+        subclassName: MBS.AbilitySystem.HasRechargeAbilityEffect
+        crowdControlType: 0
+        recharge: 10
+    - rid: 4699784425979772935
+      type: {class: ChangeStatsAbilityEffect, ns: MBS.AbilitySystem, asm: Assembly-CSharp}
+      data:
+        subclassName: MBS.AbilitySystem.ChangeStatsAbilityEffect
+        crowdControlType: 0
+        onOffAbilityEffect: 0
+        duration: 4
+        statsToChange:
+        - StatName: 12
+          value: 50
+          flatValueChange: 0
+          divideFlatValueBy100: 0
+        - StatName: 13
+          value: 50
+          flatValueChange: 0
+          divideFlatValueBy100: 0
+        - StatName: 19
+          value: 20
+          flatValueChange: 0
+          divideFlatValueBy100: 0
+        - StatName: 9
+          value: 0
+          flatValueChange: 0
+          divideFlatValueBy100: 0
+        - StatName: 11
+          value: 0
+          flatValueChange: 0
+          divideFlatValueBy100: 0
+        - StatName: 2
+          value: 0
+          flatValueChange: 0
+          divideFlatValueBy100: 0
+    - rid: 4699784470509125632
+      type: {class: SetScreenOverlayFX, ns: MBS.AbilitySystem, asm: Assembly-CSharp}
+      data:
+        overlay:
+          name: Combat Stim
+          m_CanActivate: 1
+          m_FadeIn:
+            serializedVersion: 2
+            m_Curve:
+            - serializedVersion: 3
+              time: 0
+              value: 0.5
+              inSlope: 100
+              outSlope: 100
+              tangentMode: 34
+              weightedMode: 0
+              inWeight: 0
+              outWeight: 0.33333334
+            - serializedVersion: 3
+              time: 0.005
+              value: 1
+              inSlope: 50
+              outSlope: -0.00092774734
+              tangentMode: 1
+              weightedMode: 0
+              inWeight: 0.33333334
+              outWeight: 0.116354205
+            - serializedVersion: 3
+              time: 2
+              value: 0.75
+              inSlope: -0.28520927
+              outSlope: -0.28520927
+              tangentMode: 0
+              weightedMode: 0
+              inWeight: 0.04683814
+              outWeight: 0
+            m_PreInfinity: 2
+            m_PostInfinity: 2
+            m_RotationOrder: 4
+          m_VisiblityDuration: -1
+          m_FadeOut:
+            serializedVersion: 2
+            m_Curve:
+            - serializedVersion: 3
+              time: 0
+              value: 0.75
+              inSlope: -0.75
+              outSlope: -0.75
+              tangentMode: 34
+              weightedMode: 0
+              inWeight: 0
+              outWeight: 0.33333334
+            - serializedVersion: 3
+              time: 1
+              value: 0
+              inSlope: -0.75
+              outSlope: -0.75
+              tangentMode: 34
+              weightedMode: 0
+              inWeight: 0.33333334
+              outWeight: 0
+            m_PreInfinity: 2
+            m_PostInfinity: 2
+            m_RotationOrder: 4
+          m_Color: {r: 0.9811321, g: 0.7641537, b: 0, a: 0.78431374}
+          m_Sprite: {fileID: 21300000, guid: c26da264a9dab85409268be202cf40ca, type: 3}
+    - rid: 4699784487517290496
+      type: {class: StatAbilityUpgrade, ns: MBS.AbilitySystem, asm: Assembly-CSharp}
+      data:
+        statsToChange:
+        - StatName: 8
+          value: 25
+          flatValueChange: 0
+          divideFlatValueBy100: 0
+    - rid: 4699784487517290497
+      type: {class: StatAbilityUpgrade, ns: MBS.AbilitySystem, asm: Assembly-CSharp}
+      data:
+        statsToChange:
+        - StatName: 5
+          value: 30
+          flatValueChange: 0
+          divideFlatValueBy100: 0
+    - rid: 4699784487517290498
+      type: {class: StatAbilityUpgrade, ns: MBS.AbilitySystem, asm: Assembly-CSharp}
+      data:
+        statsToChange:
+        - StatName: 9
+          value: 40
+          flatValueChange: 1
+          divideFlatValueBy100: 1
+    - rid: 4699784487517290499
+      type: {class: StatAbilityUpgrade, ns: MBS.AbilitySystem, asm: Assembly-CSharp}
+      data:
+        statsToChange:
+        - StatName: 12
+          value: 25
+          flatValueChange: 1
+          divideFlatValueBy100: 1
+    - rid: 4699784487517290500
+      type: {class: StatAbilityUpgrade, ns: MBS.AbilitySystem, asm: Assembly-CSharp}
+      data:
+        statsToChange:
+        - StatName: 5
+          value: 40
+          flatValueChange: 0
+          divideFlatValueBy100: 0
+    - rid: 4699784487517290501
+      type: {class: StatAbilityUpgrade, ns: MBS.AbilitySystem, asm: Assembly-CSharp}
+      data:
+        statsToChange:
+        - StatName: 19
+          value: 30
+          flatValueChange: 1
+          divideFlatValueBy100: 1
+    - rid: 4699784487517290502
+      type: {class: StatAbilityUpgrade, ns: MBS.AbilitySystem, asm: Assembly-CSharp}
+      data:
+        statsToChange:
+        - StatName: 11
+          value: 100
+          flatValueChange: 1
+          divideFlatValueBy100: 1
+    - rid: 4699784487517290503
+      type: {class: StatAbilityUpgrade, ns: MBS.AbilitySystem, asm: Assembly-CSharp}
+      data:
+        statsToChange:
+        - StatName: 2
+          value: 25
+          flatValueChange: 1
+          divideFlatValueBy100: 1
+    - rid: 4699784487517290504
+      type: {class: AllowOtherAbilityUseDuringUse, ns: MBS.AbilitySystem, asm: Assembly-CSharp}
+      data:
+        AdditionalAbilityUses: 1

@@ -15,8 +15,8 @@ namespace Opsive.UltimateCharacterController.FirstPersonController.Character
     using Opsive.UltimateCharacterController.Items;
     using Opsive.UltimateCharacterController.Utility;
     using Opsive.UltimateCharacterController.FirstPersonController.Character.Identifiers;
-    using System.Collections.Generic;
     using Opsive.UltimateCharacterController.FirstPersonController.Items;
+    using System.Collections.Generic;
     using UnityEngine;
 
     /// <summary>
@@ -50,8 +50,8 @@ namespace Opsive.UltimateCharacterController.FirstPersonController.Character
             {
                 m_PitchLimit = value;
                 if (Application.isPlaying) {
-                    if (m_LockPitch) { UpdateLockedPitchAngle(); }
                     enabled = IsActive();
+                    if (m_LockPitch) { UpdateLockedPitchAngle(); }
                 }
             }
         }
@@ -61,8 +61,8 @@ namespace Opsive.UltimateCharacterController.FirstPersonController.Character
             {
                 m_LockPitch = value;
                 if (Application.isPlaying) {
-                    if (m_LockPitch) { UpdateLockedPitchAngle(); }
                     enabled = IsActive();
+                    if (m_LockPitch) { UpdateLockedPitchAngle(); }
                 }
             }
         }
@@ -73,8 +73,8 @@ namespace Opsive.UltimateCharacterController.FirstPersonController.Character
             {
                 m_YawLimit = value;
                 if (Application.isPlaying) {
-                    if (m_LockYaw) { UpdateLockedYawAngle(); }
                     enabled = IsActive();
+                    if (m_LockYaw) { UpdateLockedYawAngle(); }
                 }
             }
         }
@@ -172,11 +172,13 @@ namespace Opsive.UltimateCharacterController.FirstPersonController.Character
             EventHandler.RegisterEvent(m_Character, "OnCharacterDestroyed", OnCharacterDestroyed);
 
             enabled = false;
-            
+
             // Some items might have already been added before this component is initialized.
-            var allCharacterItems = inventory.GetAllCharacterItems();
-            for (int i = 0; i < allCharacterItems.Count; i++) {
-                OnAddItem(allCharacterItems[i]);
+            if (inventory != null) {
+                var allCharacterItems = inventory.GetAllCharacterItems();
+                for (int i = 0; i < allCharacterItems.Count; i++) {
+                    OnAddItem(allCharacterItems[i]);
+                }
             }
         }
 
@@ -189,6 +191,15 @@ namespace Opsive.UltimateCharacterController.FirstPersonController.Character
             if (modelManager != null && modelManager.ActiveModel != m_CharacterModel) {
                 m_GameObject.SetActive(false);
             }
+
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+            // Remote players should never see the first person objects.
+            var networkInfo = m_Character.GetComponentInParent<Shared.Networking.INetworkInfo>();
+            if (networkInfo != null && !networkInfo.IsLocalPlayer()) {
+                m_GameObject.SetActive(false);
+                EventHandler.UnregisterEvent<bool>(m_Character, "OnCharacterActivate", OnActivate);
+            }
+#endif
         }
 
         /// <summary>
@@ -200,7 +211,7 @@ namespace Opsive.UltimateCharacterController.FirstPersonController.Character
             m_CameraController = cameraController;
             m_CameraTransform = (m_CameraController != null ? m_CameraController.Transform : null);
             // Delay the parent being set to prevent the transform from changing when the application is shutting down.
-            SchedulerBase.Schedule(0.001f, () => { 
+            Scheduler.Schedule(0.001f, () => { 
                 m_Transform.parent = (m_CameraController != null ? m_CameraTransform : (m_CharacterTransform != null ? m_CharacterTransform.parent : null));
                 m_Transform.localPosition = Vector3.zero;
                 m_Transform.localRotation = Quaternion.identity;
@@ -221,26 +232,15 @@ namespace Opsive.UltimateCharacterController.FirstPersonController.Character
                 m_Transform.localPosition != Vector3.zero);
         }
 
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
-        /// <summary>
-        /// Disables the GameObject if the character is remote.
-        /// </summary>
-        public void Start()
-        {
-            // Remote players should never see the first person objects.
-            var networkInfo = m_Character.GetComponentInParent<Networking.INetworkInfo>();
-            if (networkInfo != null && !networkInfo.IsLocalPlayer()) {
-                m_GameObject.SetActive(false);
-                EventHandler.UnregisterEvent<bool>(m_Character, "OnCharacterActivate", OnActivate);
-            }
-        }
-#endif
-
         /// <summary>
         /// Updates the internal pitch angle while ensuring it is within the pitch limits.
         /// </summary>
         private void UpdateLockedPitchAngle()
         {
+            if (!enabled) {
+                return;
+            }
+
             var localRotation = MathUtility.InverseTransformQuaternion(m_CharacterTransform.rotation, m_CameraTransform.rotation).eulerAngles;
             if (Mathf.Abs(m_PitchLimit.MinValue - m_PitchLimit.MaxValue) < 180) {
                 m_Pitch = MathUtility.ClampAngle(localRotation.x, m_PitchLimit.MinValue, m_PitchLimit.MaxValue);
@@ -254,6 +254,10 @@ namespace Opsive.UltimateCharacterController.FirstPersonController.Character
         /// </summary>
         private void UpdateLockedYawAngle()
         {
+            if (!enabled) {
+                return;
+            }
+
             var localRotation = MathUtility.InverseTransformQuaternion(m_CharacterTransform.rotation, m_CameraTransform.rotation).eulerAngles;
             if (Mathf.Abs(m_YawLimit.MinValue - m_YawLimit.MaxValue) < 360) {
                 m_Yaw = MathUtility.ClampAngle(localRotation.y, m_YawLimit.MinValue, m_YawLimit.MaxValue);

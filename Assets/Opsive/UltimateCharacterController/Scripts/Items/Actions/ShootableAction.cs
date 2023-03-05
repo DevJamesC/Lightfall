@@ -26,8 +26,6 @@ namespace Opsive.UltimateCharacterController.Items.Actions
         public virtual ShootableAction ShootableAction { get => m_ShootableAction; set => m_ShootableAction = value; }
         public virtual TriggerData TriggerData { get => m_TriggerData; set => m_TriggerData = value; }
         public virtual ShootableFireData FireData { get => m_FireData; set => m_FireData = value; }
-        public virtual ShootableProjectileData ShootableProjectileData { get => m_FireData?.ProjectileData; set => m_FireData.ProjectileData = value; }
-        public virtual ShootableAmmoData AmmoData { get => m_FireData?.ProjectileData?.AmmoData ?? ShootableAmmoData.None; set => m_FireData.ProjectileData.AmmoData = value; }
 
         /// <summary>
         /// Initialize the use data stream.
@@ -66,8 +64,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions
             if (itemAction is ShootableAction shootableCharacterItemAction) {
                 m_ShootableAction = shootableCharacterItemAction;
             } else {
-                Debug.LogError(
-                    $"The Module Type {GetType()} does not match the character item action type {itemAction?.GetType()} ");
+                Debug.LogError($"The Module Type {GetType()} does not match the character item action type {itemAction?.GetType()}.");
             }
 
             base.Initialize(itemAction);
@@ -142,8 +139,8 @@ namespace Opsive.UltimateCharacterController.Items.Actions
         public ShootableProjectileModule MainProjectileModule => m_ProjectileModuleGroup.FirstEnabledModule;
         public ShootableReloaderModule MainReloaderModule => m_ReloaderModuleGroup.FirstEnabledModule;
 
-        public int ClipSize { get => m_ClipModuleGroup.FirstEnabledModule.ClipSize; }
-        public virtual int ClipRemainingCount { get => m_ClipModuleGroup.FirstEnabledModule.ClipRemainingCount; }
+        public int ClipSize { get => MainClipModule.ClipSize; }
+        public virtual int ClipRemainingCount { get => m_IsInitialized ? MainClipModule.ClipRemainingCount : 0; }
         public virtual int AmmoRemainingCount { get => MainAmmoModule.GetAmmoRemainingCount(); }
 
         /// <summary>
@@ -264,7 +261,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions
 
             m_ShootableUseDataStream.TriggerData = triggerData;
 
-            // The Shooter will take care of removing the ammo when getting the projectile data.
+            // The shooter will take care of removing the ammo when getting the projectile data.
             // It will also call OnFire when it has done firing.
             m_ShooterModuleGroup.FirstEnabledModule.Fire(m_ShootableUseDataStream);
 
@@ -286,9 +283,20 @@ namespace Opsive.UltimateCharacterController.Items.Actions
                 DebugLogger.SetInfo(InfoKey_FireData, fireData?.ToString());
             }
 
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+            int invokedBitmask = 0;
+#endif
             for (int i = 0; i < m_FireEffectsModuleGroup.EnabledModules.Count; i++) {
                 m_FireEffectsModuleGroup.EnabledModules[i].InvokeEffects(m_ShootableUseDataStream);
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+                invokedBitmask |= 1 << m_FireEffectsModuleGroup.EnabledModules[i].ID;
+#endif
             }
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+            if (invokedBitmask > 0 && m_NetworkInfo != null && m_NetworkInfo.IsLocalPlayer()) {
+                m_NetworkCharacter.InvokeShootableFireEffectModules(this, m_FireEffectsModuleGroup, invokedBitmask, m_ShootableUseDataStream);
+            }
+#endif
         }
 
         /// <summary>
@@ -305,9 +313,20 @@ namespace Opsive.UltimateCharacterController.Items.Actions
                 DebugLogger.SetInfo(InfoKey_FireData, fireData?.ToString());
             }
 
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+            int invokedBitmask = 0;
+#endif
             for (int i = 0; i < m_DryFireEffectsModuleGroup.EnabledModules.Count; i++) {
                 m_DryFireEffectsModuleGroup.EnabledModules[i].InvokeEffects(m_ShootableUseDataStream);
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+                invokedBitmask |= 1 << m_DryFireEffectsModuleGroup.EnabledModules[i].ID;
+#endif
             }
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+            if (m_NetworkInfo != null && m_NetworkInfo.IsLocalPlayer()) {
+                m_NetworkCharacter.InvokeShootableDryFireEffectModules(this, m_DryFireEffectsModuleGroup, invokedBitmask, m_ShootableUseDataStream);
+            }
+#endif
         }
 
         /// <summary>
@@ -320,10 +339,20 @@ namespace Opsive.UltimateCharacterController.Items.Actions
                 DebugLogger.SetInfo(InfoKey_ImpactData, shootableImpactCallbackContext?.ToString());
             }
 
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+            int invokedBitmask = 0;
+#endif
             for (int i = 0; i < m_ImpactModuleGroup.EnabledModules.Count; i++) {
-                var impactModule = m_ImpactModuleGroup.EnabledModules[i];
-                impactModule.OnImpact(shootableImpactCallbackContext);
+                m_ImpactModuleGroup.EnabledModules[i].OnImpact(shootableImpactCallbackContext);
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+                invokedBitmask |= 1 << m_ImpactModuleGroup.EnabledModules[i].ID;
+#endif
             }
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+            if (m_NetworkInfo != null && m_NetworkInfo.IsLocalPlayer()) {
+                m_NetworkCharacter.InvokeShootableImpactModules(this, m_ImpactModuleGroup, invokedBitmask, shootableImpactCallbackContext);
+            }
+#endif
         }
 
         /// <summary>
@@ -347,7 +376,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions
         {
             var module = m_ProjectileModuleGroup.FirstEnabledModule;
             if (module == null) {
-                Debug.LogError("The shootable weapon requires a projectile module, use the BasicProjectile module if unsure which one to use");
+                Debug.LogError("The shootable weapon requires a projectile module. Use the BasicProjectile module if unsure which one to use.");
                 return null;
             }
 
@@ -374,10 +403,9 @@ namespace Opsive.UltimateCharacterController.Items.Actions
         {
             var module = MainProjectileModule;
             if (module == null) {
-                Debug.LogError("The shootable weapon requires a projectile module, use the BasicProjectile module if unsure which one to use");
+                Debug.LogError("The shootable weapon requires a projectile module. Use the BasicProjectile module if unsure which one to use.");
                 return null;
             }
-
 
             var projectileDataToFire = module.GetProjectileDataToFire(dataStream, firePoint, fireDirection, ammoData, remove, destroy);
 
@@ -395,7 +423,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions
         /// <returns>The ammo data at the index specified within the clip.</returns>
         public virtual ShootableAmmoData GetAmmoDataInClip(int index)
         {
-            //Index 0 is the ammo closest to getting fired
+            // Index 0 is the ammo closest to getting fired.
             var clipModule = m_ClipModuleGroup.FirstEnabledModule;
             if (clipModule == null) {
                 Debug.LogError("The Clip Module Group should always have at least one active module.");
@@ -433,8 +461,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions
         public virtual void ReloadClip(bool instantly, bool fullClip)
         {
             if (instantly) {
-                InvokeOnModulesWithType(fullClip,
-                    (IModuleReloadClip module, bool i1) => module.ReloadClip(i1));
+                InvokeOnModulesWithType(fullClip, (IModuleReloadClip module, bool i1) => module.ReloadClip(i1));
             } else {
                 var reloadAbility = CharacterLocomotion.GetItemAbility<Reload>(m_CharacterItem.SlotID, m_ID);
                 CharacterLocomotion.TryStartAbility(reloadAbility);
@@ -442,7 +469,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions
         }
 
         /// <summary>
-        /// Is the shootable action reloading.
+        /// Is the shootable action reloading?
         /// </summary>
         /// <returns>True if it is currently reloading the item.</returns>
         public virtual bool IsReloading()
@@ -451,7 +478,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions
         }
 
         /// <summary>
-        /// Has the shootable action reloaded the clip.
+        /// Has the shootable action reloaded the clip?
         /// </summary>
         /// <returns>True if the item has added the ammo to the clip.</returns>
         public virtual bool HasReloaded()
@@ -462,23 +489,20 @@ namespace Opsive.UltimateCharacterController.Items.Actions
         public virtual IReloadableItemModule ReloadableItemModule => m_ReloaderModuleGroup.FirstEnabledModule;
 
         /// <summary>
-        /// Get the reload item substate index used to animate the item.
+        /// Returns the reload item substate index used to animate the item.
         /// </summary>
         /// <returns>The reload item substate index.</returns>
         public virtual int GetReloadItemSubstateIndex()
         {
             m_ReloadItemSubstateIndexStreamData.Clear();
 
-            InvokeOnModulesWithType(m_ReloadItemSubstateIndexStreamData,
-                (IModuleGetReloadItemSubstateIndex module, ItemSubstateIndexStreamData i1) => module.GetReloadItemSubstateIndex(i1));
+            InvokeOnModulesWithType(m_ReloadItemSubstateIndexStreamData, (IModuleGetReloadItemSubstateIndex module, ItemSubstateIndexStreamData i1) => module.GetReloadItemSubstateIndex(i1));
 
-            int substateIndex = m_ReloadItemSubstateIndexStreamData.SubstateIndex;
-
+            var substateIndex = m_ReloadItemSubstateIndexStreamData.SubstateIndex;
             if (m_ReloadItemSubstateIndexStreamData.Priority > -1) {
                 if (IsDebugging) {
-
                     var dataList = m_ReloadItemSubstateIndexStreamData.SubstateIndexModuleDataList;
-                    var message = $"{substateIndex} thanks to modules:";
+                    var message = $"{substateIndex} from modules:";
 
                     for (int i = 0; i < dataList.Count; i++) {
                         message += "\n\t" + dataList[i];
@@ -493,7 +517,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions
             substateIndex = -1;
 
             if (IsDebugging) {
-                DebugLogger.SetInfo(InfoKey_ReloadItemSubstateIndex, $"{substateIndex} thanks to no modules with substate index");
+                DebugLogger.SetInfo(InfoKey_ReloadItemSubstateIndex, $"{substateIndex} due to no modules with substate index.");
             }
 
             return substateIndex;
@@ -544,8 +568,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions
                 DebugLogger.Log("Reload Item with fullClip " + fullClip);
             }
 
-            InvokeOnModulesWithType(fullClip,
-                (IModuleReloadItem module, bool i1) => module.ReloadItem(i1));
+            InvokeOnModulesWithType(fullClip, (IModuleReloadItem module, bool i1) => module.ReloadItem(i1));
         }
 
         /// <summary>
@@ -563,14 +586,13 @@ namespace Opsive.UltimateCharacterController.Items.Actions
         /// Should the item be reloaded?
         /// </summary>
         /// <param name="characterItem">The character item to check for reload.</param>
-        /// <param name="itemIdentifier">The item identifier that could be the ammo.</param>
+        /// <param name="ammoItemIdentifier">The item identifier that could be the ammo.</param>
         /// <param name="fromPickup">Was the item identifier added from pickup?</param>
         /// <returns>True if the item should reload.</returns>
-        public virtual bool ShouldReload(CharacterItem characterItem, IItemIdentifier itemIdentifier, bool fromPickup)
+        public virtual bool ShouldReload(CharacterItem characterItem, IItemIdentifier ammoItemIdentifier, bool fromPickup)
         {
             var (modulesCanStart, moduleThatStopped) = InvokeOnModulesWithTypeConditional(fromPickup,
-                (IModuleShouldReload module, bool i1) =>
-                    module.ShouldReload(i1), false);
+                (IModuleShouldReload module, bool i1) => module.ShouldReload(ammoItemIdentifier, i1), false);
 
             if (!modulesCanStart) {
                 if (IsDebugging) {

@@ -177,6 +177,16 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Impact
     [Serializable]
     public abstract class ImpactAction : BoundStateObject
     {
+        /// <summary>
+        /// A struct containing a scheduled event and a pooled callback context.
+        /// Used to avoid changing the context when multiple events are scheduled at the same time with different data.
+        /// </summary>
+        public struct ImpactScheduledCallbackData
+        {
+            public ScheduledEventBase Schedule;
+            public ImpactCallbackContext ImpactCallbackContext;
+        }
+        
         [Tooltip("Is the effect enabled?")]
         [SerializeField] protected bool m_Enabled = true;
         [Tooltip("Should the invoke effect after a certain delay.")]
@@ -193,9 +203,9 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Impact
         
         private Dictionary<uint, HashSet<Transform>> m_ImpactedObjectsMap = new Dictionary<uint, HashSet<Transform>>();
         private HashSet<Transform> m_ImpactedObjects;
-        
-        protected Action<ImpactCallbackContext> m_CachedInvokeInternalAction;
-        protected ScheduledEventBase m_ScheduledEvent;
+
+        protected Action<ImpactCallbackContext> m_CachedScheduledEventAction;
+        protected List<ImpactScheduledCallbackData> m_CachedScheduledEventsCallbacks;
 
         /// <summary>
         /// Initializes the ImpactAction.
@@ -205,6 +215,8 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Impact
         public virtual void Initialize(GameObject character, CharacterItemAction characterItemAction)
         {
             m_CharacterItemAction = characterItemAction;
+            m_CachedScheduledEventAction = ScheduledInvoke;
+            m_CachedScheduledEventsCallbacks = new List<ImpactScheduledCallbackData>();
             base.Initialize(character);
             InitializeInternal();
         }
@@ -214,7 +226,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Impact
         /// </summary>
         protected virtual void InitializeInternal()
         {
-            //To be overriden.
+            // To be overriden.
         }
         
         /// <summary>
@@ -233,21 +245,21 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Impact
         /// <param name="forceImpact">Force the impact?</param>
         public virtual void TryInvokeOnImpact(ImpactCallbackContext ctx, bool forceImpact)
         {
-            if (CanInvokeOnImpact(ctx, forceImpact) == false) {
+            if (!CanInvokeOnImpact(ctx, forceImpact)) {
                 return;
             }
             
             var id = ctx.ImpactCollisionData.SourceID;
-            var target = ctx.ImpactCollisionData.TargetGameObject;
+            var target = ctx.ImpactCollisionData.ImpactGameObject;
             
             if (!m_ImpactedObjectsMap.TryGetValue(id, out m_ImpactedObjects)) {
                 m_ImpactedObjects = new HashSet<Transform>();
                 m_ImpactedObjectsMap.Add(id, m_ImpactedObjects);
             }
             
-            // Don't call impact if the object has already been impacted by the same id.
+            // Don't call impact if the object has already been impacted by the same ID.
             if (m_ImpactedObjects.Contains(target.transform)) {
-                if (!m_AllowMultiHits && forceImpact == false) {
+                if (!m_AllowMultiHits && !forceImpact) {
                     return;
                 }
             } else {
@@ -266,10 +278,26 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Impact
             if (m_Delay <= 0) {
                 OnImpactInternal(ctx);
             } else {
-                if (m_CachedInvokeInternalAction == null) {
-                    m_CachedInvokeInternalAction = ScheduledInvoke;
+                if (m_CachedScheduledEventAction == null) {
+                    m_CachedScheduledEventAction = ScheduledInvoke;
                 }
-                m_ScheduledEvent = Scheduler.Schedule(m_Delay, m_CachedInvokeInternalAction, ctx);
+
+                if (m_CachedScheduledEventsCallbacks == null) {
+                    m_CachedScheduledEventsCallbacks = new List<ImpactScheduledCallbackData>();
+                }
+
+                // This is required, because the context could change between the time it was scheduled
+                // and the time it was actually invoked
+                var ctxDuplicate = ctx.GetPooledDuplicate();
+                
+                var schedule = Scheduler.Schedule(m_Delay, m_CachedScheduledEventAction, ctx);
+                
+                // Add the context and schedule in a list such that they can be canceled later if necessary.
+                m_CachedScheduledEventsCallbacks.Add(new ImpactScheduledCallbackData()
+                {
+                    ImpactCallbackContext = ctxDuplicate,
+                    Schedule = schedule
+                });
             }
         }
 
@@ -279,8 +307,22 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Impact
         /// <param name="ctx">Context about the hit.</param>
         protected void ScheduledInvoke(ImpactCallbackContext ctx)
         {
-            m_ScheduledEvent = null;
+            if (m_CachedScheduledEventsCallbacks != null) {
+                for (int i = 0; i < m_CachedScheduledEventsCallbacks.Count; i++) {
+                    if (m_CachedScheduledEventsCallbacks[i].ImpactCallbackContext == ctx) {
+                        // Found match.
+                        m_CachedScheduledEventsCallbacks.RemoveAt(i);
+                        break;
+                    }
+                }
+            }
+            
             OnImpactInternal(ctx);
+            
+            // The context must be returned to the pool.
+            if (ctx != null) {
+                ctx.ReturnToPool();
+            }
         }
 
         /// <summary>
@@ -318,9 +360,23 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Impact
         /// </summary>
         public virtual void OnDestroy()
         {
-            if (m_ScheduledEvent != null) {
-                Scheduler.Cancel(m_ScheduledEvent);
-                m_ScheduledEvent = null;
+            // Cancel all scheduled events.
+            if (m_CachedScheduledEventsCallbacks != null) {
+                for (int i = 0; i < m_CachedScheduledEventsCallbacks.Count; i++) {
+                    
+                    // The scheduled event must be canceled
+                    var scheduledEventBase = m_CachedScheduledEventsCallbacks[i].Schedule;
+                    if (scheduledEventBase != null) {
+                        Scheduler.Cancel(scheduledEventBase);
+                    }
+                    
+                    // The context must be returned to the pool.
+                    var pooledImpactCallback = m_CachedScheduledEventsCallbacks[i].ImpactCallbackContext;
+                    if (pooledImpactCallback != null) {
+                        pooledImpactCallback.ReturnToPool();
+                    }
+                }
+                m_CachedScheduledEventsCallbacks.Clear();
             }
         }
 

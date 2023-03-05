@@ -99,8 +99,6 @@ namespace Opsive.UltimateCharacterController.Character.Abilities.Items
 
             EventHandler.RegisterEvent<ILookSource>(m_GameObject, "OnCharacterAttachLookSource", OnAttachLookSource);
             EventHandler.RegisterEvent<bool>(m_GameObject, "OnEnableGameplayInput", OnEnableGameplayInput);
-            
-            EventHandler.RegisterEvent<IUsableItem>(m_GameObject, "OnItemUse", OnItemUse);
             EventHandler.RegisterEvent<IUsableItem>(m_GameObject, "OnItemUseComplete", OnItemUseComplete);
         }
 
@@ -437,26 +435,6 @@ namespace Opsive.UltimateCharacterController.Character.Abilities.Items
         }
 
         /// <summary>
-        /// An item was used. 
-        /// </summary>
-        /// <param name="usableItem">The item that was used.</param>
-        protected virtual void OnItemUse(IUsableItem usableItem)
-        {
-            for (int i = 0; i < m_UsableItems.Length; i++) {
-                if (m_UsableItems[i] == usableItem) {
-                    UseItem(i);
-                }
-            }
-        }
-
-        /// <summary>
-        /// The ItemUse event has been triggered.
-        /// </summary>
-        /// <param name="slotID">The id of the slot that was used.</param>
-        protected virtual void UseItem(int slotID)
-        { }
-
-        /// <summary>
         /// Updates the ability.
         /// </summary>
         public override void Update()
@@ -672,8 +650,6 @@ namespace Opsive.UltimateCharacterController.Character.Abilities.Items
 
             EventHandler.UnregisterEvent<ILookSource>(m_GameObject, "OnCharacterAttachLookSource", OnAttachLookSource);
             EventHandler.UnregisterEvent<bool>(m_GameObject, "OnEnableGameplayInput", OnEnableGameplayInput);
-            
-            EventHandler.UnregisterEvent<IUsableItem>(m_GameObject, "OnItemUse", OnItemUse);
             EventHandler.UnregisterEvent<IUsableItem>(m_GameObject, "OnItemUseComplete", OnItemUseComplete);
         }
     }

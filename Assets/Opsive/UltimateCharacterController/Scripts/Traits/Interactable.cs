@@ -6,11 +6,11 @@
 
 namespace Opsive.UltimateCharacterController.Traits
 {
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
     using Opsive.Shared.Game;
 #endif
     using Opsive.UltimateCharacterController.Objects.CharacterAssist;
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
     using Opsive.UltimateCharacterController.Networking;
     using Opsive.UltimateCharacterController.Networking.Traits;
 #endif
@@ -31,7 +31,7 @@ namespace Opsive.UltimateCharacterController.Traits
 
         private IInteractableTarget[] m_InteractableTargets;
         private AbilityIKTarget[] m_IKTargets;
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
         private INetworkInteractableMonitor m_NetworkInteractable;
 #endif
 
@@ -56,7 +56,7 @@ namespace Opsive.UltimateCharacterController.Traits
                 }
             }
 
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
             m_NetworkInteractable = gameObject.GetCachedComponent<INetworkInteractableMonitor>();
 #endif
 
@@ -85,12 +85,12 @@ namespace Opsive.UltimateCharacterController.Traits
         /// <param name="character">The character that wants to interactact with the target.</param>
         public virtual void Interact(GameObject character)
         {
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
-            var characterNetworkInfo = character.GetCachedComponent<INetworkInfo>();
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+            var characterNetworkInfo = character.GetCachedComponent<Shared.Networking.INetworkInfo>();
             if (characterNetworkInfo != null && characterNetworkInfo.IsLocalPlayer()) {
 #if UNITY_EDITOR
                 if (m_NetworkInteractable == null) {
-                    Debug.LogError("Error: The object " + gameObject.name + " must have a NetworkInteractable component.");
+                    Debug.LogError($"Error: The object {gameObject.name} must have a NetworkInteractable component.");
                 }
 #endif
                 m_NetworkInteractable.Interact(character);

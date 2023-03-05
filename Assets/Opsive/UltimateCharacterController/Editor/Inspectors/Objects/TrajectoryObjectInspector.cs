@@ -74,14 +74,8 @@ namespace Opsive.UltimateCharacterController.Editor.Inspectors.Objects
             if (target is ProjectileBase) {
                 m_ExcludeFields.Add("m_DisableColliderOnImpact");
                 m_ExcludeFields.Add("m_StickyLayers");
-                m_ExcludeFields.Add("m_InternalImpact");
-                m_ExcludeFields.Add("m_DefaultImpactDamageData");
-                m_ExcludeFields.Add("m_ImpactActionGroup");
                 m_ShowOnCollisionModeCollide.Add(GetPropertyField("m_DisableColliderOnImpact"));
                 m_ShowOnCollisionModeCollide.Add(GetPropertyField("m_StickyLayers"));
-                m_ShowOnCollisionModeCollide.Add(GetPropertyField("m_InternalImpact"));
-                m_ShowOnCollisionModeCollide.Add(GetPropertyField("m_DefaultImpactDamageData"));
-                m_ShowOnCollisionModeCollide.Add(GetPropertyField("m_ImpactActionGroup"));
             }
 
             // Adding the fields is required otherwise they won't be initialized properly.
@@ -91,6 +85,9 @@ namespace Opsive.UltimateCharacterController.Editor.Inspectors.Objects
             for (int i = 0; i < m_ShowOnCollisionModeCollide.Count; i++) {
                 m_ImpactFoldout.Add(m_ShowOnCollisionModeCollide[i]);
             }
+            m_ImpactFoldout.Add(GetPropertyField("m_InternalImpact"));
+            m_ImpactFoldout.Add(GetPropertyField("m_DefaultImpactDamageData"));
+            m_ImpactFoldout.Add(GetPropertyField("m_ImpactActionGroup"));
 
             var audioFoldout = PropertiesFoldout(container, "Audio", m_ExcludeFields, new[]
             {

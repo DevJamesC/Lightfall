@@ -35,7 +35,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
     [Serializable]
     public abstract class ActionModuleGroupBase
     {
-        [Tooltip("The Group ID used to identify the group easily.")]
+        [Tooltip("The ID used is to identify the group easily.")]
         [System.NonSerialized] protected int m_ID = -1;
         
         protected CharacterItemAction m_CharacterItemAction;
@@ -274,10 +274,8 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
         public override IReadOnlyList<ActionModule> EnabledBaseModules => m_EnabledModules;
         public override IReadOnlyList<ActionModule> DisabledBaseModules => m_DisabledModules;
 
-        public T FirstEnabledModule =>
-            m_EnabledModules.Count > 0 ? m_EnabledModules[0] : null;
-        public T FirstDisabledModule =>
-            m_DisabledModules.Count > 0 ? m_DisabledModules[0] : null;
+        public T FirstEnabledModule => m_EnabledModules.Count > 0 ? m_EnabledModules[0] : null;
+        public T FirstDisabledModule => m_DisabledModules.Count > 0 ? m_DisabledModules[0] : null;
         public override ActionModule FirstEnabledBaseModule => FirstEnabledModule;
         public override ActionModule FirstDisabledBaseModule => FirstDisabledModule;
 
@@ -297,13 +295,13 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
 
             m_IsInitialized = true;
 
-            if (m_CharacterItemAction.AllModuleGroups.Contains(this) == false) {
+            if (!m_CharacterItemAction.AllModuleGroups.Contains(this)) {
                 // The ID is set to be unique.
                 m_ID = m_CharacterItemAction.AllModuleGroups.Count;
                 m_CharacterItemAction.AllModuleGroups.Add(this);
                 if (m_CharacterItemAction.ModuleGroupsByID.ContainsKey(m_ID)) {
                     Debug.LogWarning($"Module Groups in '{characterItemAction}' must have unique IDs such that they can be organized in a dictionary.\n" +
-                                     $"{m_ID} clash '{this}' with {m_CharacterItemAction.ModuleGroupsByID[m_ID]}", characterItemAction);
+                                     $"The ID {m_ID} '{this}' conflicts with {m_CharacterItemAction.ModuleGroupsByID[m_ID]}.", characterItemAction);
                 }
 
                 m_CharacterItemAction.ModuleGroupsByID[m_ID] = this;
@@ -367,7 +365,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
         public T GetModuleByID(int id)
         {
             for (int i = 0; i < m_Modules.Count; i++) {
-                if (m_Modules[i].ModuleID == id) {
+                if (m_Modules[i].ID == id) {
                     return m_Modules[i];
                 }
             }
@@ -399,7 +397,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
         public override int IndexOfModule(int moduleID)
         {
             for (int i = 0; i < m_Modules.Count; i++) {
-                if (m_Modules[i].ModuleID == moduleID) {
+                if (m_Modules[i].ID == moduleID) {
                     return i;
                 }
             }

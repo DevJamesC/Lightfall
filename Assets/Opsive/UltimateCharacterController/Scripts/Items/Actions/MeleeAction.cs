@@ -42,9 +42,9 @@ namespace Opsive.UltimateCharacterController.Items.Actions
         /// </summary>
         public virtual void Reset()
         {
-            TriggerData = null;
-            AttackData = null;
-            CollisionData = null;
+            m_TriggerData = null;
+            m_AttackData = null;
+            m_CollisionData = null;
         }
     }
     
@@ -66,7 +66,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions
             if (itemAction is MeleeAction meleeCharacterItemAction) {
                 m_MeleeAction =meleeCharacterItemAction;
             } else {
-                Debug.LogError($"The Module Type {GetType()} does not match the character item action type {itemAction?.GetType()} ");
+                Debug.LogError($"The Module Type {GetType()} does not match the character item action type {itemAction?.GetType()}.");
             }
             
             base.Initialize(itemAction);
@@ -78,7 +78,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions
         /// <param name="meleeUseDataStream">The use data stream.</param>
         public virtual void OnActiveAttackStart(MeleeUseDataStream meleeUseDataStream)
         {
-            //To override.
+            // To override.
         }
 
         /// <summary>
@@ -87,7 +87,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions
         /// <param name="meleeUseDataStream">The use data stream.</param>
         public virtual void OnActiveAttackComplete(MeleeUseDataStream meleeUseDataStream)
         {
-            //To override.
+            // To override.
         }
     }
     
@@ -238,8 +238,12 @@ namespace Opsive.UltimateCharacterController.Items.Actions
             TriggeredUseItemAction();
             
             m_MeleeUseDataStream.TriggerData = triggerData;
-            
             MainMeleeAttackModule.AttackStart(m_MeleeUseDataStream);
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+            if (m_NetworkInfo != null && m_NetworkInfo.IsLocalPlayer()) {
+                m_NetworkCharacter.InvokeMeleeAttackModule(MainMeleeAttackModule, m_MeleeUseDataStream);
+            }
+#endif
 
             // The item can complete its use.
             TriggeredUseItemActionComplete();
@@ -251,7 +255,6 @@ namespace Opsive.UltimateCharacterController.Items.Actions
         /// <param name="attackData">The attack data.</param>
         public virtual void OnActiveAttackStart(MeleeAttackData attackData)
         {
-            
             if (IsDebugging) {
                 DebugLogger.SetInfo(InfoKey_OnHitCount, m_OnHitCountSinceAttackStart.ToString());
                 DebugLogger.SetInfo(InfoKey_CheckCollisionCount, m_CheckCollisionCountSinceAttackStart.ToString());
@@ -310,7 +313,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions
             m_MeleeUseDataStream.CollisionData = collisionData;
 
             var recoilModule = MainMeleeRecoilModule;
-            //If there is no recoil, simply continue.
+            // If there is no recoil, simply continue.
             if (recoilModule == null) { return true;}
 
             // Stop checking collisions and recoil if something solid is hit.
@@ -341,13 +344,22 @@ namespace Opsive.UltimateCharacterController.Items.Actions
                 DebugLogger.SetInfo(InfoKey_ImpactData, impactCallbackContext.ToString());
                 DebugLogger.Log("On Attack impact");
             }
-            
-            for (int i = 0; i < m_ImpactModuleGroup.EnabledModules.Count; i++) {
-                var impactModule = m_ImpactModuleGroup.EnabledModules[i];
-                impactModule.OnImpact(impactCallbackContext);
-            }
-        }
 
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+            int invokedBitmask = 0;
+#endif
+            for (int i = 0; i < m_ImpactModuleGroup.EnabledModules.Count; i++) {
+                m_ImpactModuleGroup.EnabledModules[i].OnImpact(impactCallbackContext);
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+                invokedBitmask |= 1 << m_ImpactModuleGroup.EnabledModules[i].ID;
+#endif
+            }
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+            if (m_NetworkInfo != null && m_NetworkInfo.IsLocalPlayer()) {
+                m_NetworkCharacter.InvokeMeleeImpactModules(this, m_ImpactModuleGroup, invokedBitmask, impactCallbackContext);
+            }
+#endif
+        }
 
         /// <summary>
         /// The item has been used.

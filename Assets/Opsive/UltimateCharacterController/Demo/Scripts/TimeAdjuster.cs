@@ -130,7 +130,7 @@ namespace Opsive.UltimateCharacterController.Demo
                     // Reset the time after the duration.
                     m_Active = false;
                     m_Time = 0;
-                    SchedulerBase.Schedule(m_Duration, UpdateTimeScale, !activate);
+                    Scheduler.Schedule(m_Duration, UpdateTimeScale, !activate);
                 } else {
                     for (int i = 0; i < m_Children.Length; ++i) {
                         m_Children[i].SetActive(true);
@@ -138,7 +138,7 @@ namespace Opsive.UltimateCharacterController.Demo
                 }
             } else {
                 // Keep updating the timescale until the time is 1.
-                SchedulerBase.Schedule(0.05f, UpdateTimeScale, activate);
+                Scheduler.Schedule(0.05f, UpdateTimeScale, activate);
             }
         }
     }

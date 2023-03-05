@@ -12,9 +12,9 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
     using Opsive.UltimateCharacterController.Game;
     using Opsive.UltimateCharacterController.Items.Actions.Impact;
     using Opsive.UltimateCharacterController.Objects;
+    using Opsive.UltimateCharacterController.Traits.Damage;
     using Opsive.UltimateCharacterController.Utility;
     using System;
-    using Opsive.UltimateCharacterController.Traits.Damage;
     using UnityEngine;
     using EventHandler = Opsive.Shared.Events.EventHandler;
 
@@ -60,7 +60,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
         private RaycastHit m_RaycastHit;
         protected ShootableImpactCallbackContext m_ShootableImpactCallbackContext;
 
-        GameObject IProjectileOwner.Originator => Character;
+        GameObject IProjectileOwner.Owner => Character;
         Component IProjectileOwner.SourceComponent => m_CharacterItemAction;
         IDamageSource IProjectileOwner.DamageSource => ShootableAction;
 
@@ -112,20 +112,8 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
         public override ShootableFireData GetFirePreviewData()
         {
             var dataStream = ShootableAction.ShootableUseDataStream;
-            
-            var firePoint = GetFirePoint(dataStream);
-            var fireDirection = GetFireDirection(firePoint, dataStream);
-
-            var projectileData =
-                ShootableAction.GetPreviewProjectileDataToFire(dataStream, firePoint, fireDirection, 0);
-            m_ShootableFireData.FirePoint = firePoint;
-            m_ShootableFireData.FireDirection = fireDirection;
-            m_ShootableFireData.ProjectileData = projectileData;
-            m_ShootableFireData.Velocity = Vector3.zero;
-            m_ShootableFireData.ImpactLayers = m_ImpactLayers;
-            m_ShootableFireData.TrajectoryOffset = Vector3.zero;
-            m_ShootableFireData.FireTransform = GetFirePointLocation();
-            m_ShootableFireData.TracerTransform = null;
+            m_ShootableFireData.FirePoint = GetFirePoint(dataStream);
+            m_ShootableFireData.FireDirection = GetFireDirection(m_ShootableFireData.FirePoint, dataStream);
             
             return m_ShootableFireData;
         }
@@ -189,10 +177,10 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
                 return;
             }
             
-            //Get the preview data to set things up.
+            // Get the preview data to set things up.
             GetFirePreviewData();
             
-            //remove the ammo before it is fired.
+            // Remove the ammo before it is fired.
             ShootableAction.ClipModuleGroup.FirstEnabledModule.AmmoUsed(1, ammoIndex);
             
             // Fire as many projectiles or hitscan bullets as the fire count specifies.
@@ -200,7 +188,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
                 ProjectileFire(dataStream, ammoData);
             }
             
-            //Notify that the shooter fired.
+            // Notify that the shooter fired.
             ShootableAction.OnFire(m_ShootableFireData);
         }
 
@@ -218,44 +206,27 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
         /// </summary>
         protected virtual void ProjectileFire(ShootableUseDataStream dataStream, ShootableAmmoData ammoData)
         {
-            var strength = dataStream.TriggerData.Force;
-            var fireInLookSourceDirection = m_FireInLookSourceDirection || m_UseLookSourcePosition;
-
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
-            // Do not spawn the projectile unless on the server. The server will manage the projectile.
-            if (m_NetworkInfo != null && !m_NetworkInfo.IsServer()) {
-                if (m_SpawnedProjectile != null) {
-                    ObjectPoolBase.Destroy(m_SpawnedProjectile);
-                    m_SpawnedProjectile = null;
-                }
-                return;
-            }
-#endif
-
             var firePoint = GetFirePoint(dataStream);
             var fireDirection = GetFireDirection(firePoint, dataStream);
-            var rotation = Quaternion.LookRotation(fireDirection);
-
             var projectileData = GetProjectileDataToFire(dataStream, firePoint, fireDirection, ammoData);
+
             m_ShootableFireData.FirePoint = firePoint;
             m_ShootableFireData.FireDirection = fireDirection;
-            m_ShootableFireData.ProjectileData = projectileData;
             
-            if (projectileData.AmmoData.Valid == false) {
+            if (!projectileData.AmmoData.Valid) {
                 CharacterItemAction.DebugLogger.Log(this,"No Ammo to fire!");
                 return;
             }
             
-            var spawnedProjectile = projectileData.SpawnedProjectileGO;
-            
+            var spawnedProjectile = projectileData.SpawnedProjectile;
             if (projectileData.WasPrespawnedProjectile) {
                 CharacterItemAction.DebugLogger.Log(this,"Prespawned");
 
                 // The projectile may be on the other side of an object (especially in the case of separate arms for the first person perspective). Perform a linecast
                 // to ensure the projectile doesn't go through any objects.
+                var fireInLookSourceDirection = m_FireInLookSourceDirection || m_UseLookSourcePosition;
                 if (fireInLookSourceDirection && !CharacterLocomotion.ActiveMovementType.UseIndependentLook(false) &&
-                    Physics.Linecast(LookSource.LookPosition(true), spawnedProjectile.transform.position,
-                        out m_RaycastHit, m_ImpactLayers, QueryTriggerInteraction.Ignore)) {
+                    Physics.Linecast(LookSource.LookPosition(true), spawnedProjectile.transform.position, out m_RaycastHit, m_ImpactLayers, QueryTriggerInteraction.Ignore)) {
                     // The cast should not hit the character that it belongs to.
                     var updatePosition = true;
                     var hitGameObject = m_RaycastHit.transform.gameObject;
@@ -265,9 +236,9 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
                     }
 #if FIRST_PERSON_CONTROLLER
                     // The cast should not hit any colliders who are a child of the camera.
-                    if (updatePosition &&
-                        hitGameObject.GetCachedParentComponent<FirstPersonController.Character.FirstPersonObjects>() !=
-                        null) { updatePosition = false; }
+                    if (updatePosition && hitGameObject.GetCachedParentComponent<FirstPersonController.Character.FirstPersonObjects>() != null) { 
+                        updatePosition = false; 
+                    }
 #endif
                     if (updatePosition) { spawnedProjectile.transform.position = m_RaycastHit.point; }
 
@@ -280,20 +251,26 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
             // Optionally change the layer after the object has been fired. This allows the object to change from the first person Overlay layer
             // to the Default layer after it has cleared the first person weapon.
             if (spawnedProjectile.layer != m_ProjectileFiredLayer) {
-                SchedulerBase.ScheduleFixed(m_LayerChangeDelay, ChangeFiredLayer, spawnedProjectile);
+                Scheduler.ScheduleFixed(m_LayerChangeDelay, ChangeFiredLayer, spawnedProjectile);
             }
 
             var projectile = spawnedProjectile.GetCachedComponent<Projectile>();
-            var projectileVelocity = CharacterLocomotion.LocalVelocity + rotation * (m_ProjectileFireVelocityMagnitude * strength * Vector3.forward);
-            
+            var rotation = Quaternion.LookRotation(fireDirection);
+            var projectileVelocity = (CharacterTransform.forward * CharacterLocomotion.LocalVelocity.z) + rotation * (m_ProjectileFireVelocityMagnitude * dataStream.TriggerData.Force * Vector3.forward);
+
             CharacterItemAction.DebugLogger.DrawRay(this, firePoint, fireDirection * 10, Color.red, 1);
             CharacterItemAction.DebugLogger.DrawRay(this, firePoint, projectileVelocity, Color.blue, 1);
             
             projectile.Initialize(0, projectileVelocity, Vector3.zero, this, null);
 
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
-            if (m_NetworkCharacter != null) {
-                NetworkObjectPool.NetworkSpawn(m_Projectile, projectile.gameObject, true);
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+            if (NetworkInfo != null && NetworkInfo.IsLocalPlayer()) {
+                Networking.Game.NetworkObjectPool.NetworkSpawn(projectileData.ProjectilePrefab, projectile.gameObject, true);
+                // The server will manage the projectile.
+                if (!NetworkInfo.IsServer()) {
+                    ObjectPoolBase.Destroy(projectileData.SpawnedProjectile);
+                    projectileData.SpawnedProjectile = null;
+                }
             }
 #endif
             spawnedProjectile = null;

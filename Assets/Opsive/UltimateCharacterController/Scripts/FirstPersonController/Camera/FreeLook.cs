@@ -64,12 +64,12 @@ namespace Opsive.UltimateCharacterController.FirstPersonController.Camera.ViewTy
         /// <param name="baseCharacterRotation">The rotation of the character.</param>
         public override void ChangeViewType(bool activate, float pitch, float yaw, Quaternion baseCharacterRotation)
         {
-            base.ChangeViewType(activate, pitch, yaw, baseCharacterRotation);
             if (activate) {
-                if (Mathf.Abs(m_YawLimit.MinValue - m_YawLimit.MaxValue) < 360) {
-                }
+                baseCharacterRotation = m_CharacterRigidbody.rotation;
+                var localRotation = MathUtility.InverseTransformQuaternion(baseCharacterRotation, m_Transform.rotation);
+                yaw = localRotation.eulerAngles.y;
             }
-
+            base.ChangeViewType(activate, pitch, yaw, baseCharacterRotation);
         }
 
         /// <summary>

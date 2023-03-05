@@ -29,35 +29,19 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Magic.CastEff
         private Effect m_Effect;
 
         /// <summary>
-        /// Awake is called after all of the actions have been initialized.
-        /// </summary>
-        public override void OnAllModulesPreInitialized()
-        {
-            base.OnAllModulesPreInitialized();
-
-            if (!string.IsNullOrEmpty(m_EffectName)) {
-                m_Effect = CharacterLocomotion.GetEffect(Shared.Utility.TypeUtility.GetType(m_EffectName), m_EffectIndex);
-            }
-            if (m_Effect == null) {
-                Debug.LogError($"Error: Unable to find effect {m_EffectName}.");
-            }
-        }
-
-        /// <summary>
         /// Performs the cast.
         /// </summary>
         /// <param name="useDataStream">The use data stream, contains the cast data.</param>
         protected override void DoCastInternal(MagicUseDataStream useDataStream)
         {
-            Transform origin = useDataStream.CastData.CastOrigin;
-            Vector3 direction = useDataStream.CastData.Direction;
-            Vector3 targetPosition = useDataStream.CastData.CastTargetPosition;
-            m_CastID = (uint)useDataStream.CastData.CastID;
-            
+            if (!string.IsNullOrEmpty(m_EffectName)) {
+                m_Effect = CharacterLocomotion.GetEffect(Shared.Utility.TypeUtility.GetType(m_EffectName), m_EffectIndex);
+            }
             if (m_Effect == null) {
                 return;
             }
 
+            m_CastID = (uint)useDataStream.CastData.CastID;
             CharacterLocomotion.TryStartEffect(m_Effect);
         }
 

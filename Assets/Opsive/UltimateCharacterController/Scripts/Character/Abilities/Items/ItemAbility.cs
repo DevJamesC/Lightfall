@@ -6,7 +6,7 @@
 
 namespace Opsive.UltimateCharacterController.Character.Abilities.Items
 {
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
     using Opsive.Shared.Game;
     using Opsive.UltimateCharacterController.Networking.Character;
 #endif
@@ -36,7 +36,8 @@ namespace Opsive.UltimateCharacterController.Character.Abilities.Items
             set { Debug.LogWarning($"ActionID cannot be set to {value}."); }
         }
 
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+        protected Shared.Networking.INetworkInfo m_NetworkInfo;
         protected INetworkCharacter m_NetworkCharacter;
 
         /// <summary>
@@ -46,6 +47,7 @@ namespace Opsive.UltimateCharacterController.Character.Abilities.Items
         {
             base.Awake();
 
+            m_NetworkInfo = m_GameObject.GetCachedComponent<Shared.Networking.INetworkInfo>();
             m_NetworkCharacter = m_GameObject.GetCachedComponent<INetworkCharacter>();
         }
 #endif

@@ -59,6 +59,8 @@ namespace Opsive.UltimateCharacterController.UI
         [Tooltip("Should the crosshairs be disabled when the character dies?")]
         [SerializeField] protected bool m_DisableOnDeath = true;
 
+        public event System.Action<Transform> OnAquiredTarget= delegate { };
+
         public bool AutoAssignAssistAimTarget { get { return m_AutoAssignAssistAimTarget; } set { m_AutoAssignAssistAimTarget = value; } }
         public float CollisionRadius { get { return m_CollisionRadius; } set { m_CollisionRadius = value; } }
         public QueryTriggerInteraction TriggerInteraction { get { return m_TriggerInteraction; } set { m_TriggerInteraction = value; } }
@@ -78,8 +80,6 @@ namespace Opsive.UltimateCharacterController.UI
         public Color DefaultColor { get { return m_DefaultColor; } set { m_DefaultColor = value; } }
         public Color TargetColor { get { return m_TargetColor; } set { m_TargetColor = value; } }
         public bool DisableOnDeath { get { return m_DisableOnDeath; } set { m_DisableOnDeath = value; } }
-
-        public event System.Action<Transform> OnAquiredTarget = delegate { };
 
         [System.NonSerialized] private GameObject m_GameObject;
         private UnityEngine.Camera m_Camera;
@@ -513,7 +513,7 @@ namespace Opsive.UltimateCharacterController.UI
         {
             base.ShowUI(show);
 
-            if (!CanShowUI()) {
+            if (!CanShowUI() || m_GameObject == null) {
                 m_TargetCrosshairsSpread = m_CurrentCrosshairsSpread = 0;
             } else {
                 Update();

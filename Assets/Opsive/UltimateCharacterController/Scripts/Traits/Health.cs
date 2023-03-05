@@ -8,13 +8,15 @@ namespace Opsive.UltimateCharacterController.Traits
 {
     using Opsive.Shared.Audio;
     using Opsive.Shared.Game;
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+    using Opsive.Shared.Networking;
+#endif
     using Opsive.Shared.StateSystem;
     using Opsive.Shared.Utility;
     using Opsive.UltimateCharacterController.Events;
     using Opsive.UltimateCharacterController.Game;
     using Opsive.UltimateCharacterController.Objects;
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
-    using Opsive.UltimateCharacterController.Networking;
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
     using Opsive.UltimateCharacterController.Networking.Traits;
 #endif
     using Opsive.UltimateCharacterController.Traits.Damage;
@@ -122,7 +124,7 @@ namespace Opsive.UltimateCharacterController.Traits
         private AttributeManager m_AttributeManager;
         private Attribute m_HealthAttribute;
         private Attribute m_ShieldAttribute;
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
         private INetworkInfo m_NetworkInfo;
         private INetworkHealthMonitor m_NetworkHealthMonitor;
 #endif
@@ -151,12 +153,16 @@ namespace Opsive.UltimateCharacterController.Traits
             m_AttributeManager = GetComponent<AttributeManager>();
             if (!string.IsNullOrEmpty(m_HealthAttributeName)) {
                 m_HealthAttribute = m_AttributeManager.GetAttribute(m_HealthAttributeName);
+            } else {
+                m_HealthAttribute = null;
             }
             if (!string.IsNullOrEmpty(m_ShieldAttributeName)) {
                 m_ShieldAttribute = m_AttributeManager.GetAttribute(m_ShieldAttributeName);
+            } else {
+                m_ShieldAttribute = null;
             }
             m_AliveLayer = m_GameObject.layer;
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
             m_NetworkInfo = m_GameObject.GetCachedComponent<INetworkInfo>();
             m_NetworkHealthMonitor = m_GameObject.GetCachedComponent<INetworkHealthMonitor>();
             if (m_NetworkInfo != null && m_NetworkHealthMonitor == null) {
@@ -305,10 +311,10 @@ namespace Opsive.UltimateCharacterController.Traits
                 return;
             }
 
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
             if (m_NetworkInfo != null) {
                 if (m_NetworkInfo.IsLocalPlayer()) {
-                    m_NetworkHealthMonitor.OnDamage(damageData.Amount, damageData.Position, damageData.Direction, damageData.ForceMagnitude, damageData.Frames, damageData.Radius, damageData.DamageOriginator, damageData.HitCollider);
+                    m_NetworkHealthMonitor.OnDamage(damageData.Amount, damageData.Position, damageData.Direction, damageData.ForceMagnitude, damageData.Frames, damageData.Radius, damageData.DamageSource, damageData.HitCollider);
                 }
                 return;
             }
@@ -403,11 +409,11 @@ namespace Opsive.UltimateCharacterController.Traits
 
             // The object is dead when there is no more health or shield.
             if (!IsAlive()) {
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
                 if (m_NetworkInfo == null || m_NetworkInfo.IsLocalPlayer()) {
 #endif
                     Die(damageData.Position, force, attacker);
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
                 }
 #endif
             } else {
@@ -434,7 +440,7 @@ namespace Opsive.UltimateCharacterController.Traits
         /// <param name="attacker">The GameObject that killed the character.</param>
         public virtual void Die(Vector3 position, Vector3 force, GameObject attacker)
         {
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
             if (m_NetworkInfo != null && m_NetworkInfo.IsLocalPlayer()) {
                 m_NetworkHealthMonitor.Die(position, force, attacker);
             }
@@ -477,7 +483,7 @@ namespace Opsive.UltimateCharacterController.Traits
 
             // Deactivate the object if requested.
             if (m_DeactivateOnDeath) {
-                SchedulerBase.Schedule(m_DeactivateOnDeathDelay, Deactivate);
+                Scheduler.Schedule(m_DeactivateOnDeathDelay, Deactivate);
             }
 
             // The attributes shouldn't regenerate.
@@ -532,7 +538,7 @@ namespace Opsive.UltimateCharacterController.Traits
         /// <returns>True if the object was healed.</returns>
         public virtual bool Heal(float amount)
         {
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
             if (m_NetworkInfo != null && m_NetworkInfo.IsLocalPlayer()) {
                 m_NetworkHealthMonitor.Heal(amount);
             }

@@ -8,6 +8,10 @@ namespace MBS.AbilitySystem
     [Serializable]
     public class AbilityUpgradeBase : IShallowCloneable<AbilityUpgradeBase>
     {
+        /// <summary>
+        /// Use() occurs when the upgrade is applied to the ability. This is the equivalent of Start(), and only happens when initalized
+        /// </summary>
+        /// <param name="wrapperAbility"></param>
         public virtual void Use(AbilityWrapperBase wrapperAbility)
         {
 

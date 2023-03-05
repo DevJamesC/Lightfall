@@ -77,7 +77,7 @@ namespace Opsive.UltimateCharacterController.Character
         public Vector3 CenterOffset { get { return m_CenterOffset; }
             set {
                 if (m_ColliderOffsetEvent != null) {
-                    SchedulerBase.Cancel(m_ColliderOffsetEvent);
+                    Scheduler.Cancel(m_ColliderOffsetEvent);
                     m_ColliderOffsetEvent = null;
                 }
                 AdjustCenterOffset(value);
@@ -97,6 +97,8 @@ namespace Opsive.UltimateCharacterController.Character
         private Vector3 m_FirstEndCapLocalPosition;
         private Quaternion m_PrevLocalRotation;
         private ScheduledEventBase m_ColliderOffsetEvent;
+
+        private bool m_FixedFrame;
 
         /// <summary>
         /// Initialize the default values.
@@ -126,9 +128,9 @@ namespace Opsive.UltimateCharacterController.Character
 
             Initialize();
 
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
             // The positioner cannot be used with server autoritative implementations.
-            var networkInfo = m_CharacterGameObject.GetCachedComponent<Networking.INetworkInfo>();
+            var networkInfo = m_CharacterGameObject.GetCachedComponent<Shared.Networking.INetworkInfo>();
             if (networkInfo != null && networkInfo.IsServerAuthoritative()) {
                 enabled = false;
                 Debug.LogWarning("Warning: The CapsuleColliderPositioner has been disabled. Unity bug 985643 needs to be fixed for it to work over a server authoritative network.");
@@ -183,14 +185,35 @@ namespace Opsive.UltimateCharacterController.Character
             m_FirstEndCapLocalPosition = m_FirstEndCapTarget.localPosition;
             m_FirstEndCapOffset = m_Transform.InverseTransformDirection(m_FirstEndCapTarget.position - firstEndCap);
             m_SecondEndCapOffset = m_Transform.InverseTransformDirection(m_SecondEndCapTarget.position - secondEndCap) - m_CharacterTransform.up * m_SecondEndCapPadding;
+
+            // The center offset may be a non-zero value when initialized.
+            if (m_CenterOffset.sqrMagnitude > 0) {
+                var centerOffset = m_CenterOffset;
+                m_CenterOffset = Vector3.zero;
+                AdjustCenterOffset(centerOffset);
+            }
+        }
+
+        /// <summary>
+        /// Updates during the physics loop.
+        /// </summary>
+        private void FixedUpdate()
+        {
+            m_FixedFrame = true;
         }
 
         /// <summary>
         /// Perform the rotation and height changes.
         /// </summary>
-        private void FixedUpdate()
+        private void LateUpdate()
         {
-            UpdateRotationHeight();
+            if (m_FixedFrame) {
+                if (!Physics.autoSyncTransforms) {
+                    Physics.SyncTransforms();
+                }
+                UpdateRotationHeight();
+                m_FixedFrame = false;
+            }
         }
 
         /// <summary>
@@ -225,7 +248,7 @@ namespace Opsive.UltimateCharacterController.Character
                 var firstEndCapOffset = m_Transform.InverseTransformDirection(m_FirstEndCapTarget.position - firstEndCap);
                 var secondEndCapOffset = m_Transform.InverseTransformDirection(m_SecondEndCapTarget.position - secondEndCap);
                 var offset = m_SecondEndCapOffset - m_FirstEndCapOffset;
-                localDirection = ((secondEndCapOffset - firstEndCapOffset) - offset);
+                localDirection = secondEndCapOffset - firstEndCapOffset - offset;
 
                 // Determine if the new height would cause any collisions. If it does not then apply the height changes. A negative height change will never cause any
                 // collisions so the OverlapCapsule does not need to be checked. A valid capsule collider height is always greater than 2 times the radius of the collider.
@@ -290,7 +313,7 @@ namespace Opsive.UltimateCharacterController.Character
                                     m_OverlapColliders, m_CharacterLayerManager.SolidObjectLayers, QueryTriggerInteraction.Ignore) > 0) {
                 m_CapsuleCollider.center -= delta;
                 m_CapsuleCollider.height -= delta.y / 2;
-                m_ColliderOffsetEvent = SchedulerBase.Schedule(Time.fixedDeltaTime, AdjustCenterOffset, targetOffset);
+                m_ColliderOffsetEvent = Scheduler.Schedule(Time.fixedDeltaTime, AdjustCenterOffset, targetOffset);
             } else {
                 m_CenterOffset = targetOffset;
             }
@@ -333,7 +356,7 @@ namespace Opsive.UltimateCharacterController.Character
         /// </summary>
         private void OnDestroy()
         {
-            SchedulerBase.Cancel(m_ColliderOffsetEvent);
+            Scheduler.Cancel(m_ColliderOffsetEvent);
 
             EventHandler.UnregisterEvent(m_CharacterGameObject, "OnAnimatorSnapped", Initialize);
             EventHandler.UnregisterEvent<float>(m_CharacterGameObject, "OnHeightChangeAdjustHeight", AdjustCapsuleColliderHeight);

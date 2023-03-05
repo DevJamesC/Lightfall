@@ -817,7 +817,7 @@ namespace Opsive.UltimateCharacterController.Character.Abilities
             EventHandler.UnregisterEvent<GameObject>(m_GameObject, "OnCharacterSwitchModels", OnSwitchModels);
         }
 
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
         /// <summary>
         /// Returns any data required to start the ability.
         /// </summary>
@@ -1017,7 +1017,7 @@ namespace Opsive.UltimateCharacterController.Character.Abilities
         /// The character's model has switched.
         /// </summary>
         /// <param name="activeModel">The active character model.</param>
-        private void OnSwitchModels(GameObject activeModel)
+        protected virtual void OnSwitchModels(GameObject activeModel)
         {
             m_AnimatorMonitor = activeModel.GetCachedComponent<AnimatorMonitor>();
         }

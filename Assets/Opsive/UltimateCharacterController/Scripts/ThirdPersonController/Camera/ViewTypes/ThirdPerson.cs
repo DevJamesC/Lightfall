@@ -629,6 +629,10 @@ namespace Opsive.UltimateCharacterController.ThirdPersonController.Camera.ViewTy
         /// </summary>
         public override void StateChange()
         {
+            if (m_Character == null) {
+                return;
+            }
+
             // Append the zoom state name so the combination of state names will be called, such as "CrouchZoom".
             if (!string.IsNullOrEmpty(m_CameraController.ZoomState) && !m_AppendingZoomState) {
                 m_AppendingZoomState = true;

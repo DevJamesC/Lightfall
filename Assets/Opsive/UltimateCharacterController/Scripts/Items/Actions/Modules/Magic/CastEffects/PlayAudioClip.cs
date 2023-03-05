@@ -58,7 +58,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Magic.CastEff
             m_AudioSource.volume = 1;
 
             if (m_FadeEvent != null) {
-                SchedulerBase.Cancel(m_FadeEvent);
+                Scheduler.Cancel(m_FadeEvent);
                 m_FadeEvent = null;
             }
         }
@@ -88,7 +88,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Magic.CastEff
         {
             m_AudioSource.volume -= m_FadeStep;
             if (m_AudioSource.volume > 0) {
-                m_FadeEvent = SchedulerBase.Schedule(interval, FadeAudio, interval);
+                m_FadeEvent = Scheduler.Schedule(interval, FadeAudio, interval);
             } else {
                 m_AudioSource.Stop();
                 m_AudioSource = null;

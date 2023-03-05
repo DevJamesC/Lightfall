@@ -28,7 +28,7 @@ namespace Opsive.UltimateCharacterController.Inventory
     {
         [Tooltip("The item category assigned to this item set group.")]
         [SerializeField] protected CategoryBase m_SerializedItemCategory;
-        [Tooltip("The Starting Item set rules (item set rules can be added at runtime).")]
+        [Tooltip("The starting item set rules (item set rules can be added at runtime).")]
         [SerializeField] protected ItemSetRuleBase[] m_StartingItemSetRules;
 
         protected GameObject m_GameObject;
@@ -107,7 +107,6 @@ namespace Opsive.UltimateCharacterController.Inventory
         public void Initialize(GameObject gameObject, ItemSetManagerBase itemSetManager)
         {
             if (m_ItemCategoryIdentifier == null) {
-
                 // Use the default ItemCategory if the serialized Item Category is null.
                 if (m_SerializedItemCategory == null) {
                     m_SerializedItemCategory = itemSetManager.GetDefaultCategory();
@@ -122,12 +121,10 @@ namespace Opsive.UltimateCharacterController.Inventory
                 if (m_ItemCategoryIdentifier == null) {
                     Debug.LogError($"The Item Set Group has a null ItemCategory on {gameObject}, A category must be assigned.", gameObject);
                     
-                    // We'll assign a "fake" category just to prevent further errors
+                    // Assign a "fake" category just to prevent further errors
                     m_ItemCategoryIdentifier = ScriptableObject.CreateInstance<Category>();
                 }
             }
-            
-           
 
             m_GameObject = gameObject;
             m_ItemSetManager = itemSetManager;
@@ -168,10 +165,10 @@ namespace Opsive.UltimateCharacterController.Inventory
                 m_EquipUnequip = genericEquipUnequipAbility;
                 if (m_EquipUnequip == null) {
                     if (firstequipUnequipAbility == null) {
-                        Debug.LogError($"No Equip/Unequip ability was found, please add at least one Equip/Unequip ability.");
+                        Debug.LogError($"No Equip/Unequip ability was found. Please add at least one Equip/Unequip ability.");
                     } else {
-                        Debug.LogWarning($"No Equip/Unequip ability was found matching the ItemSetGroup category ID: '{CategoryID}'," +
-                                         $" the first ability found will be assigned instead to avoid errors, please add a matching ability.");
+                        Debug.LogWarning($"No Equip/Unequip ability was found matching the ItemSetGroup category ID '{CategoryID}'. " +
+                                         $"The first ability found will be assigned instead. Add a matching ability to avoid errors.");
                         m_EquipUnequip = firstequipUnequipAbility;
                     }
                 }
@@ -311,25 +308,21 @@ namespace Opsive.UltimateCharacterController.Inventory
         public int GetItemSetIndex(IItemIdentifier item, int slotID, bool checkIfValid)
         {
             // The ItemSet may be in the process of being changed. Test the next item set first to determine if this item set should be returned.
-            List<ItemSet> itemSetList;
-            var nextItemSetIndex = NextItemSetIndex;
+            var nextItemSetIndex = m_NextItemSetIndex;
             if (nextItemSetIndex != -1) {
-                itemSetList = ItemSetList;
-                var itemSet = itemSetList[nextItemSetIndex];
-
+                var itemSet = m_ItemSetList[nextItemSetIndex];
                 if (slotID == -1) {
                     for (int i = 0; i < itemSet.ItemIdentifiers.Length; i++) {
-
                         if (itemSet.ItemIdentifiers[i] != item) {
                             continue;
                         }
-                        if ((!checkIfValid || IsItemSetValid(nextItemSetIndex, false))) {
+                        if (!checkIfValid || IsItemSetValid(nextItemSetIndex, false)) {
                             return nextItemSetIndex;
                         }
                     }
                 } else {
                     if (itemSet.ItemIdentifiers[slotID] == item) {
-                        if ((!checkIfValid || IsItemSetValid(nextItemSetIndex, false))) {
+                        if (!checkIfValid || IsItemSetValid(nextItemSetIndex, false)) {
                             return nextItemSetIndex;
                         }
                     }
@@ -338,13 +331,12 @@ namespace Opsive.UltimateCharacterController.Inventory
 
             var itemCount = m_ItemSetManager.CharacterInventory.GetItemIdentifierAmount(item);
             // Search through all of the ItemSets for one that contains the specified item.
-            itemSetList = ItemSetList;
             var validItemSet = -1;
-            for (int i = 0; i < itemSetList.Count; ++i) {
+            for (int i = 0; i < m_ItemSetList.Count; ++i) {
                 // The ItemSet is valid, but do not return it immediately if the ItemSet uses more than one ItemDefinitions. This will prevent a dual wield ItemSet from equipping
                 // when a single item was picked up.
                 var validSlotCount = 1;
-                var itemSet = itemSetList[i];
+                var itemSet = m_ItemSetList[i];
 
                 var slotValid = slotID == -1;
                 for (int j = 0; j < itemSet.ItemIdentifiers.Length; ++j) {
@@ -357,10 +349,10 @@ namespace Opsive.UltimateCharacterController.Inventory
                 }
                 
                 // The slot specified must match or be -1.
-                if(slotValid == false){ continue; }
+                if (!slotValid) { continue; }
 
                 if (itemCount == validSlotCount) {
-                    if ((!checkIfValid || IsItemSetValid(i, false))) {
+                    if (!checkIfValid || IsItemSetValid(i, false)) {
                         return i;
                     }
                 } else if (validItemSet == -1) {
@@ -368,7 +360,7 @@ namespace Opsive.UltimateCharacterController.Inventory
                 }
             }
             
-            if ((!checkIfValid || IsItemSetValid(validItemSet, false))) {
+            if (!checkIfValid || IsItemSetValid(validItemSet, false)) {
                 return validItemSet;
             }
             
@@ -389,7 +381,6 @@ namespace Opsive.UltimateCharacterController.Inventory
             }
             
             var itemSet = ItemSetList[itemSetIndex];
-
             return IsItemSetValid(itemSet, checkIfCanSwitchTo, allowedSlotsMask);
         }
 
@@ -416,11 +407,10 @@ namespace Opsive.UltimateCharacterController.Inventory
                 return false;
             }
             
-            //Check if an ItemSet Is valid on the Item Set Rule
+            // The ItemSet may not be valid according to the ItemSetRule.
             var itemSetRule = GetItemSetRule(itemSet);
             if (itemSetRule != null) {
-                var result = itemSetRule.IsItemSetValid(itemSet, allowedSlotsMask);
-                if (result == false) {
+                if (!itemSetRule.IsItemSetValid(itemSet, allowedSlotsMask)) {
                     return false;
                 }
             }
@@ -453,7 +443,7 @@ namespace Opsive.UltimateCharacterController.Inventory
                 for (int j = 0; j < item.ItemActions.Length; ++j) {
                     var usableItem = item.ItemActions[j] as IUsableItem;
                     if (usableItem != null) {
-                        if (usableItem.CanEquip() == false) {
+                        if (!usableItem.CanEquip()) {
                             return false;
                         }
                     }
@@ -611,13 +601,12 @@ namespace Opsive.UltimateCharacterController.Inventory
         public void UpdateNextItemSet(int itemSetIndex)
         {
             // No updates are necessary if the indicies are the same.
-            var nextItemSetIndex = NextItemSetIndex;
-            if (nextItemSetIndex == itemSetIndex) {
+            if (m_NextItemSetIndex == itemSetIndex) {
                 return;
             }
 
-            var prevItemSetIndex = nextItemSetIndex != -1 ? nextItemSetIndex : ActiveItemSetIndex;
-            NextItemSetIndex = itemSetIndex;
+            var prevItemSetIndex = m_NextItemSetIndex != -1 ? m_NextItemSetIndex : ActiveItemSetIndex;
+            m_NextItemSetIndex = itemSetIndex;
 
             EventHandler.ExecuteEvent<int,int,int>(m_GameObject, "OnItemSetManagerUpdateNextItemSet", GroupIndex, prevItemSetIndex, itemSetIndex);
         }
@@ -629,7 +618,7 @@ namespace Opsive.UltimateCharacterController.Inventory
         public virtual void UpdateActiveItemSet(int newActiveIndex)
         {
             // No updates are necessary if the indicies are the same.
-            if (ActiveItemSetIndex == newActiveIndex) {
+            if (m_ActiveItemSetIndex == newActiveIndex) {
                 return;
             }
 
@@ -651,20 +640,18 @@ namespace Opsive.UltimateCharacterController.Inventory
                 previousItemSet.Active = false;
             }
 
-            ActiveItemSetIndex = newActiveIndex;
-            NextItemSetIndex = -1;
+            m_ActiveItemSetIndex = newActiveIndex;
+            m_NextItemSetIndex = -1;
 
             
             if (newActiveIndex != -1) {
                 newItemSet = ItemSetList[newActiveIndex];
                 newItemSet.Active = true;
-                
 #if UNITY_EDITOR
                 if (newItemSet.Enabled == false) {
                     Debug.LogError($"The Item Set [{newActiveIndex}]{newItemSet.State} in the group [{GroupIndex}]{ItemCategory} was set active when it is actually disabled. This should not happen.");
                 }
 #endif
-                
             }
 
             SetStateForItemSet(previousItemSet, newItemSet);
@@ -682,11 +669,11 @@ namespace Opsive.UltimateCharacterController.Inventory
         {
             // No need to make a change if they have the same state.
             var sameState = previousItemSet?.State == newItemSet?.State;
-            if(sameState){ return; }
+            if (sameState) { return; }
 
             if (newItemSet != null) {
                 var newState = newItemSet.State;
-                if (string.IsNullOrWhiteSpace(newState) == false) {
+                if (!string.IsNullOrWhiteSpace(newState)) {
                     // Activate the state.
                     StateManager.SetState(m_GameObject, newState, true);
                 }
@@ -694,7 +681,7 @@ namespace Opsive.UltimateCharacterController.Inventory
             
             if (previousItemSet != null) {
                 var previousState = previousItemSet.State;
-                if (string.IsNullOrWhiteSpace(previousState) == false) {
+                if (!string.IsNullOrWhiteSpace(previousState)) {
                     // No longer active.
                     StateManager.SetState(m_GameObject, previousState, false);
                 }

@@ -219,9 +219,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Throwable
             
             var firePoint = GetThrowPoint(dataStream);
             var fireDirection = GetThrowDirection(firePoint, dataStream);
-
-            var projectileData =
-                ThrowableAction.GetProjectileDataToThrow(dataStream, firePoint, fireDirection, 0, false);
+            var projectileData = ThrowableAction.GetProjectileDataToThrow(dataStream, firePoint, fireDirection, 0, false);
             m_ThrowableThrowData.FirePoint = firePoint;
             m_ThrowableThrowData.FireDirection = fireDirection;
             m_ThrowableThrowData.ProjectileData = projectileData;
@@ -242,7 +240,6 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Throwable
         public virtual Vector3 GetThrowPoint(ThrowableUseDataStream dataStream)
         {
             var useLookPosition = m_ThrowInLookSourceDirection && !CharacterLocomotion.ActiveMovementType.UseIndependentLook(false);
-
             if (useLookPosition) {
                 return LookSource.LookPosition(true);
             }
@@ -302,39 +299,22 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Throwable
             var strength = dataStream.TriggerData.Force;
             var fireInLookSourceDirection = m_ThrowInLookSourceDirection;
 
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
-            // The object has been thrown. If the ItemAction is on the server then that object should be spawned on the network.
-            // Non-server actions should disable the mesh renderers so the object can take its place. The mesh renderers will be enabled again in a separate call.
-            if (m_NetworkInfo != null) {
-                EnableObjectMeshRenderers(false);
-                if (!m_NetworkInfo.IsServer()) {
-                    if (m_InstantiatedThrownObject != null) {
-                        ObjectPoolBase.Destroy(m_InstantiatedThrownObject);
-                        m_InstantiatedThrownObject = null;
-                    }
-                    return;
-                }
-            }
-#endif
-
-            //Get the Throw Preview Data to initialize the ThrowableThrowData
+            // Get the data to initialize the ThrowableThrowData.
             GetThrowPreviewData();
-            var projectileData = GetProjectileDataToThrow(dataStream, m_ThrowableThrowData.FirePoint,
-                m_ThrowableThrowData.FireDirection);
+            var projectileData = GetProjectileDataToThrow(dataStream, m_ThrowableThrowData.FirePoint, m_ThrowableThrowData.FireDirection);
             m_ThrowableThrowData.ProjectileData = projectileData;
 
             if (projectileData.AmmoData.Valid == false) {
-                CharacterItemAction.DebugLogger.Log(this, "No Ammo to fire!");
-
+                CharacterItemAction.DebugLogger.Log(this, "No ammo to throw.");
                 return;
             }
 
-            var spawnedThrowObject = projectileData.SpawnedProjectileGO;
+            var spawnedThrownObject = projectileData.SpawnedProjectile;
             var spawnedTrajectoryObject = projectileData.SpawnedTrajectoryObject;
 
-            spawnedThrowObject.transform.parent = null;
+            spawnedThrownObject.transform.parent = null;
             // The collider was previously disabled. Enable it again when it is thrown.
-            var thrownCollider = spawnedThrowObject.GetCachedComponent<Collider>();
+            var thrownCollider = spawnedThrownObject.GetCachedComponent<Collider>();
             thrownCollider.enabled = true;
 
             // When the item is used the trajectory object should start moving on its own.
@@ -351,8 +331,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Throwable
             CharacterLocomotion.EnableColliderCollisionLayer(collisionEnabled);
 
             var trajectoryTransform = GetTrajectoryLocation();
-            var lookDirection = LookSource.LookDirection(trajectoryTransform.TransformPoint(m_TrajectoryOffset), false,
-                m_ImpactLayers, true, true);
+            var lookDirection = LookSource.LookDirection(trajectoryTransform.TransformPoint(m_TrajectoryOffset), false, m_ImpactLayers, true, true);
             var velocity = MathUtility.TransformDirection(m_Velocity, Quaternion.LookRotation(lookDirection, CharacterTransform.up));
             // Prevent the item from being thrown behind the character. This can happen if the character is looking straight up and there is a positive
             // y velocity. Gravity will cause the thrown object to go in the opposite direction.
@@ -370,16 +349,22 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Throwable
                     ? (velocity + (CharacterTransform.forward * CharacterLocomotion.LocalVelocity.z))
                     : Vector3.zero, Vector3.zero, Character, ThrowableAction, false, Vector3.down);
 
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
-            if (m_NetworkInfo != null) {
-                NetworkObjectPool.NetworkSpawn(m_ThrownObject, m_InstantiatedThrownObject, true);
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+            if (NetworkInfo != null) {
+                Networking.Game.NetworkObjectPool.NetworkSpawn(projectileData.m_ProjectilePrefab, projectileData.SpawnedProjectile, true);
+                // The server will manage the projectile.
+                if (!NetworkInfo.IsServer()) {
+                    ObjectPoolBase.Destroy(spawnedThrownObject);
+                    projectileData.SpawnedProjectile = null;
+                    return;
+                }
             }
 #endif
 
             // Optionally change the layer after the object has been fired. This allows the object to change from the first person Overlay layer
             // to the Default layer after it has cleared the first person weapon.
-            if (spawnedThrowObject.layer != m_ProjectileThrownLayer) {
-                SchedulerBase.ScheduleFixed(m_LayerChangeDelay, ChangeThrownLayer, spawnedThrowObject);
+            if (spawnedThrownObject.layer != m_ProjectileThrownLayer) {
+                Scheduler.ScheduleFixed(m_LayerChangeDelay, ChangeThrownLayer, spawnedThrownObject);
             }
         }
         

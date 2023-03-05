@@ -66,6 +66,7 @@ namespace MBS.DamageSystem
     [Serializable]
     public class MBSExtraDamageData
     {
+        [SerializeField] private float _baseDamage;
         [SerializeField] private float _weakpointMultiplier;
         [SerializeField] private float _sheildEffectiveness;
         [SerializeField] private float _armorEffectiveness;
@@ -76,6 +77,7 @@ namespace MBS.DamageSystem
         [SerializeField] private bool _isSelfDamage;
         [SerializeField] private List<Tag> _sourceTags;
 
+        public float BaseDamage { get => _baseDamage; set => _baseDamage = value; }
         public float WeakpointMultiplier { get => _weakpointMultiplier; set => _weakpointMultiplier = value; }
         public float ShieldEffectiveness { get => _sheildEffectiveness; set => _sheildEffectiveness = value; }
         public float ArmorEffectiveness { get => _armorEffectiveness; set => _armorEffectiveness = value; }
@@ -89,11 +91,12 @@ namespace MBS.DamageSystem
 
         public MBSExtraDamageData()
         {
-            Initalize(2, 1, 1, 10, false, false);
+            Initalize(10, 2, 1, 1, 10, false, false);
         }
 
-        public void Initalize(float weakpointMult, float sheildEff, float armorEff, float staggerForce, bool ignoreShield, bool ignoreArmor, bool isSelfDamage = false, List<Tag> sourceTags = null)
+        public void Initalize(float baseDamage, float weakpointMult, float sheildEff, float armorEff, float staggerForce, bool ignoreShield, bool ignoreArmor, bool isSelfDamage = false, List<Tag> sourceTags = null)
         {
+            BaseDamage = baseDamage;
             WeakpointMultiplier = weakpointMult;
             ShieldEffectiveness = sheildEff;
             ArmorEffectiveness = armorEff;
@@ -107,6 +110,7 @@ namespace MBS.DamageSystem
         public MBSExtraDamageData Copy()
         {
             MBSExtraDamageData returnVal = new MBSExtraDamageData();
+            returnVal.BaseDamage = BaseDamage;
             returnVal.WeakpointMultiplier = WeakpointMultiplier;
             returnVal.ShieldEffectiveness = ShieldEffectiveness;
             returnVal.ArmorEffectiveness = ArmorEffectiveness;

@@ -9,12 +9,18 @@ using UnityEngine;
 
 namespace MBS.AbilitySystem
 {
-    public class ChangeStatsOnOffAbilityEffect : AbilityEffectBase
+    public class ChangeStatsAbilityEffect : AbilityEffectBase
     {
+        [SerializeField, Tooltip("Set to true if you want this effect to be toggled On-Off. Otherwise, set the duration.")]
+        private bool onOffAbilityEffect = false;
+        [SerializeField]
+        private float duration;
         [SerializeField]
         private List<AbilityStatChangeEntry> statsToChange = new List<AbilityStatChangeEntry>();
         private List<AbilityStatChangeEntry> statsChanged;// used for undoing stat changes
         private ModifierHandler modifierHandler;
+
+        private float remainingDuration;
 
         protected override void OnStart(AbilityWrapperBase abilityWrapper)
         {
@@ -29,7 +35,7 @@ namespace MBS.AbilitySystem
         public override void Use(AbilityWrapperBase abilityWrapper)
         {
 
-            if (abilityWrapper.AbilityState == AbilityState.Deactivating)
+            if (abilityWrapper.AbilityState == AbilityState.Deactivating && onOffAbilityEffect)
             {
                 OnEffectFinishedInvoke();
                 return;
@@ -59,14 +65,33 @@ namespace MBS.AbilitySystem
                 statsChanged.Add(new AbilityStatChangeEntry(item.StatName, realVal * 100));
             }
 
-            OnEffectFinishedInvoke();
+            if (!onOffAbilityEffect)
+                remainingDuration = abilityWrapper.GetStatChange(StatName.AbilityDuration, duration, true);
+            else
+                OnEffectFinishedInvoke();
         }
 
+
+        public override void OnUpdate(AbilityWrapperBase abilityWrapper)
+        {
+            base.OnUpdate(abilityWrapper);
+
+            if (abilityWrapper.AbilityState == AbilityState.InUse && !onOffAbilityEffect)
+            {
+                if (remainingDuration > 0)
+                    remainingDuration -= Time.deltaTime;
+                else
+                {
+                    Dispose(abilityWrapper);
+                    OnEffectFinishedInvoke();
+                }
+
+            }
+        }
 
 
         public override void Dispose(AbilityWrapperBase abilityWrapperBase)
         {
-            base.Dispose(abilityWrapperBase);
 
             foreach (var item in statsChanged)
             {
@@ -79,10 +104,6 @@ namespace MBS.AbilitySystem
         public override List<AbilityUIStat> GetStats()
         {
             List<AbilityUIStat> returnVal = new List<AbilityUIStat>();
-
-
-
-
 
             foreach (var stat in statsToChange)
             {
@@ -107,6 +128,17 @@ namespace MBS.AbilitySystem
                     ProspectiveValue = stat.Value * multiplier
                 });
             }
+
+            returnVal.Add(new AbilityUIStat()
+            {
+                StatName = StatName.AbilityDuration,
+                StatNameDisplayName = "Duration",
+                statValueDisplaySuffix = " Sec",
+                InitalValue = duration,
+                CurrentValue = duration,
+                MaxValue = duration,
+                ProspectiveValue = duration
+            });
 
             return returnVal;
         }
@@ -135,7 +167,11 @@ namespace MBS.AbilitySystem
 
         protected float GetValue()
         {
-            float returnVal = (flatValueChange) ? value : value / 100;
+            float baseValue = value;
+            if (StatName == StatName.AbilityRecharge)
+                baseValue = value * -1f;
+
+            float returnVal = (flatValueChange) ? baseValue : baseValue / 100;
             if (divideFlatValueBy100 && flatValueChange)
                 returnVal /= 100;
 

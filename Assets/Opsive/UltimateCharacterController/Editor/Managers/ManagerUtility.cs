@@ -36,8 +36,10 @@ namespace Opsive.UltimateCharacterController.Editor.Managers
         /// <param name="buttonTitle">The title of the action button.</param>
         /// <param name="buttonAction">The action of the button.</param>
         /// <param name="parent">The VisualElement that the box should be added to.</param>
+        /// <param name="enableButton">Should the button be enabled?</param>
+        /// <param name="topMargin">The top of the box margin.</param>
         /// <returns>The bottom action button (can be null).</returns>
-        public static Button ShowControlBox(string title, string description, Action<VisualElement> options, string buttonTitle, Action buttonAction, VisualElement parent, bool enableButton)
+        public static Button ShowControlBox(string title, string description, Action<VisualElement> options, string buttonTitle, Action buttonAction, VisualElement parent, bool enableButton, float topMargin = 20f)
         {
             var container = new VisualElement();
             container.AddToClassList("sub-menu");
@@ -46,7 +48,7 @@ namespace Opsive.UltimateCharacterController.Editor.Managers
             } else {
                 container.AddToClassList("sub-menu-light");
             }
-            container.style.marginTop = 20f;
+            container.style.marginTop = topMargin;
             var titleLabel = new Label(title);
             titleLabel.AddToClassList("sub-menu-title");
             container.Add(titleLabel);

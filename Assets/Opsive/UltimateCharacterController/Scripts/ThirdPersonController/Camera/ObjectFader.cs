@@ -54,7 +54,20 @@ namespace Opsive.UltimateCharacterController.ThirdPersonController.Camera
         [Tooltip("The offset to apply to the character when determining if the character should fade/is considered obstructed.")]
         [SerializeField] protected Vector3 m_TransformOffset = new Vector3(0, 0.9f, 0);
 
-        public bool CharacterFade { get { return m_CharacterFade; } set { m_CharacterFade = value; if (!value) { DisableCharacterFade(); } } }
+        public bool CharacterFade
+        {
+            get { return m_CharacterFade; }
+            set {
+                m_CharacterFade = value; if (value) {
+                    if (m_RegisteredMaterial == null) {
+                        m_RegisteredMaterial = new HashSet<Material>();
+                        m_MaterialModeSet = new HashSet<Material>();
+                    }
+                } else {
+                    DisableCharacterFade();
+                }
+            }
+        }
         public float StartFadeDistance { get { return m_StartFadeDistance; } set { m_StartFadeDistance = value; } }
         public float EndFadeDistance { get { return m_EndFadeDistance; } set { m_EndFadeDistance = value; } }
         public float CharacterFadeStateChangeCooldown { get { return m_CharacterFadeStateChangeCooldown; } set { m_CharacterFadeStateChangeCooldown = value; } }
@@ -143,7 +156,7 @@ namespace Opsive.UltimateCharacterController.ThirdPersonController.Camera
                     if (m_CharacterFadeMaterials != null) {
                         if (m_CacheCharacterMaterials) {
                             for (int i = 0; i < m_CharacterFadeMaterials.Length; ++i) {
-                                if (!m_OriginalMaterialValuesMap.ContainsKey(m_CharacterFadeMaterials[i])) {
+                                if (m_CharacterFadeMaterials[i] == null || !m_OriginalMaterialValuesMap.ContainsKey(m_CharacterFadeMaterials[i])) {
                                     continue;
                                 }
                                 GenericObjectPool.Return(m_OriginalMaterialValuesMap[m_CharacterFadeMaterials[i]]);

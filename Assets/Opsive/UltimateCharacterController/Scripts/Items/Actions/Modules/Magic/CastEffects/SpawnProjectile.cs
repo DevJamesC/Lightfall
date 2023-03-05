@@ -36,7 +36,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Magic.CastEff
         public float Speed { get { return m_Speed; } set { m_Speed = value; } }
         public bool ParentToOrigin { get { return m_ParentToOrigin; } set { m_ParentToOrigin = value; } }
 
-        GameObject IProjectileOwner.Originator => Character;
+        GameObject IProjectileOwner.Owner => Character;
         Component IProjectileOwner.SourceComponent => m_CharacterItemAction;
         IDamageSource IProjectileOwner.DamageSource => MagicAction;
 
@@ -55,18 +55,6 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Magic.CastEff
             if (m_CharacterItemAction.IsDebugging) {
                 Debug.DrawRay(castPosition, direction * 5, Color.red, 0.1f);
             }
-
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
-            // The server will spawn the projectile.
-            if (m_MagicItem.NetworkInfo != null) {
-                if (m_MagicItem.NetworkInfo.IsLocalPlayer()) {
-                    m_MagicItem.NetworkCharacter.MagicCast(m_MagicItem, m_Index, m_CastID, direction, targetPosition);
-                }
-                if (!m_MagicItem.NetworkInfo.IsServer()) {
-                    return;
-                }
-            }
-#endif
 
             if (m_ProjectilePrefab == null) {
                 Debug.LogError("Error: A Projectile Prefab must be specified.", MagicAction);
@@ -87,13 +75,17 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Magic.CastEff
             var magicParticle = obj.GetComponent<MagicParticle>();
             if (magicParticle != null) { magicParticle.Initialize(MagicAction, m_CastID); }
 
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
-            if (m_MagicItem.NetworkInfo != null) {
-                NetworkObjectPool.NetworkSpawn(m_ProjectilePrefab, obj, true);
+            base.DoCastInternal(useDataStream);
+
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+            if (NetworkInfo != null && NetworkInfo.IsLocalPlayer()) {
+                Networking.Game.NetworkObjectPool.NetworkSpawn(m_ProjectilePrefab, projectile.gameObject, true);
+                // The server will manage the projectile.
+                if (!NetworkInfo.IsServer()) {
+                    ObjectPoolBase.Destroy(obj);
+                }
             }
 #endif
-            
-            base.DoCastInternal(useDataStream);
         }
 
         /// <summary>

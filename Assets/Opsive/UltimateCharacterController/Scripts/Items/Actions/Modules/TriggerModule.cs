@@ -72,13 +72,13 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
         }
 
         /// <summary>
-        /// Register to events while the item is equipped and the module is enabled.
+        /// Updates the registered events when the item is equipped and the module is enabled.
         /// </summary>
-        protected override void RegisterEventsWhileEquippedAndEnabledInternal(bool register)
+        protected override void UpdateRegisteredEventsInternal(bool register)
         {
             m_IsTriggering = false;
             m_WasTriggered = false;
-            base.RegisterEventsWhileEquippedAndEnabledInternal(register);
+            base.UpdateRegisteredEventsInternal(register);
         }
 
         /// <summary>
@@ -92,7 +92,12 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
         /// <param name="useAbility">A reference to the Use ability.</param>
         /// <param name="abilityState">The state of the Use ability when calling CanUseItem.</param>
         /// <returns>True if the item can be used.</returns>
-        public abstract bool CanStartUseItem(Use useAbility, UsableAction.UseAbilityState abilityState);
+        public virtual bool CanStartUseItem(Use useAbility, UsableAction.UseAbilityState abilityState)
+        {
+            if (useAbility != null && useAbility.IsUseInputTryingToStop()) { return false; }
+
+            return true;
+        }
 
         /// <summary>
         /// Can the item be stopped?
@@ -172,6 +177,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
     {
         [Tooltip("Should the audio play when the item starts to be used? If false it will be played when the item is used.")]
         [SerializeField] protected bool m_PlayAudioOnStartUse;
+        [Tooltip("Specifies the animator and audio state that should be triggered when the item is started.")]
         [SerializeField] protected ItemSubstateIndexData m_SubstateIndexData = new ItemSubstateIndexData(0,100);
         [Tooltip("Specifies the animator and audio state that should be triggered when the item is used.")]
         [SerializeField] protected AnimatorAudioStateSet m_UseAnimatorAudioStateSet = new AnimatorAudioStateSet(2);
@@ -248,11 +254,10 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
         /// <returns>The string representation of the module.</returns>
         public override string ToString()
         {
-            var audioAnimatorSubtateString = "";
             if (m_UseAnimatorAudioStateSet != null && m_UseAnimatorAudioStateSet.States != null &&
                 m_UseAnimatorAudioStateSet.States.Length > 0) {
                 var states = m_UseAnimatorAudioStateSet.States;
-                audioAnimatorSubtateString = states[0].ItemSubstateIndex.ToString();
+                var audioAnimatorSubtateString = states[0].ItemSubstateIndex.ToString();
                 for (int i = 1; i < states.Length; i++) {
                     audioAnimatorSubtateString += ", " + states[i].ItemSubstateIndex;
                 }
@@ -266,7 +271,6 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
             } else {
                 return base.ToString();
             }
-            
         }
         
         /// <summary>
@@ -321,6 +325,9 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
         /// <returns>True if the item can be used.</returns>
         public override bool CanStartUseItem(Use useAbility, UsableAction.UseAbilityState abilityState)
         {
+            var baseResult = base.CanStartUseItem(useAbility, abilityState);
+            if (!baseResult) { return false; }
+            
             if (m_CanStopIfInputStop && useAbility.IsUseInputTryingToStop()) {
                 return false;
             }
@@ -368,7 +375,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
         public override void UseItemUpdate()
         {
             if(m_UseItemAbility == null){ return; }
-            if(m_IsTriggering == false){ return; }
+            if(!m_IsTriggering){ return; }
 
             // Make sure to update the Animator parameters when the input changes.
             var isUseInputTryingToStop = m_UseItemAbility.IsUseInputTryingToStop();
@@ -396,7 +403,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
         /// </summary>
         public override void ItemUseComplete()
         {
-            //Stop the animation on complete.
+            // Stop the animation on complete.
             m_IsTriggering = false;
             UpdateItemAbilityAnimatorParameters();
         }
@@ -431,7 +438,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
         {
             base.StopItemUse();
 
-            if (m_WasTriggered == false) {
+            if (!m_WasTriggered) {
                 // If the item is stopped before it is thrown then the character may have died. The item should be released.
                 Opsive.Shared.Events.EventHandler.ExecuteEvent(Character, "OnItemActionTriggerStoppedEarly", this);
             }
@@ -503,6 +510,9 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
         /// <returns>True if the item can be used.</returns>
         public override bool CanStartUseItem(Use useAbility, UsableAction.UseAbilityState abilityState)
         {
+            var baseResult = base.CanStartUseItem(useAbility, abilityState);
+            if (!baseResult) { return false; }
+            
             if (abilityState == UsableAction.UseAbilityState.Start) {
                 if (m_StartedUseAttack) {
                     
@@ -651,10 +661,26 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
             }
 
             // Cannot repeat the use until it was actually used.
-            if (abilityState == UsableAction.UseAbilityState.Update && m_WasTriggered == false) {
+            if (abilityState == UsableAction.UseAbilityState.Update && !m_WasTriggered) {
                 return false;
             }
             
+            return true;
+        }
+
+        public override bool CanStopItemUse()
+        {
+            if (m_CanStopIfInputStop && (m_UseItemAbility != null && m_UseItemAbility.IsUseInputTryingToStop())) {
+                return true;
+            }
+            if (m_IsTriggering) {
+                return false;
+            }
+            
+            if (m_UseItemAbility != null && !m_UseItemAbility.IsUseInputTryingToStop()){
+                return false;
+            }
+
             return true;
         }
     }
@@ -669,8 +695,12 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
         [SerializeField] protected int m_BurstSize = 5;
         [Tooltip("Can the Use ability stop before all the bursts shots have been fired?")]
         [SerializeField] protected bool m_CancelBurstOnStop = false;
+        [Tooltip("The time to wait between bursts before repeating. (-1) to not repeat.")]
+        [SerializeField] protected float m_BurstRepeatDelay = -1;
         
         protected int m_FiredBurstCount = 0;
+        protected int m_FiredCompleteCount = 0;
+        protected float m_LastTriggerTime = 0;
 
         /// <summary>
         /// Can the item be used?
@@ -680,7 +710,18 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
         /// <returns>True if the item can be used.</returns>
         public override bool CanStartUseItem(Use useAbility, UsableAction.UseAbilityState abilityState)
         {
-            if (m_FiredBurstCount >= m_BurstSize) {
+            if (m_FiredCompleteCount >= m_BurstSize) {
+
+                if (m_BurstRepeatDelay >= 0 && m_LastTriggerTime + m_BurstRepeatDelay <= Time.time) {
+                    if (m_CanStopIfInputStop && (useAbility != null && useAbility.IsUseInputTryingToStop())) {
+                        return false;
+                    } else {
+                        // Start the burst again.
+                        ResetBurstCount();
+                        return true;
+                    }
+                }
+                
                 return false;
             }
             
@@ -688,7 +729,21 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
                 return false;
             }
             
+            // Cannot repeat the use until it was actually used.
+            if (abilityState == UsableAction.UseAbilityState.Update && m_FiredBurstCount != m_FiredCompleteCount) {
+                return false;
+            }
+
             return true;
+        }
+
+        /// <summary>
+        /// Resets the burst count.
+        /// </summary>
+        private void ResetBurstCount()
+        {
+            m_FiredBurstCount = 0;
+            m_FiredCompleteCount = 0;
         }
 
         /// <summary>
@@ -696,8 +751,18 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
         /// </summary>
         public override void UseItemTrigger()
         {
-            base.UseItemTrigger();
+            m_LastTriggerTime = Time.time;
             m_FiredBurstCount += 1;
+            base.UseItemTrigger();
+        }
+
+        /// <summary>
+        /// The item has complete its use.
+        /// </summary>
+        public override void ItemUseComplete()
+        {
+            base.ItemUseComplete();
+            m_FiredCompleteCount += 1;
         }
 
         /// <summary>
@@ -714,9 +779,15 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
                 return false;
             }
 
-            if (m_CancelBurstOnStop == false && m_FiredBurstCount != m_BurstSize) {
+            if (!m_CancelBurstOnStop && m_FiredCompleteCount < m_BurstSize) {
                 return false;
             }
+            
+            // If burst repeat, then don't stop unless the input is trying to stop.
+            if (m_BurstRepeatDelay > 0 && (m_UseItemAbility != null && !m_UseItemAbility.IsUseInputTryingToStop())) {
+                return false;
+            }
+
             return true;
         }
 
@@ -725,7 +796,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
         /// </summary>
         public override void StopItemUse()
         {
-            m_FiredBurstCount = 0;
+            ResetBurstCount();
             base.StopItemUse();
         }
 
@@ -735,7 +806,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
         /// <param name="fullClip">Reload the clip completely?</param>
         public void ReloadClip(bool fullClip)
         {
-            m_FiredBurstCount = 0;
+            ResetBurstCount();
         }
     }
 
@@ -746,25 +817,35 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
     [Serializable]
     public class Charged : TriggerModuleAnimatorAudioStateSet
     {
-        //Info keys for debugging.
+        // Info keys for debugging.
         public const string InfoKey_IsCharging  = "Trigger/ChargedTrigger/IsCharging";
         
         [Tooltip("A set of AudioClips that can be played when the weapon is charging.")]
         [SerializeField] protected AudioClipSet m_ChargeAudioClipSet = new AudioClipSet();
+        [Tooltip("The minimum force of the charge.")]
         [SerializeField] protected float m_MinChargeForce = 0.1f;
+        [Tooltip("The maximum force of the charge.")]
         [SerializeField] protected float m_MaxChargeForce = 1f;
+        [Tooltip("Normalizes the time between the start and complete charging times.")]
         [SerializeField] protected float m_ChargeTimeForceNormalizer = 1;
         [SerializeField] protected ItemSubstateIndexData m_ChargeSubstateParameterValue = new ItemSubstateIndexData(0,100);
         [Tooltip("Specifies if the item should wait for the OnAnimatorItemMinChargeComplete animation event or wait for the specified duration before being used.")]
         [SerializeField] protected AnimationSlotEventTrigger m_MinChargeCompleteEvent = new AnimationSlotEventTrigger(true, 0.2f);
         [Tooltip("Specifies if the item should wait for the OnAnimatorItemMaxChargeComplete animation event or wait for the specified duration before being used.")]
         [SerializeField] protected AnimationSlotEventTrigger m_MaxChargeCompleteEvent = new AnimationSlotEventTrigger(true, 0.2f);
-        [SerializeField] protected ItemSubstateIndexData m_UnChargeSubstateParameterValue = new ItemSubstateIndexData(0,100);
-        [Tooltip("Specifies if the item should wait for the OnAnimatorItemUnchargeComplete animation event or wait for the specified duration before being used.")]
-        [SerializeField] protected AnimationSlotEventTrigger m_UnchargeCompleteEvent = new AnimationSlotEventTrigger(true, 0.2f);
+        [Tooltip("Specifies if the item should wait for the OnAnimatorItemDepleteCharge animation event or wait for the specified duration before being used.")]
+        [UnityEngine.Serialization.FormerlySerializedAs("m_UnChargeSubstateParameterValue")]
+        [SerializeField] protected ItemSubstateIndexData m_DepleteChargeSubstateParameterValue = new ItemSubstateIndexData(0,100);
+        [Tooltip("Specifies if the item should wait for the OnAnimatorItemDepleteChargeComplete animation event or wait for the specified duration before being used.")]
+        [UnityEngine.Serialization.FormerlySerializedAs("m_UnchargeCompleteEvent")]
+        [SerializeField] protected AnimationSlotEventTrigger m_DepleteChargeCompleteEvent = new AnimationSlotEventTrigger(true, 0.2f);
+        [Tooltip("Should the charge automatically fire when it is fully charged?")]
         [SerializeField] protected bool m_AutoFireOnFullCharge;
+        [Tooltip("Can the fire be repeated?")]
         [SerializeField] protected bool m_RepeatFire;
-        [SerializeField] protected bool m_UnchargeOnStopEarly = true;
+        [Tooltip("Should the module deplete when it is stopped early?")]
+        [UnityEngine.Serialization.FormerlySerializedAs("m_UnchargeOnStopEarly")]
+        [SerializeField] protected bool m_DepleteChargeOnStopEarly = true;
 
         protected bool m_IsCharging = false;
         protected bool m_RegisteredToEvents = false;
@@ -781,32 +862,28 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
             protected set
             {
                 m_IsCharging = value;
-                var message = m_IsCharging ? "IS Charging" : "NOT Charging";
+                var message = m_IsCharging ? "is charging" : "is not charging";
                 CharacterItemAction.DebugLogger.SetInfo(InfoKey_IsCharging,message);
             }
         }
 
         /// <summary>
-        /// Register to events while the item is equipped and the module is enabled.
+        /// Updates the registered events when the item is equipped and the module is enabled.
         /// </summary>
-        protected override void RegisterEventsWhileEquippedAndEnabledInternal(bool register)
+        protected override void UpdateRegisteredEventsInternal(bool register)
         {
             if (register == m_RegisteredToEvents) {
                 return;
             }
             
-            base.RegisterEventsWhileEquippedAndEnabledInternal(register);
+            base.UpdateRegisteredEventsInternal(register);
 
             m_RegisteredToEvents = register;
 
             var eventTarget = Character;
-            
-            m_MinChargeCompleteEvent.RegisterUnregisterEvent(register, eventTarget,"OnAnimatorItemMinChargeComplete",SlotID,
-                HandleItemUseMinChargeComplete);
-            m_MaxChargeCompleteEvent.RegisterUnregisterEvent(register, eventTarget,"OnAnimatorItemMaxChargeComplete",SlotID,
-                HandleItemUseMaxChargeComplete);
-            m_UnchargeCompleteEvent.RegisterUnregisterEvent(register, eventTarget,"OnAnimatorItemUnchargeComplete",SlotID,
-                HandleItemUseUnchargeComplete);
+            m_MinChargeCompleteEvent.RegisterUnregisterEvent(register, eventTarget,"OnAnimatorItemMinChargeComplete",SlotID, HandleItemUseMinChargeComplete);
+            m_MaxChargeCompleteEvent.RegisterUnregisterEvent(register, eventTarget,"OnAnimatorItemMaxChargeComplete",SlotID, HandleItemUseMaxChargeComplete);
+            m_DepleteChargeCompleteEvent.RegisterUnregisterEvent(register, eventTarget,"OnAnimatorItemDepleteChargeComplete",SlotID, HandleItemUseUnchargeComplete);
         }
 
         /// <summary>
@@ -825,7 +902,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
         /// </summary>
         protected virtual void HandleItemUseMaxChargeComplete()
         {
-            //Do nothing
+            // Do nothing.
         }
 
         /// <summary>
@@ -833,7 +910,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
         /// </summary>
         protected virtual void HandleItemUseMinChargeComplete()
         {
-            //Do nothing.
+            // Do nothing.
         }
 
         /// <summary>
@@ -842,12 +919,12 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
         /// <param name="streamData">The stream data containing the other module data which affect the substate index.</param>
         public override void GetUseItemSubstateIndex(ItemSubstateIndexStreamData streamData)
         {
-            if (m_UnchargeCompleteEvent.IsWaiting) {
-                streamData.TryAddSubstateData(this, m_UnChargeSubstateParameterValue);
+            if (m_DepleteChargeCompleteEvent.IsWaiting) {
+                streamData.TryAddSubstateData(this, m_DepleteChargeSubstateParameterValue);
                 return;
             }
             
-            if (IsCharging) {
+            if (m_IsCharging) {
                 streamData.TryAddSubstateData(this, m_ChargeSubstateParameterValue);
                 return;
             }
@@ -872,7 +949,10 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
         /// <returns>True if the item can be used.</returns>
         public override bool CanStartUseItem(Use useAbility, UsableAction.UseAbilityState abilityState)
         {
-            if ((m_RepeatFire == false && m_WasTriggered) || IsCharging) {
+            var baseResult = base.CanStartUseItem(useAbility, abilityState);
+            if (!baseResult) { return false; }
+            
+            if ((!m_RepeatFire && m_WasTriggered) || m_IsCharging) {
                 return false;
             }
             
@@ -894,9 +974,9 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
             m_IsTriggering = true;
             m_TryStop = false;
             
-            //Start Charging
+            // Start Charging
             m_StartChargeTime = Time.time;
-            IsCharging = true;
+            m_IsCharging = true;
             
             //Play the Charge Audio
             m_ChargeAudioClipSet.PlayAudioClip(CharacterItem.GetVisibleObject());
@@ -914,11 +994,11 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
         public override bool CanUseItem()
         {
             var baseResult = base.CanUseItem();
-            if (baseResult == false) {
+            if (!baseResult) {
                 return false;
             }
 
-            if (IsCharging || m_MinChargeCompleteEvent.IsWaiting) {
+            if (m_IsCharging || m_MinChargeCompleteEvent.IsWaiting) {
                 return false;
             }
 
@@ -930,16 +1010,14 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
         /// </summary>
         public override void UseItemTrigger()
         {
-            //This is called when charging is false
-            if (IsCharging || m_MinChargeCompleteEvent.IsWaiting) {
-                Debug.LogWarning("The item shouldn't be used while the trigger is being charged");
+            // This is called when charging is false
+            if (m_IsCharging || m_MinChargeCompleteEvent.IsWaiting) {
+                Debug.LogWarning("The item shouldn't be used while the trigger is being charged.");
                 return;
             }
             
             UsableAction.TriggerItemAction(m_TriggerData);
             m_WasTriggered = true;
-            
-            
         }
 
         /// <summary>
@@ -947,17 +1025,16 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
         /// </summary>
         protected virtual void ReleaseCharge()
         {
-            //Setting charging to false will cause the item to be used.
-            IsCharging = false;
+            // Setting charging to false will cause the item to be used.
+            m_IsCharging = false;
 
             if (m_ChargeTimeForceNormalizer <= 0) {
-                Debug.LogWarning($"The m_ChargeTimeForceNormalizer value is not valid, it must be positive. Value: {m_ChargeTimeForceNormalizer}", CharacterItem);
+                Debug.LogWarning($"The m_ChargeTimeForceNormalizer must be a positive value: {m_ChargeTimeForceNormalizer}", CharacterItem);
                 m_ChargeTimeForceNormalizer = 1;
             }
             
             var normalizedShotDeltaTime = Mathf.Clamp01((Time.time - m_StartChargeTime) / m_ChargeTimeForceNormalizer);
             var shotForce = m_MinChargeForce + normalizedShotDeltaTime * (m_MaxChargeForce - m_MinChargeForce);
-
             m_TriggerData.Force = shotForce;
         }
 
@@ -966,18 +1043,16 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
         /// </summary>
         public override void UseItemUpdate()
         {
-            if (IsCharging && m_MinChargeCompleteEvent.IsWaiting == false) {
-
+            if (m_IsCharging && !m_MinChargeCompleteEvent.IsWaiting) {
                 var canStop = m_TryStop || (m_UseItemAbility?.IsUseInputTryingToStop() ?? m_TryStop);
-
-                //We tried to stop earlier but couldn't because min wait wasn't finished, fire now.
+                // The module wasn't able to be stopped earlier because it wasn't finished. Fire the module now.
                 if (canStop) {
                     ReleaseCharge();
                     return;
                 }
                 
-                if(m_AutoFireOnFullCharge && m_MaxChargeCompleteEvent.IsWaiting == false) {
-                    //Done charging
+                if(m_AutoFireOnFullCharge && !m_MaxChargeCompleteEvent.IsWaiting) {
+                    // Done charging.
                     ReleaseCharge();
                     return;
                 }
@@ -990,7 +1065,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
         /// <returns>True if the item is use pending.</returns>
         public override bool IsItemUsePending()
         {
-            return IsCharging;
+            return m_IsCharging;
         }
 
         /// <summary>
@@ -998,7 +1073,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
         /// </summary>
         public override void ItemUseComplete()
         {
-            //Stop the animation on complete.
+            // Stop the animation on complete.
             m_IsTriggering = false;
             UpdateItemAbilityAnimatorParameters();
         }
@@ -1010,20 +1085,20 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
         {
             m_TryStop = m_UseItemAbility?.IsUseInputTryingToStop() ?? true;
 
-            if (m_Stopping || m_TryStop == false) {
+            if (m_Stopping || !m_TryStop) {
                 return;
             }
 
             m_Stopping = true;
             
-            if(IsCharging == false){ return; }
+            if (!m_IsCharging){ return; }
 
-            //Can't stop if the minimum charge amount hasn't been reached.
+            // Can't stop if the minimum charge amount hasn't been reached.
             if (m_MinChargeCompleteEvent.IsWaiting) {
-                if (m_UnchargeOnStopEarly) {
+                if (m_DepleteChargeOnStopEarly) {
                     m_MinChargeCompleteEvent.CancelWaitForEvent();
                     m_MaxChargeCompleteEvent.CancelWaitForEvent();
-                    m_UnchargeCompleteEvent.WaitForEvent(false);
+                    m_DepleteChargeCompleteEvent.WaitForEvent(false);
                 }
                 
                 return;
@@ -1039,7 +1114,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
         /// <returns>True if the item can be stopped.</returns>
         public override bool CanStopItemUse()
         {
-            if ( (m_IsTriggering && !m_WasTriggered) || IsCharging) {
+            if ( (m_IsTriggering && !m_WasTriggered) || m_IsCharging) {
                 return false;
             }
             return true;
@@ -1057,7 +1132,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
             
             m_MinChargeCompleteEvent.CancelWaitForEvent();
             m_MaxChargeCompleteEvent.CancelWaitForEvent();
-            m_UnchargeCompleteEvent.CancelWaitForEvent();
+            m_DepleteChargeCompleteEvent.CancelWaitForEvent();
             
             //Stop the animation on stop item use.
             m_IsTriggering = false;
@@ -1081,7 +1156,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
         public override bool CanStartUseItem(Use useAbility, UsableAction.UseAbilityState abilityState)
         {
             var canStart = base.CanStartUseItem(useAbility, abilityState);
-            if (canStart == false) {
+            if (!canStart) {
                 return false;
             }
             

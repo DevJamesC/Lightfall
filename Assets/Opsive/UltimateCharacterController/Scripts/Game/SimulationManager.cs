@@ -303,7 +303,7 @@ namespace Opsive.UltimateCharacterController
             }
 
             if (firstIndex == -1 || secondIndex == -1) {
-                Debug.LogError($"Error: The character {(firstIndex == -1 ? firstLocomotion.name : secondLocomotion)} is not registered with the SimulationManager so the update order cannot be changed.");
+                Debug.LogError($"Error: The character {(firstIndex == -1 ? firstLocomotion.name.ToString() : secondLocomotion.ToString())} is not registered with the SimulationManager so the update order cannot be changed.");
                 return;
             }
 

@@ -77,7 +77,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Magic.CastEff
         public GameObject SpawnedGameObject { 
             set {
                 if (m_FadeEvent != null) {
-                    SchedulerBase.Cancel(m_FadeEvent);
+                    Scheduler.Cancel(m_FadeEvent);
                     m_FadeEvent = null;
                     SetRendererAlpha(0);
                 }
@@ -105,18 +105,11 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Magic.CastEff
         /// <param name="useDataStream">The use data stream, contains the cast data.</param>
         protected override void DoCastInternal(MagicUseDataStream useDataStream)
         {
-            Transform origin = useDataStream.CastData.CastOrigin;
-            Vector3 direction = useDataStream.CastData.Direction;
-            Vector3 targetPosition = useDataStream.CastData.CastTargetPosition;
-            m_CastID = (uint)useDataStream.CastData.CastID;
-            
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
-            // The server will spawn the particle.
-            if (m_MagicItem.NetworkInfo != null && m_MagicItem.NetworkInfo.IsLocalPlayer()) {
-                m_MagicItem.NetworkCharacter.MagicCast(m_MagicItem, m_Index, m_CastID, direction, targetPosition);
-            }
-#endif
+            m_CastID = useDataStream.CastData.CastID;
 
+            var origin = useDataStream.CastData.CastOrigin;
+            var direction = useDataStream.CastData.Direction;
+            var targetPosition = useDataStream.CastData.CastTargetPosition;
             var position = MathUtility.TransformPoint(origin.position, CharacterTransform.rotation, m_PositionOffset);
             if (targetPosition != position) {
                 direction = (targetPosition - position).normalized;
@@ -148,7 +141,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Magic.CastEff
             }
 
             if (m_FadeEvent != null) {
-                SchedulerBase.Cancel(m_FadeEvent);
+                Scheduler.Cancel(m_FadeEvent);
                 m_FadeEvent = null;
                 SetRendererAlpha(0);
             }
@@ -205,7 +198,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Magic.CastEff
                 }
                 SetRendererAlpha(0);
                 var interval = m_FadeInDuration / (1 / m_FadeStep);
-                m_FadeEvent = SchedulerBase.Schedule(interval, FadeMaterials, interval, 1f);
+                m_FadeEvent = Scheduler.Schedule(interval, FadeMaterials, interval, 1f);
             }
         }
 
@@ -249,7 +242,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Magic.CastEff
             if (arrived) {
                 m_FadeEvent = null;
             } else {
-                m_FadeEvent = SchedulerBase.Schedule(interval, FadeMaterials, interval, targetAlpha);
+                m_FadeEvent = Scheduler.Schedule(interval, FadeMaterials, interval, targetAlpha);
             }
         }
 
@@ -278,7 +271,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Magic.CastEff
             // Optionally fade the particle out of the world.
             if (m_FadeOutDuration > 0) {
                 if (m_FadeEvent != null) {
-                    SchedulerBase.Cancel(m_FadeEvent);
+                    Scheduler.Cancel(m_FadeEvent);
                     m_FadeEvent = null;
                 }
                 if (m_Renderers == null) {
@@ -289,7 +282,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Magic.CastEff
                 if (m_FadeInDuration == 0) {
                     SetRendererAlpha(1);
                 }
-                m_FadeEvent = SchedulerBase.Schedule(interval, FadeMaterials, interval, 0f);
+                m_FadeEvent = Scheduler.Schedule(interval, FadeMaterials, interval, 0f);
             }
 
             m_Active = false;
@@ -302,7 +295,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Magic.CastEff
         /// <param name="firstPerson">Changed to first person?.</param>
         public override void OnChangePerspectives(bool firstPerson)
         {
-            if (m_Active == false) {
+            if (!m_Active) {
                 return;
             }
             
@@ -312,12 +305,10 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Magic.CastEff
             }
 
             var spawnedTransform = m_ParticleSystem.transform;
-            var localRotation = spawnedTransform.localRotation;
-            var localScale = spawnedTransform.localScale;
             spawnedTransform.parent = origin;
             spawnedTransform.position = MathUtility.TransformPoint(origin.position, CharacterTransform.rotation, m_PositionOffset);
-            spawnedTransform.localRotation = localRotation;
-            spawnedTransform.localScale = localScale;
+            spawnedTransform.localRotation = spawnedTransform.localRotation;
+            spawnedTransform.localScale = spawnedTransform.localScale;
         }
     }
 }

@@ -62,9 +62,9 @@ namespace Opsive.Shared.Input.VirtualControls
                 var canvasScale = m_CanvasScalarTransform == null ? Vector3.one : m_CanvasScalarTransform.localScale;
                 m_DeltaPosition.x += data.delta.x * m_DeltaPositionMultiplier / canvasScale.x;
                 m_DeltaPosition.y += data.delta.y * m_DeltaPositionMultiplier / canvasScale.y;
-                SchedulerBase.Cancel(m_ActiveDragScheduler);
+                Scheduler.Cancel(m_ActiveDragScheduler);
                 if (m_RequireActiveDrag) {
-                    m_ActiveDragScheduler = SchedulerBase.Schedule(Time.fixedDeltaTime, DampenDeltaPosition);
+                    m_ActiveDragScheduler = Scheduler.Schedule(Time.fixedDeltaTime, DampenDeltaPosition);
                 }
             }
         }
@@ -76,7 +76,7 @@ namespace Opsive.Shared.Input.VirtualControls
         {
             m_DeltaPosition /= (1 + m_ActiveDragDamping);
             if (m_DeltaPosition.sqrMagnitude > 0.1f) {
-                m_ActiveDragScheduler = SchedulerBase.Schedule(Time.fixedDeltaTime, DampenDeltaPosition);
+                m_ActiveDragScheduler = Scheduler.Schedule(Time.fixedDeltaTime, DampenDeltaPosition);
             }
         }
 

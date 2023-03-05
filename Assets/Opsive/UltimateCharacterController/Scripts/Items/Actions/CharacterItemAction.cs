@@ -7,12 +7,18 @@
 namespace Opsive.UltimateCharacterController.Items.Actions
 {
     using Opsive.Shared.Game;
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+    using Opsive.Shared.Networking;
+#endif
     using Opsive.Shared.StateSystem;
     using Opsive.Shared.Utility;
     using Opsive.UltimateCharacterController.Character;
     using Opsive.UltimateCharacterController.Inventory;
     using Opsive.UltimateCharacterController.Items;
     using Opsive.UltimateCharacterController.Items.Actions.Modules;
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+    using Opsive.UltimateCharacterController.Networking.Character;
+#endif
     using System;
     using System.Collections.Generic;
     using UnityEngine;
@@ -24,7 +30,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions
     /// </summary>
     public abstract class CharacterItemAction : StateBehavior
     {
-        //Info keys are used for debugging character item actions.
+        // Info keys are used for debugging character item actions.
         public const string InfoKey_CanEquip  = "Action/CanEquip";
         public const string InfoKey_CanActivateVisibleObject  = "Action/CanActivateVisibleObject";
         
@@ -36,7 +42,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions
         public event Action OnFixedUpdateE;
         public event Action OnLateUpdateE;
 
-        [Tooltip("The ID of the action. Used with the perspective properties and item abilities to allow multiple actions to exist on the same item.")]
+        [Tooltip("The ID of the action. Used with the item abilities to allow multiple actions to exist on the same item.")]
         [SerializeField] protected int m_ID;
         [Tooltip("The name of the action.")]
         [SerializeField] protected string m_ActionName;
@@ -53,12 +59,16 @@ namespace Opsive.UltimateCharacterController.Items.Actions
         [Shared.Utility.NonSerialized] public string ActionDescription { get => m_ActionDescription; set => m_ActionDescription = value; }
 
         protected GameObject m_GameObject;
+        protected Transform m_Transform;
         protected CharacterItem m_CharacterItem;
         protected InventoryBase m_Inventory;
         protected GameObject m_Character;
         protected Transform m_CharacterTransform;
-        protected Transform m_Transform;
         protected UltimateCharacterLocomotion m_CharacterLocomotion;
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+        protected INetworkInfo m_NetworkInfo;
+        protected INetworkCharacter m_NetworkCharacter;
+#endif
         protected bool m_UsingFirstPerspective;
         protected bool m_IsEquipped;
 
@@ -71,13 +81,17 @@ namespace Opsive.UltimateCharacterController.Items.Actions
         public List<ActionModuleGroupBase> AllModuleGroups { get => m_AllModuleGroups; }
         public Dictionary<int, ActionModuleGroupBase> ModuleGroupsByID { get => m_ModuleGroupsByID; }
 
+        public GameObject GameObject => m_GameObject;
+        public Transform Transform => m_Transform;
         public CharacterItem CharacterItem => m_CharacterItem;
         public InventoryBase Inventory => m_Inventory;
         public GameObject Character => m_Character;
         public Transform CharacterTransform => m_CharacterTransform;
         public UltimateCharacterLocomotion CharacterLocomotion => m_CharacterLocomotion;
-        public GameObject GameObject => m_GameObject;
-        public Transform Transform => m_Transform;
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+        public INetworkInfo NetworkInfo => m_NetworkInfo;
+        public INetworkCharacter NetworkCharacter => m_NetworkCharacter;
+#endif
         public bool UsingFirstPerspective => m_UsingFirstPerspective;
 
         public CharacterItemActionLogger DebugLogger => m_DebugLogger;
@@ -97,8 +111,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions
         /// </summary>
         protected virtual void Start()
         {
-            StartModules();
-            // We only check if the modules are valid after they have started, since some modules are interdependent.
+            // Some modules are independent so only check if they are valid after they have started.
             CheckIfValid(true);
         }
 
@@ -123,7 +136,11 @@ namespace Opsive.UltimateCharacterController.Items.Actions
             m_Character = m_CharacterLocomotion.gameObject;
             m_CharacterTransform = m_Character.transform;
             m_Inventory = m_Character.GetCachedComponent<InventoryBase>();
-            
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+            m_NetworkInfo = m_Character.GetCachedComponent<INetworkInfo>();
+            m_NetworkCharacter = m_Character.GetCachedComponent<INetworkCharacter>();
+#endif
+
             m_UsingFirstPerspective = m_CharacterLocomotion.FirstPersonPerspective;
             EventHandler.RegisterEvent<bool>(m_Character, "OnCharacterChangePerspectives", OnChangePerspectives);
             
@@ -160,17 +177,17 @@ namespace Opsive.UltimateCharacterController.Items.Actions
 
             if (m_CharacterItem == null) {
                 isValid = false;
-                message += "The Character Item cannot be null\n";
+                message += "The Character Item cannot be null.\n";
             }
             
             if (m_CharacterLocomotion == null) {
                 isValid = false;
-                message += "The Character Locomotion cannot be null\n";
+                message += "The Character Locomotion cannot be null.\n";
             }
             
             if (m_Inventory == null) {
                 isValid = false;
-                message += "The Inventory cannot be null\n";
+                message += "The Inventory cannot be null.\n";
             }
 
             return (isValid, message);
@@ -182,7 +199,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions
         /// <param name="force">Force initialize the action?</param>
         protected virtual void InitializeActionInternal(bool force)
         {
-            //Do nothing.
+            // Do nothing.
         }
 
         /// <summary>
@@ -197,11 +214,19 @@ namespace Opsive.UltimateCharacterController.Items.Actions
             m_AllModuleGroups = new List<ActionModuleGroupBase>();
             m_ModuleGroupsByID = new Dictionary<int, ActionModuleGroupBase>();
 
-            // A temporary list is used when initializing 
+            // A temporary list is used when initializing.
             var tempModuleGroupList = new List<ActionModuleGroupBase>();
             GetAllModuleGroups(tempModuleGroupList);
             for (int i = 0; i < tempModuleGroupList.Count; i++) {
                 tempModuleGroupList[i].Initialize(this);
+            }
+            
+            for (int i = 0; i < m_AllModuleGroups.Count; i++) {
+                // Initialize all modules, not just the active/enabled ones
+                var modules = m_AllModuleGroups[i].BaseModules;
+                for (int j = 0; j < modules.Count; j++) {
+                    modules[j].OnAllModulesPreInitialized();
+                }
             }
         }
 
@@ -336,16 +361,18 @@ namespace Opsive.UltimateCharacterController.Items.Actions
         /// <param name="i1">The first parameter to pass.</param>
         /// <param name="i2">The second parameter to pass.</param>
         /// <param name="action">The action the invoke on all active modules with the type specified.</param>
+        /// <param name="includeInactive">Should the method also be invoked on inactive modules?</param>
         /// <typeparam name="Tm">The module type.</typeparam>
         /// <typeparam name="T1">The first parameter type.</typeparam>
         /// <typeparam name="T2">The second parameter type.</typeparam>
-        public void InvokeOnModulesWithType<Tm,T1,T2>(T1 i1, T2 i2, Action<Tm,T1,T2> action)
+        public void InvokeOnModulesWithType<Tm,T1,T2>(T1 i1, T2 i2, Action<Tm,T1,T2> action, bool includeInactive = false)
         {
             for (int i = 0; i < m_AllModuleGroups.Count; i++) {
                 var moduleGroup = m_AllModuleGroups[i];
-                for (int j = 0; j < moduleGroup.EnabledBaseModules.Count; j++) {
-                    var module = moduleGroup.EnabledBaseModules[j];
-                    if (!module.IsActive || !(module is Tm moduleT)) { continue; }
+                var modules = includeInactive ? moduleGroup.BaseModules : moduleGroup.EnabledBaseModules;
+                for (int j = 0; j < modules.Count; j++) {
+                    var module = modules[j];
+                    if ((!includeInactive && !module.IsActive) || !(module is Tm moduleT)) { continue; }
 
                     action(moduleT, i1, i2);
                 } 
@@ -417,7 +444,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions
                     var module = moduleGroup.EnabledBaseModules[j];
                     if (!module.IsActive || !(module is Tm moduleT)) { continue; }
 
-                    if (condition(moduleT) == false) {
+                    if (!condition(moduleT)) {
                         if (skip) {
                             continue;
                         } else {
@@ -435,26 +462,28 @@ namespace Opsive.UltimateCharacterController.Items.Actions
         /// </summary>
         /// <param name="action">The action that returns if the module passed or failed.</param>
         /// <param name="returnOnTrue">Break and return if the module passed or failed the condition.</param>
+        /// <param name="includeInactive">Should the method also be invoked on inactive modules?</param>
         /// <typeparam name="Tm">The module type.</typeparam>
         /// <returns>(The action returned True/False, module that returned early if there is one).</returns>
-        public  (bool, Tm) InvokeOnModulesWithTypeConditional<Tm>(Func<Tm, bool> action, bool returnOnTrue)
+        public (bool, Tm) InvokeOnModulesWithTypeConditional<Tm>(Func<Tm, bool> action, bool returnOnTrue, bool includeInactive = false)
         {
             for (int i = 0; i < m_AllModuleGroups.Count; i++) {
                 var moduleGroup = m_AllModuleGroups[i];
-                for (int j = 0; j < moduleGroup.EnabledBaseModules.Count; j++) {
-                    var module = moduleGroup.EnabledBaseModules[j];
-                    if (!module.IsActive || !(module is Tm moduleT)) { continue; }
+                var modules = includeInactive ? moduleGroup.BaseModules : moduleGroup.EnabledBaseModules;
+                for (int j = 0; j < modules.Count; j++) {
+                    var module = modules[j];
+                    if ((!includeInactive && !module.IsActive) || !(module is Tm moduleT)) { continue; }
 
                     var result = action(moduleT);
-                    
-                    if (returnOnTrue == false && result == false) {
-                        return (false,moduleT);
+
+                    if (!returnOnTrue && !result) {
+                        return (false, moduleT);
                     }
-                    
+
                     if (returnOnTrue && result) {
-                        return (true,moduleT);
+                        return (true, moduleT);
                     }
-                } 
+                }
             }
 
             return (!returnOnTrue, default);
@@ -478,8 +507,8 @@ namespace Opsive.UltimateCharacterController.Items.Actions
                     if (!module.IsActive || !(module is Tm moduleT)) { continue; }
 
                     var result = action(moduleT, i1);
-                    
-                    if (returnOnTrue == false && result == false) {
+
+                    if (!returnOnTrue && !result) {
                         return (false,moduleT);
                     }
                     
@@ -513,7 +542,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions
 
                     var result = action(moduleT, i1, i2);
                     
-                    if (returnOnTrue == false && result == false) {
+                    if (!returnOnTrue && !result) {
                         return (false,moduleT);
                     }
                     
@@ -526,20 +555,6 @@ namespace Opsive.UltimateCharacterController.Items.Actions
             return (!returnOnTrue, default);
         }
 
-        /// <summary>
-        /// Start the modules, this used after all modules have been initialized.
-        /// </summary>
-        protected virtual void StartModules()
-        {
-            for (int i = 0; i < m_AllModuleGroups.Count; i++) {
-                // We run this on ALL modules, not just the active/enabled ones
-                var modules = m_AllModuleGroups[i].BaseModules;
-                for (int j = 0; j < modules.Count; j++) {
-                    modules[j].OnAllModulesPreInitialized();
-                }
-            }
-        }
-        
         /// <summary>
         /// The item has been picked up by the character.
         /// </summary>
@@ -705,6 +720,9 @@ namespace Opsive.UltimateCharacterController.Items.Actions
         /// </summary>
         public virtual void Remove()
         {
+            if(m_IsEquipped) {
+                Unequip();
+            }
             for (int i = 0; i < m_AllModuleGroups.Count; i++) {
                 var modules = m_AllModuleGroups[i].EnabledBaseModules;
                 for (int j = 0; j < modules.Count; j++) {

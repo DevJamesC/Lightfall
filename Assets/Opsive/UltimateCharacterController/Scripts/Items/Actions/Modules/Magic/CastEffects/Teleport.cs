@@ -63,12 +63,10 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Magic.CastEff
         /// <param name="useDataStream">The use data stream, contains the cast data.</param>
         protected override void DoCastInternal(MagicUseDataStream useDataStream)
         {
-            Transform origin = useDataStream.CastData.CastOrigin;
-            Vector3 direction = useDataStream.CastData.Direction;
-            Vector3 targetPosition = useDataStream.CastData.CastTargetPosition;
             m_CastID = (uint)useDataStream.CastData.CastID;
             
-            direction = Vector3.ProjectOnPlane(targetPosition - GameObject.transform.position, CharacterLocomotion.Up);
+            var targetPosition = useDataStream.CastData.CastTargetPosition;
+            var direction = Vector3.ProjectOnPlane(targetPosition - GameObject.transform.position, CharacterLocomotion.Up);
             CharacterLocomotion.SetPositionAndRotation(targetPosition, Quaternion.LookRotation(direction), m_SnapAnimator, false);
         }
     }

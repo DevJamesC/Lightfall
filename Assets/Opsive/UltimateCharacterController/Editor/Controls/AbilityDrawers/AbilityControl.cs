@@ -12,6 +12,7 @@ namespace Opsive.UltimateCharacterController.Editor.Controls.Types.AbilityDrawer
     using Opsive.UltimateCharacterController.Character.Abilities;
     using Opsive.UltimateCharacterController.Character.Abilities.Starters;
     using Opsive.UltimateCharacterController.Editor.Inspectors.Utility;
+    using Opsive.UltimateCharacterController.Editor.Utility;
     using System.Collections.Generic;
     using System.Reflection;
     using UnityEditor;
@@ -367,56 +368,54 @@ namespace Opsive.UltimateCharacterController.Editor.Controls.Types.AbilityDrawer
         protected virtual void ShowEditorFields(Object unityObject, object target, VisualElement container, System.Action<object> onChangeEvent, 
                                                     Inspectors.Character.UltimateCharacterLocomotionInspector inspector)
         {
-            var abilityDrawer = AbilityDrawerUtility.FindAbilityDrawer(target.GetType(), true);
-            if (abilityDrawer == null) {
-                return;
-            }
-
             var ability = target as Ability;
-            abilityDrawer.CreateEditorDrawer(unityObject, target, container, null, (o) =>
-            {
-                onChangeEvent(o);
-            });
-
-            if (abilityDrawer.CanBuildAnimator || ability.AbilityIndexParameter != -1) {
-                var horizontalLayout = new VisualElement();
-                horizontalLayout.AddToClassList("horizontal-layout");
-                container.Add(horizontalLayout);
-
-                var generateButton = new Button();
-                generateButton.text = "Generate Animator Controller";
-                generateButton.style.flexGrow = 1;
-                horizontalLayout.Add(generateButton);
-                generateButton.clicked += () =>
-                 {
-                     UnityEditor.Animations.AnimatorController[] animatorControllers = null;
-                     UnityEditor.Animations.AnimatorController[] firstPersonAnimatorControllers = null;
-                     GetAnimatorControllers(unityObject as UltimateCharacterLocomotion, ref animatorControllers, ref firstPersonAnimatorControllers);
-
-                     if (animatorControllers != null || firstPersonAnimatorControllers != null) {
-                         var baseDirectory = EditorPrefs.GetString(c_EditorPrefsLastLastAnimatorCodePathKey, "Assets");
-                         var path = abilityDrawer.GenerateAnimatorCode(ability, animatorControllers, firstPersonAnimatorControllers, baseDirectory);
-                         if (!string.IsNullOrEmpty(path)) {
-                             EditorPrefs.SetString(c_EditorPrefsLastLastAnimatorCodePathKey, System.IO.Path.GetFullPath(path.Replace(Application.dataPath, "Assets")));
-                         }
-                     }
-                 };
-
-                var buildAnimatorButton = new Button();
-                buildAnimatorButton.text = "Build Animator";
-                buildAnimatorButton.clicked += () =>
+            var abilityDrawer = AbilityDrawerUtility.FindAbilityDrawer(ability.GetType(), true);
+            if (abilityDrawer != null) {
+                abilityDrawer.CreateEditorDrawer(unityObject, ability, container, null, (o) =>
                 {
-                    UnityEditor.Animations.AnimatorController[] animatorControllers = null;
-                    UnityEditor.Animations.AnimatorController[] firstPersonAnimatorControllers = null;
-                    GetAnimatorControllers(unityObject as UltimateCharacterLocomotion, ref animatorControllers, ref firstPersonAnimatorControllers);
-
-                    if (animatorControllers != null || firstPersonAnimatorControllers != null) {
-                        abilityDrawer.BuildAnimator(animatorControllers, firstPersonAnimatorControllers);
-                    }
-                };
-                buildAnimatorButton.style.flexGrow = 1;
-                horizontalLayout.Add(buildAnimatorButton);
+                    onChangeEvent(o);
+                });
             }
+
+            var horizontalLayout = new VisualElement();
+            horizontalLayout.AddToClassList("horizontal-layout");
+            container.Add(horizontalLayout);
+
+            var generateButton = new Button();
+            generateButton.text = "Generate Animator Controller";
+            generateButton.clicked += () =>
+            {
+                UnityEditor.Animations.AnimatorController[] animatorControllers = null;
+                UnityEditor.Animations.AnimatorController[] firstPersonAnimatorControllers = null;
+                GetAnimatorControllers(unityObject as UltimateCharacterLocomotion, ref animatorControllers, ref firstPersonAnimatorControllers);
+
+                if (animatorControllers != null || firstPersonAnimatorControllers != null) {
+                    var baseDirectory = EditorPrefs.GetString(c_EditorPrefsLastLastAnimatorCodePathKey, "Assets");
+                    var path = AnimatorBuilder.GenerateAnimatorCode(animatorControllers, firstPersonAnimatorControllers, "AbilityIndex", ability.AbilityIndexParameter, ability, baseDirectory);
+                    if (!string.IsNullOrEmpty(path)) {
+                        EditorPrefs.SetString(c_EditorPrefsLastLastAnimatorCodePathKey, System.IO.Path.GetFullPath(path.Replace(Application.dataPath, "Assets")));
+                    }
+                }
+            };
+            generateButton.style.flexGrow = 1;
+            generateButton.SetEnabled(ability.AbilityIndexParameter != -1);
+            horizontalLayout.Add(generateButton);
+
+            var buildAnimatorButton = new Button();
+            buildAnimatorButton.text = "Build Animator";
+            buildAnimatorButton.clicked += () =>
+            {
+                UnityEditor.Animations.AnimatorController[] animatorControllers = null;
+                UnityEditor.Animations.AnimatorController[] firstPersonAnimatorControllers = null;
+                GetAnimatorControllers(unityObject as UltimateCharacterLocomotion, ref animatorControllers, ref firstPersonAnimatorControllers);
+
+                if (animatorControllers != null || firstPersonAnimatorControllers != null) {
+                    abilityDrawer.BuildAnimator(animatorControllers, firstPersonAnimatorControllers);
+                }
+            };
+            buildAnimatorButton.style.flexGrow = 1;
+            buildAnimatorButton.SetEnabled(abilityDrawer != null && abilityDrawer.CanBuildAnimator);
+            horizontalLayout.Add(buildAnimatorButton);
         }
 
         /// <summary>

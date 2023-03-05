@@ -329,7 +329,10 @@ namespace Opsive.UltimateCharacterController.Utility
         /// <returns>The comparison for IDs.</returns>
         public Comparison<NameID> IDComparison(bool ascending)
         {
-            return ascending ? (x, y) => x.ID.CompareTo(y.ID) : (x, y) => y.ID.CompareTo(x.ID);
+            if (ascending)
+                return (x, y) => x.ID.CompareTo(y.ID);
+            else
+                return (x, y) => y.ID.CompareTo(x.ID);
         }
 
         /// <summary>
@@ -339,9 +342,10 @@ namespace Opsive.UltimateCharacterController.Utility
         /// <returns>The comparison for names.</returns>
         public Comparison<NameID> NameComparison(bool ascending)
         {
-            return ascending
-                ? (x, y) => String.Compare(x.Name, y.Name, StringComparison.OrdinalIgnoreCase)
-                : (x, y) => String.Compare(y.Name, x.Name, StringComparison.OrdinalIgnoreCase);
+            if (ascending)
+                return (x, y) => String.Compare(x.Name, y.Name, StringComparison.OrdinalIgnoreCase);
+            else
+                return (x, y) => String.Compare(y.Name, x.Name, StringComparison.OrdinalIgnoreCase);
         }
 
         /// <summary>

@@ -120,10 +120,10 @@ namespace Opsive.UltimateCharacterController.Traits
         /// <param name="delay">The amount to delay the attribute update event by.</param>
         public void ScheduleAutoUpdate(float delay)
         {
-            SchedulerBase.Cancel(m_AutoUpdateEvent);
+            Scheduler.Cancel(m_AutoUpdateEvent);
             if ((m_AutoUpdateValueType == AutoUpdateValue.Increase && m_Value != m_MaxValue) ||
                 (m_AutoUpdateValueType == AutoUpdateValue.Decrease && m_Value != m_MinValue)) {
-                m_AutoUpdateEvent = SchedulerBase.Schedule(delay, UpdateValue);
+                m_AutoUpdateEvent = Scheduler.Schedule(delay, UpdateValue);
             }
         }
 
@@ -140,14 +140,14 @@ namespace Opsive.UltimateCharacterController.Traits
             if (m_AutoUpdateValueType == AutoUpdateValue.Increase) {
                 m_Value = Mathf.Min(m_Value + m_AutoUpdateAmount, m_MaxValue);
                 if (m_Value < m_MaxValue) {
-                    m_AutoUpdateEvent = SchedulerBase.ScheduleFixed(m_AutoUpdateInterval, UpdateValue);
+                    m_AutoUpdateEvent = Scheduler.ScheduleFixed(m_AutoUpdateInterval, UpdateValue);
                 } else {
                     EventHandler.ExecuteEvent(this, "OnAttributeReachedDestinationValue");
                 }
             } else { // Decrease.
                 m_Value = Mathf.Max(m_Value - m_AutoUpdateAmount, m_MinValue);
                 if (m_Value > m_MinValue) {
-                    m_AutoUpdateEvent = SchedulerBase.ScheduleFixed(m_AutoUpdateInterval, UpdateValue);
+                    m_AutoUpdateEvent = Scheduler.ScheduleFixed(m_AutoUpdateInterval, UpdateValue);
                 } else {
                     EventHandler.ExecuteEvent(this, "OnAttributeReachedDestinationValue");
                 }
@@ -208,7 +208,7 @@ namespace Opsive.UltimateCharacterController.Traits
         /// </summary>
         public void CancelAutoUpdate()
         {
-            SchedulerBase.Cancel(m_AutoUpdateEvent);
+            Scheduler.Cancel(m_AutoUpdateEvent);
         }
 
         /// <summary>
@@ -216,7 +216,7 @@ namespace Opsive.UltimateCharacterController.Traits
         /// </summary>
         public void ResetValue()
         {
-            SchedulerBase.Cancel(m_AutoUpdateEvent);
+            Scheduler.Cancel(m_AutoUpdateEvent);
             m_Value = m_StartValue;
             if (m_GameObject != null) {
                 EventHandler.ExecuteEvent(m_GameObject, "OnAttributeUpdateValue", this);
@@ -236,7 +236,7 @@ namespace Opsive.UltimateCharacterController.Traits
         /// </summary>
         ~Attribute()
         {
-            SchedulerBase.Cancel(m_AutoUpdateEvent);
+            Scheduler.Cancel(m_AutoUpdateEvent);
         }
     }
 
@@ -388,13 +388,13 @@ namespace Opsive.UltimateCharacterController.Traits
                 m_Attribute.AutoUpdateStartDelay = m_AutoUpdateStartDelay; // Setting the actual start delay will update the value.
 
                 if (m_AutoUpdateDuration > 0) {
-                    m_DisableAutoUpdateEvent = SchedulerBase.Schedule(m_AutoUpdateDuration, EnableModifier, false);
+                    m_DisableAutoUpdateEvent = Scheduler.Schedule(m_AutoUpdateDuration, EnableModifier, false);
                 }
             } else {
                 m_Attribute.StoreRestoreAutoUpdateValues(false);
 
                 if (m_DisableAutoUpdateEvent != null) {
-                    SchedulerBase.Cancel(m_DisableAutoUpdateEvent);
+                    Scheduler.Cancel(m_DisableAutoUpdateEvent);
                     m_DisableAutoUpdateEvent = null;
                 }
 

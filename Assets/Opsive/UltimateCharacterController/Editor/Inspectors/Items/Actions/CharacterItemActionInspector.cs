@@ -176,6 +176,9 @@ namespace Opsive.UltimateCharacterController.Editor.Inspectors.Items.Actions
                     // Call on module removed.
                     // The list is a copy of the array, so the module must also be removed from the list.
                     m_ItemActionModuleGroupBase.RemoveModuleAt(index, m_TargetGameObject);
+                    for (int i = index; i < m_ItemActionModuleGroupBase.ModuleCount; ++i) {
+                        m_ItemActionModuleGroupBase.BaseModules[i].ID -= 1;
+                    }
                     m_List.RemoveAt(index);
 
                     InvokeValueChanged();
@@ -247,6 +250,7 @@ namespace Opsive.UltimateCharacterController.Editor.Inspectors.Items.Actions
             InvokeValueChanged(false);
 
             m_ItemActionModuleGroupBase.OnModuleAdded(module, m_TargetGameObject);
+            module.ID = m_ItemActionModuleGroupBase.ModuleCount - 1;
 
             // Invoke value changed again in case the OnModuleAdded function made some changes.
             InvokeValueChanged(true);

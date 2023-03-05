@@ -11,8 +11,6 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Throwable
     using Opsive.UltimateCharacterController.Objects;
     using Opsive.UltimateCharacterController.Utility;
     using System;
-    using Opsive.Shared.Inventory;
-    using Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable;
     using UnityEngine;
 
     /// <summary>
@@ -55,11 +53,11 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Throwable
         }
 
         /// <summary>
-        /// Register to events while the item is equipped and the module is enabled.
+        /// Updates the registered events when the item is equipped and the module is enabled.
         /// </summary>
-        protected override void RegisterEventsWhileEquippedAndEnabledInternal(bool register)
+        protected override void UpdateRegisteredEventsInternal(bool register)
         {
-            base.RegisterEventsWhileEquippedAndEnabledInternal(register);
+            base.UpdateRegisteredEventsInternal(register);
 
             if (register) {
                 m_CharacterItemAction.OnFixedUpdateE += OnLateUpdate;
@@ -176,11 +174,11 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Throwable
         }
 
         /// <summary>
-        /// Register to events while the item is equipped and the module is enabled.
+        /// Updates the registered events when the item is equipped and the module is enabled.
         /// </summary>
-        protected override void RegisterEventsWhileEquippedAndEnabledInternal(bool register)
+        protected override void UpdateRegisteredEventsInternal(bool register)
         {
-            base.RegisterEventsWhileEquippedAndEnabledInternal(register);
+            base.UpdateRegisteredEventsInternal(register);
             m_RemovePinEvent.RegisterUnregisterAnimationEvent(register, Character,"OnAnimatorItemRemovePin", RemovePin);
         }
 
@@ -243,11 +241,11 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Throwable
         public bool Show { get => m_Show; set => m_Show = value; }
 
         /// <summary>
-        /// Register to events while the item is equipped and the module is enabled.
+        /// Updates the registered events when the item is equipped and the module is enabled.
         /// </summary>
-        protected override void RegisterEventsWhileEquippedAndEnabledInternal(bool register)
+        protected override void UpdateRegisteredEventsInternal(bool register)
         {
-            base.RegisterEventsWhileEquippedAndEnabledInternal(register);
+            base.UpdateRegisteredEventsInternal(register);
 
             var target = Character;
             Shared.Events.EventHandler.RegisterUnregisterEvent<CharacterItem, ThrowableAmmoModule>(register, target, "OnThrowableItemAmmoChange", OnThrowableItemAmmoChange);

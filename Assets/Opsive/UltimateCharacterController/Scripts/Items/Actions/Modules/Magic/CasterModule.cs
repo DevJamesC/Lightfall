@@ -26,15 +26,13 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Magic
         private Vector3 m_Direction;
         private Vector3 m_CastPosition;
         private Vector3 m_CastTargetPosition;
-        protected float m_InitialStartCastTime; // The first cast time
-        protected float m_StartCastTime;        // The start of other casts if the caster is continuous
+        protected float m_StartCastTime;        // The start of other casts if the caster is continuous.
         
         public Transform CastOrigin { get => m_CastOrigin; set => m_CastOrigin = value; }
         public Vector3 CastPosition { get => m_CastPosition; set => m_CastPosition = value; }
         
         public Vector3 Direction { get => m_Direction; set => m_Direction = value; }
         public Vector3 CastTargetPosition { get => m_CastTargetPosition; set => m_CastTargetPosition = value; }
-        public float InitialStartCastTime { get=> m_InitialStartCastTime; set=> m_InitialStartCastTime = value; }
         public float StartCastTime { get=> m_StartCastTime; set=> m_StartCastTime = value; }
         public int TargetIndex { get; set; }
         public ListSlice<Collider> Targets { get; set; }
@@ -252,9 +250,9 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Magic
             if (m_SurfaceIndicator != null) {
                 m_SurfaceIndicator.gameObject.SetActive(false);
             }
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
             // The local surface indicator should not show for remote players.
-            if (m_NetworkInfo != null && !m_NetworkInfo.IsLocalPlayer()) {
+            if (NetworkInfo != null && !NetworkInfo.IsLocalPlayer()) {
                 m_SurfaceIndicator = null;
             }
 #endif
@@ -262,11 +260,11 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Magic
         }
 
         /// <summary>
-        /// Register to events while the item is equipped and the module is enabled.
+        /// Updates the registered events when the item is equipped and the module is enabled.
         /// </summary>
-        protected override void RegisterEventsWhileEquippedAndEnabledInternal(bool register)
+        protected override void UpdateRegisteredEventsInternal(bool register)
         {
-            base.RegisterEventsWhileEquippedAndEnabledInternal(register);
+            base.UpdateRegisteredEventsInternal(register);
 
             var target = Character;
             
@@ -341,7 +339,6 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Magic
             //Start the casting right away.
             var magicCastData = GetCastData();
             m_StartCastTime =  Time.time;
-            magicCastData.InitialStartCastTime = m_StartCastTime;
             magicCastData.StartCastTime = m_StartCastTime;
             
             MagicAction.OnStartCasting(magicCastData);
@@ -356,10 +353,22 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Magic
         protected virtual void StartCastEffects()
         {
             m_AllCastStartCount++;
-            var enabledCastModules = MagicAction.CastEffectsModuleGroup.EnabledModules;
-            for (int i = 0; i < enabledCastModules.Count; i++) {
-                enabledCastModules[i].StartCast(MagicAction.MagicUseDataStream);
+
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+            int invokedBitmask = 0;
+#endif
+            for (int i = 0; i < MagicAction.CastEffectsModuleGroup.EnabledModules.Count; i++) {
+                MagicAction.CastEffectsModuleGroup.EnabledModules[i].StartCast(MagicAction.MagicUseDataStream);
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+                invokedBitmask |= 1 << MagicAction.CastEffectsModuleGroup.EnabledModules[i].ID;
+#endif
             }
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+            if (MagicAction.NetworkInfo != null && MagicAction.NetworkInfo.IsLocalPlayer()) {
+                MagicAction.NetworkCharacter.InvokeMagicCastEffectsModules(MagicAction, MagicAction.CastEffectsModuleGroup, invokedBitmask, 
+                    Networking.Character.INetworkCharacter.CastEffectState.Start, MagicAction.MagicUseDataStream);
+            }
+#endif
         }
 
         /// <summary>
@@ -372,11 +381,9 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Magic
             var magicCastData = GetCastData();
             magicCastData.TargetIndex = -1;
             MagicAction.MagicUseDataStream.CastData = magicCastData;
-            
-            var castEffectModules = MagicAction.CastEffectsModuleGroup.EnabledModules;
-
 
             // Only cast the actions that haven't been casted yet.
+            var castEffectModules = MagicAction.CastEffectsModuleGroup.EnabledModules;
             var allActionsCasted = true;
             if (!m_ContinuousCast) {
                 for (int i = 0; i < castEffectModules.Count; ++i) {
@@ -392,16 +399,13 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Magic
             }
             
             if (!allActionsCasted || m_ContinuousCast) {
-                
                 // Use the cast effect for each targets.
                 var useCount = m_Direction == CastDirection.Target ? TargetCount : 1;
                 for (int i = 0; i < useCount; ++i) {
-
                     var previousCastDirection = m_CastDirection;
                     var previousCastTarget = m_CastTargetPosition;
                     var previousCastNormal = m_CastNormal;
                     if (!DetermineCastValues(i, ref m_CastDirection, ref m_CastTargetPosition, ref m_CastNormal)) {
-                        
                         // If the cast no longer finds a value, but it is the first cast use the previous values
                         // Otherwise ignore the cast
                         if (m_Used || i > 0) {
@@ -415,15 +419,25 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Magic
                     
                     magicCastData = GetCastData();
 
-                    //Update the cast data for each target.
+                    // Update the cast data for each target.
                     magicCastData.TargetIndex = i;
                     MagicAction.MagicUseDataStream.CastData = magicCastData;
 
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+                    int invokedBitmask = 0;
+#endif
                     for (int j = 0; j < castEffectModules.Count; j++) {
-                        var castEffectModule = castEffectModules[j];
-
-                        castEffectModule.OnCastUpdate(MagicAction.MagicUseDataStream);
+                        castEffectModules[j].OnCastUpdate(MagicAction.MagicUseDataStream);
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+                        invokedBitmask |= 1 << castEffectModules[i].ID;
+#endif
                     }
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+                    if (MagicAction.NetworkInfo != null && MagicAction.NetworkInfo.IsLocalPlayer()) {
+                        MagicAction.NetworkCharacter.InvokeMagicCastEffectsModules(MagicAction, MagicAction.CastEffectsModuleGroup, invokedBitmask,
+                            Networking.Character.INetworkCharacter.CastEffectState.Update, MagicAction.MagicUseDataStream);
+                    }
+#endif
                 }
             }
 
@@ -451,7 +465,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Magic
 
                 // If the item was just used the end actions should start.
                 if (m_UseType == CastUseType.Single) {
-                    //Notify the cast modules that they will stop.
+                    // Notify the cast modules that they will stop.
                     var enabledCastModules = MagicAction.CastEffectsModuleGroup.EnabledModules;
                     for (int i = 0; i < enabledCastModules.Count; i++) {
                         enabledCastModules[i].CastWillStop();
@@ -471,7 +485,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Magic
         {
             MagicAction.OnAllActionsCasted(m_IndividualCastStartCount, m_AllCastStartCount);
             
-            //Start waiting for a repeat.
+            // Start waiting for a repeat.
             m_RepeatCastEventTrigger.WaitForEvent(true);
             
             var useCount = m_Direction == CastDirection.Target ? TargetCount : 1;
@@ -492,7 +506,6 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Magic
                 var castEffectModule = castEffectModules[j];
                 
                 // Do not check if can cast.
-
                 castEffectModule.DoCast(magicUseDataStream);
                 m_IndividualCastStartCount++;
             }
@@ -512,7 +525,6 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Magic
             m_MagicCastData.Targets = new ListSlice<Collider>(m_TargetColliders, 0, Mathf.Min(m_TargetsFoundCount, m_MaxTargetCount));
             m_MagicCastData.TargetIndex = -1;
             m_MagicCastData.DetectLayers = m_DetectLayers;
-
 
             return m_MagicCastData;
         }
@@ -543,7 +555,9 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Magic
         /// <returns>True if the item can be used.</returns>
         public bool CanStartUseItem(Use useAbility, UsableAction.UseAbilityState abilityState)
         {
-            // The item cannot be used while it is already casting
+            if (useAbility != null && useAbility.IsUseInputTryingToStop()) { return false; }
+            
+            // The item cannot be used while it is already casting.
             // Casting effects must stop before they can be cast again by the trigger.
             if (m_Casting) { return false; }
 
@@ -569,7 +583,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Magic
         /// <returns>True if the item can be used.</returns>
         public bool CanUseItem()
         {
-            // The item cannot be used while it is already casting
+            // The item cannot be used while it is already casting.
             // Casting effects must stop before they can be cast again by the trigger.
             if (m_Casting) { return false; }
 
@@ -649,7 +663,6 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Magic
         private bool DetermineCastValues(int index, ref Vector3 direction, ref Vector3 position, ref Vector3 normal)
         {
             var castPosition = CastOriginLocation.position;
-            
             if (m_Direction == CastDirection.Forward || m_Direction == CastDirection.Indicate) {
                 if (m_Direction == CastDirection.Forward) {
                     direction = m_UseLookSource ? LookSource.LookDirection(CastOriginLocation.position, false, m_CharacterLayerManager.SolidObjectLayers, true, true) : CharacterTransform.forward;
@@ -795,10 +808,6 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Magic
         /// </summary>
         public void StopItemUse()
         {
-            if (m_Casting) {
-                // Stopped while casting, this means it was forced to stop. Some cast effects might still be active
-            }
-            
             // If the item is forced to stop for whatever reason, make sure it is reset properly.
             m_Casting = false;
         }

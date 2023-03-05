@@ -17,13 +17,12 @@ namespace Opsive.UltimateCharacterController.ThirdPersonController.Camera.ViewTy
 #endif
     using UnityEngine;
 
-    using EventHandler = Opsive.Shared.Events.EventHandler;
-
     /// <summary>
     /// The Top Down View Type allows the camera to be placed in a top down perspective with the character in view with any pitch (as long as top down) or rotation.
     /// </summary>
     [RecommendedMovementType(typeof(Character.MovementTypes.TopDown))]
     [RecommendedMovementType(typeof(Character.MovementTypes.FourLegged))]
+    [RecommendedMovementType(typeof(Character.MovementTypes.PointClick))]
     public class TopDown : ViewType
     {
         [Tooltip("The distance that the character should look ahead.")]

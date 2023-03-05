@@ -33,7 +33,7 @@ namespace Opsive.UltimateCharacterController.Traits
         /// </summary>
         private void OnEnable()
         {
-            m_RemoveEvent = SchedulerBase.Schedule(m_Lifetime, Remove);
+            m_RemoveEvent = Scheduler.Schedule(m_Lifetime, Remove);
         }
 
         /// <summary>
@@ -42,7 +42,7 @@ namespace Opsive.UltimateCharacterController.Traits
         public void CancelRemoveEvent()
         {
             if (m_RemoveEvent != null) {
-                SchedulerBase.Cancel(m_RemoveEvent);
+                Scheduler.Cancel(m_RemoveEvent);
                 m_RemoveEvent = null;
             }
         }

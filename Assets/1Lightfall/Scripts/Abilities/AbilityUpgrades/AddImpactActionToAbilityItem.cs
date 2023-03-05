@@ -34,8 +34,10 @@ namespace MBS.AbilitySystem
         [SerializeField, ShowIf("@upgrades.Contains(ImpactModuleUpgrades.DetonateMajorEffect)")] protected DetonateMajorEffectInitValues detonateMajorEffectInitFields;
 
         private AbilityItemHandler abilityItemHandler;
+        private bool upgradesAppliedToWeaponItem;
         public override void Use(AbilityWrapperBase wrapperAbility)
         {
+
             EquipOpsiveItemOnUse equipOpsiveItemOnUse = null;
             foreach (var effect in wrapperAbility.effects)
             {
@@ -47,14 +49,19 @@ namespace MBS.AbilitySystem
             if (equipOpsiveItemOnUse == null)
                 return;
 
-            equipOpsiveItemOnUse.OnSetupAbilityItemHandler += EquipOpsiveItemOnUse_OnSetupAbilityItemHandler; ;
+            equipOpsiveItemOnUse.OnSetupAbilityItemHandler += EquipOpsiveItemOnUse_OnSetupAbilityItemHandler;
+            upgradesAppliedToWeaponItem = false;
         }
 
         private void EquipOpsiveItemOnUse_OnSetupAbilityItemHandler(AbilityItemHandler abilityItemHandler)
         {
+            if(upgradesAppliedToWeaponItem)
+                    return;
+
             if (this.abilityItemHandler == abilityItemHandler)
                 return;
             this.abilityItemHandler = abilityItemHandler;
+            upgradesAppliedToWeaponItem = true;
 
             foreach (var upgrade in upgrades)
             {
@@ -73,6 +80,7 @@ namespace MBS.AbilitySystem
 
             }
 
+            abilityItemHandler.OnItemDestroyed += () => { upgradesAppliedToWeaponItem = false; };
 
         }
 
@@ -185,7 +193,7 @@ namespace MBS.AbilitySystem
     }
 
     [Serializable]
-    public class MBSThrowableImpactModuleInitValuesBase 
+    public class MBSThrowableImpactModuleInitValuesBase
     {
         public float Delay;
     }
@@ -226,9 +234,9 @@ namespace MBS.AbilitySystem
 
         protected override void OnImpactInternal(ImpactCallbackContext ctx)
         {
-            Debug.Log("Grenade Shock Damage on "+ctx.ImpactCollisionData.ImpactGameObject.name);
+            Debug.Log("Grenade Shock Damage on " + ctx.ImpactCollisionData.ImpactGameObject.name);
             base.OnImpactInternal(ctx);
-            
+
         }
     }
 

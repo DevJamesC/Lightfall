@@ -95,7 +95,7 @@ namespace Opsive.UltimateCharacterController.Objects.CharacterAssist
             if (pickupItemIdentifier) {
                 // Even if the ItemIdentifier doesn't have space it may be equipped by the inventory. The object should be considered as picked up in this situation.
                 EventHandler.RegisterEvent<CharacterItem, int>(character, "OnAbilityWillEquipItem", OnWillEquipItem);
-                if (DoItemIdentifierPickup(character, inventory, slotID, immediatePickup, true)) {
+                if (DoItemIdentifierPickup(character, inventory, slotID, immediatePickup, false)) {
                     m_PickedUp = true;
                 }
                 EventHandler.UnregisterEvent<CharacterItem, int>(character, "OnAbilityWillEquipItem", OnWillEquipItem);

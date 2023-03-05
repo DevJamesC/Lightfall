@@ -15,6 +15,11 @@ namespace Opsive.UltimateCharacterController.Character
     /// </summary>
     public abstract class CharacterIKBase : StateBehavior
     {
+        /// <summary>
+        /// Should the component use the OnAnimatorIK callback?
+        /// </summary>
+        public abstract bool UseOnAnimatorIK { get; }
+
         // Specifies the limb affected by IK.
         public enum IKGoal
         {
@@ -64,5 +69,11 @@ namespace Opsive.UltimateCharacterController.Character
         /// <param name="target">The target location of the limb.</param>
         /// <param name="duration">The amount of time it takes to reach the goal.</param>
         public abstract void SetAbilityIKTarget(Transform target, IKGoal ikGoal, float duration);
+
+        /// <summary>
+        /// Updates the IK solvers.
+        /// </summary>
+        /// <param name="layerIndex">The index of the animation layer.</param>
+        public abstract void UpdateSolvers(int layerIndex);
     }
 }

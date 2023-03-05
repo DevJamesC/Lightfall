@@ -22,7 +22,7 @@ namespace MBS.Lightfall
     public class AbilityItemHandler : MonoBehaviour
     {
 
-
+        public event Action OnItemDestroyed = delegate { };
         public float PercentUseRemaining { get => currentCharges / maxCharges; }
         public Action OnFinishUse = delegate { };
         public Action OnUse = delegate { };
@@ -135,9 +135,9 @@ namespace MBS.Lightfall
             OnUse.Invoke();
 
 
-            AbilityProjectileHandler abilityProjectileHandler = obj.ProjectileData.SpawnedProjectileGO.GetComponent<AbilityProjectileHandler>();
+            AbilityProjectileHandler abilityProjectileHandler = obj.ProjectileData.m_SpawnedProjectile.GetComponent<AbilityProjectileHandler>();
             if (abilityProjectileHandler == null)
-                abilityProjectileHandler = obj.ProjectileData.SpawnedProjectileGO.AddComponent<AbilityProjectileHandler>();
+                abilityProjectileHandler = obj.ProjectileData.m_SpawnedProjectile.AddComponent<AbilityProjectileHandler>();
             abilityProjectileHandler.Initalize(sourceAbilityWrapper);
             MBSThrowableImpactModule module = throwableAction.ImpactModuleGroup.Modules.Count > 0 ? throwableAction.ImpactModuleGroup.Modules[0] as MBSThrowableImpactModule : null;
             if (module != null)
@@ -159,20 +159,21 @@ namespace MBS.Lightfall
             OnUse.Invoke();
             Debug.Log("ability shot");
 
-            if (shootableAction.ShootableUseDataStream.ShootableProjectileData.SpawnedProjectileGO != null)
-            {
-                AbilityProjectileHandler abilityProjectileHandler = shootableAction.ShootableUseDataStream.ShootableProjectileData.SpawnedProjectileGO.GetComponent<AbilityProjectileHandler>();
-                if (abilityProjectileHandler == null)
-                    abilityProjectileHandler = shootableAction.ShootableUseDataStream.ShootableProjectileData.SpawnedProjectileGO.AddComponent<AbilityProjectileHandler>();
-                abilityProjectileHandler.Initalize(sourceAbilityWrapper);
-            }
+            //Since Opsive removed ShootableProjectileData from FireData, this code needs to be refactored (also it was never tested because we had no "shoot" abilities)
+            //if (shootableAction.ShootableUseDataStream.FireData ShootableProjectileData.SpawnedProjectileGO != null)
+            //{
+            //    AbilityProjectileHandler abilityProjectileHandler = shootableAction.ShootableUseDataStream.ShootableProjectileData.SpawnedProjectileGO.GetComponent<AbilityProjectileHandler>();
+            //    if (abilityProjectileHandler == null)
+            //        abilityProjectileHandler = shootableAction.ShootableUseDataStream.ShootableProjectileData.SpawnedProjectileGO.AddComponent<AbilityProjectileHandler>();
+            //    abilityProjectileHandler.Initalize(sourceAbilityWrapper);
+            //}
 
-            if (currentCharges <= 0)
-            {
-                OnFinishUse.Invoke();
-                OnFinishUse = delegate { };
-                OnUse = delegate { };
-            }
+            //if (currentCharges <= 0)
+            //{
+            //    OnFinishUse.Invoke();
+            //    OnFinishUse = delegate { };
+            //    OnUse = delegate { };
+            //}
         }
 
         public void AddThrowableItemImpactModule(ImpactModuleUpgrades upgrade, MBSThrowableImpactModuleInitValuesBase initValues)
@@ -199,6 +200,11 @@ namespace MBS.Lightfall
 
                 Debug.Log("action added");
             }
+        }
+
+        private void OnDestroy()
+        {
+            OnItemDestroyed.Invoke();
         }
 
     }
@@ -283,5 +289,7 @@ namespace MBS.Lightfall
 
             impactActionsFromUpgrades.AddRange(actions);
         }
+
+        
     }
 }

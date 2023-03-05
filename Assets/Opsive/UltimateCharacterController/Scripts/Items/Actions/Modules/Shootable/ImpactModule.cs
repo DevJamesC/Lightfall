@@ -13,7 +13,9 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
 
     public class ShootableImpactCallbackContext : ImpactCallbackContext
     {
-        public ShootableAction m_ShootableAction;
+        private ShootableAction m_ShootableAction;
+
+        public ShootableAction ShootableAction { get => m_ShootableAction; set => m_ShootableAction = value; }
 
         /// <summary>
         /// Reset the data.
@@ -22,6 +24,29 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
         {
             base.Reset();
             m_ShootableAction = null;
+        }
+        
+        /// <summary>
+        /// Get a duplicate version of this object that is pooled pooled.
+        /// </summary>
+        /// <returns>The pooled duplicate.</returns>
+        public override ImpactCallbackContext GetPooledDuplicate()
+        {
+            var duplicate = GenericObjectPool.Get<ShootableImpactCallbackContext>();
+            duplicate.PooledCopy(this);
+            return duplicate;
+        }
+
+        /// <summary>
+        /// Copy the contents of another impact callback context.
+        /// </summary>
+        /// <param name="other">The other callback context to copy the data from.</param>
+        protected override void PooledCopy(ImpactCallbackContext other)
+        {
+            base.PooledCopy(other);
+            if (other is ShootableImpactCallbackContext otherShootable) {
+                m_ShootableAction = otherShootable.m_ShootableAction;
+            }
         }
     }
     

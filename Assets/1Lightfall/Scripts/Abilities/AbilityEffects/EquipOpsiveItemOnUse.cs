@@ -142,18 +142,18 @@ namespace MBS.AbilitySystem
             {
                 if (equippedItem != null)
                 {
-                    UnEquipAbility(abilityWrapper);
-                    OnEffectFinishedInvoke();
                     if (!UseChargeEveryUse && abilityItemHandler.PercentUseRemaining < 1)
                     {
                         abilityWrapper.ChangeChargesRemaining(-1);
                     }
+                    UnEquipAbility(abilityWrapper);
+                    OnEffectFinishedInvoke();
                 }
             };
             if (UseChargeEveryUse)
                 abilityItemHandler.OnUse += () => { abilityWrapper.ChangeChargesRemaining(-1); };
 
-            OnSetupAbilityItemHandler(abilityItemHandler);
+            OnSetupAbilityItemHandler.Invoke(abilityItemHandler);
         }
 
         //some modules need to be manually reset sometimes, for some reason. If things don't equip right, likely more use cases need to be applied here.

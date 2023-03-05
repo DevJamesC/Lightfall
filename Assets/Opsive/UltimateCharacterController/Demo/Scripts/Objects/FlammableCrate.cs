@@ -102,7 +102,7 @@ namespace Opsive.UltimateCharacterController.Demo.Objects
             m_Health.Damage(m_DamageAmount.RandomValue);
             if (m_Health.IsAlive()) {
                 // Keep reducing the object's health until is is no longer alive.
-                SchedulerBase.Schedule(m_HealthReductionInterval.RandomValue, ReduceHealth);
+                Scheduler.Schedule(m_HealthReductionInterval.RandomValue, ReduceHealth);
             } else {
                 // After the object is no longer alive spawn some wood shreds. These shreds should be cleaned up after a random
                 // amount of time.
@@ -118,7 +118,7 @@ namespace Opsive.UltimateCharacterController.Demo.Objects
                     Scheduler.Schedule(destroyTime, x => x.SetActive(false), m_SpawnedCrate.transform.GetChild(i).gameObject);
                 }
 
-                m_StopEvent = SchedulerBase.Schedule(maxDestroyTime, StopParticles);
+                m_StopEvent = Scheduler.Schedule(maxDestroyTime, StopParticles);
             }
         }
 
@@ -137,16 +137,16 @@ namespace Opsive.UltimateCharacterController.Demo.Objects
             }
             m_SpawnedCrate = null;
 
-            SchedulerBase.Cancel(m_StopEvent);
+            Scheduler.Cancel(m_StopEvent);
             m_StopEvent = null;
             m_FlameParticle.Stop(true);
 
             m_OnStopFlame?.Invoke();
-            SchedulerBase.Schedule(0.2f, FadeAudioSource);
+            Scheduler.Schedule(0.2f, FadeAudioSource);
             
             var duration = m_FlameParticle.main.duration;
             duration = Mathf.Max(duration, 0.1f + 0.2f * (1/m_AudioSourceFadeAmount));
-            SchedulerBase.Schedule(duration, DestroyParticle);
+            Scheduler.Schedule(duration, DestroyParticle);
         }
 
         /// <summary>
@@ -156,7 +156,7 @@ namespace Opsive.UltimateCharacterController.Demo.Objects
         {
             m_FlameParticleAudioSource.volume -= m_AudioSourceFadeAmount;
             if (m_FlameParticleAudioSource.volume > 0) {
-                SchedulerBase.Schedule(0.2f, FadeAudioSource);
+                Scheduler.Schedule(0.2f, FadeAudioSource);
             }
         }
 

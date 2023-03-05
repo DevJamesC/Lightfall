@@ -8,8 +8,6 @@ namespace Opsive.UltimateCharacterController.Objects
 {
     using Opsive.Shared.Game;
     using Opsive.UltimateCharacterController.Game;
-    using Opsive.UltimateCharacterController.Items.Actions.Impact;
-    using Opsive.UltimateCharacterController.SurfaceSystem;
     using Opsive.UltimateCharacterController.Traits.Damage;
     using UnityEngine;
 
@@ -66,7 +64,7 @@ namespace Opsive.UltimateCharacterController.Objects
             SetOwner(originator, ownerSource, Vector3.up);
 
             // The grenade should destruct after a specified amount of time.
-            m_ScheduledDeactivation = SchedulerBase.Schedule(m_Lifespan, Deactivate);
+            m_ScheduledDeactivation = Scheduler.Schedule(m_Lifespan, Deactivate);
         }
 
         /// <summary>
@@ -93,7 +91,7 @@ namespace Opsive.UltimateCharacterController.Objects
         /// </summary>
         protected void Deactivate()
         {
-            SchedulerBase.Cancel(m_ScheduledDeactivation);
+            Scheduler.Cancel(m_ScheduledDeactivation);
             m_ScheduledDeactivation = null;
 
             InitializeComponentReferences(); // The grenade may explode before Awake is called.

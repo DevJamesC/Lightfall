@@ -59,8 +59,8 @@ namespace Opsive.UltimateCharacterController.Character.Abilities
         private bool m_LeftMount;
         private ScheduledEventBase m_MountDismountEvent;
         private RideState m_RideState = RideState.DismountComplete;
-        private Vector3 m_DriveLocationOffset;
-        private Quaternion m_DriveLocationRotationOffset;
+        private Vector3 m_RideLocationOffset;
+        private Quaternion m_RideLocationRotationOffset;
         private float m_Epsilon = 0.99999f;
 
         public override int AbilityIntData
@@ -149,8 +149,8 @@ namespace Opsive.UltimateCharacterController.Character.Abilities
             m_Rideable.Mount(this);
             m_CharacterLocomotion.SetMovingPlatform(m_Rideable.GameObject.transform);
             m_CharacterLocomotion.AlignToUpDirection = true;
-            m_DriveLocationOffset = m_Rideable.Rigidbody.InverseTransformPoint(m_Rideable.RideLocation.position);
-            m_DriveLocationRotationOffset = MathUtility.InverseTransformQuaternion(m_Rideable.Rigidbody.rotation, m_Rideable.RideLocation.rotation);
+            m_RideLocationOffset = m_Rideable.Rigidbody.InverseTransformPoint(m_Rideable.RideLocation.position);
+            m_RideLocationRotationOffset = MathUtility.InverseTransformQuaternion(m_Rideable.Rigidbody.rotation, m_Rideable.RideLocation.rotation);
 
             // The character will look independently of the rotation.
             EventHandler.ExecuteEvent(m_GameObject, "OnCharacterForceIndependentLook", true);
@@ -251,7 +251,7 @@ namespace Opsive.UltimateCharacterController.Character.Abilities
                 return;
             }
 
-            var targetRotation = MathUtility.TransformQuaternion(m_Rideable.Rigidbody.rotation, m_DriveLocationRotationOffset);
+            var targetRotation = MathUtility.TransformQuaternion(m_Rideable.Rigidbody.rotation, m_RideLocationRotationOffset);
             m_CharacterLocomotion.DesiredRotation = Quaternion.Inverse(m_Rigidbody.rotation) * targetRotation;
         }
 
@@ -264,8 +264,8 @@ namespace Opsive.UltimateCharacterController.Character.Abilities
                 return;
             }
 
-            var targetRotation = MathUtility.TransformQuaternion(m_Rideable.Rigidbody.rotation, m_DriveLocationRotationOffset);
-            var targetPosition = MathUtility.TransformPoint(m_Rideable.Rigidbody.position, targetRotation, m_DriveLocationOffset);
+            var targetRotation = MathUtility.TransformQuaternion(m_Rideable.Rigidbody.rotation, m_RideLocationRotationOffset);
+            var targetPosition = MathUtility.TransformPoint(m_Rideable.Rigidbody.position, targetRotation, m_RideLocationOffset);
             m_CharacterLocomotion.DesiredMovement = targetPosition - m_Rigidbody.position;
         }
 
@@ -363,7 +363,7 @@ namespace Opsive.UltimateCharacterController.Character.Abilities
             m_AllowEquippedSlotsMask = m_StartAllowEquippedItemSlotsMask;
 
             if (m_MountDismountEvent != null) {
-                SchedulerBase.Cancel(m_MountDismountEvent);
+                Scheduler.Cancel(m_MountDismountEvent);
                 m_MountDismountEvent = null;
             }
 

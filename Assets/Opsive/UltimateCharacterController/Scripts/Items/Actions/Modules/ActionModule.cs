@@ -6,12 +6,17 @@
 
 namespace Opsive.UltimateCharacterController.Items.Actions.Modules
 {
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+    using Opsive.Shared.Networking;
+#endif
     using Opsive.UltimateCharacterController.Character;
     using Opsive.UltimateCharacterController.Inventory;
     using Opsive.UltimateCharacterController.Items.Actions.Bindings;
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+    using Opsive.UltimateCharacterController.Networking.Character;
+#endif
     using System;
     using UnityEngine;
-    using UnityEngine.Serialization;
 
     /// <summary>
     /// The base class for Character Item Action Modules.
@@ -30,17 +35,20 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
         [Tooltip("The action module name is used find a module easily within a module Group.")]
         [SerializeField] protected string m_Name = "";
 
-        protected bool m_ListeningToEvents;
+        public int ID { get => m_ID; set => m_ID = value; }
+        public string Name => m_Name;
+
         protected ActionModuleGroupBase m_ModuleGroup;
         protected CharacterItemAction m_CharacterItemAction;
         protected bool m_AllModulesPreInitialized;
         protected bool m_Initialized;
+        protected bool m_ListeningToEvents;
 
+        public ActionModuleGroupBase ModuleGroup => m_ModuleGroup;
+        public CharacterItemAction CharacterItemAction => m_CharacterItemAction;
         public bool AllModulesPreInitialized => m_AllModulesPreInitialized;
         public bool Initialized => m_Initialized;
 
-        public int ModuleID => m_ID;
-        public string Name => m_Name;
         public bool IsEquipped => CharacterItemAction.IsEquipped;
         public UltimateCharacterLocomotion CharacterLocomotion => m_CharacterItemAction.CharacterLocomotion;
         public GameObject GameObject => m_CharacterItemAction.GameObject;
@@ -50,7 +58,11 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
         public GameObject Character => m_CharacterItemAction.Character;
         public Transform CharacterTransform => m_CharacterItemAction.Character.transform;
         public InventoryBase Inventory => m_CharacterItemAction.Inventory;
-        public CharacterItemAction CharacterItemAction => m_CharacterItemAction;
+
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+        public INetworkInfo NetworkInfo => m_CharacterItemAction.NetworkInfo;
+        public INetworkCharacter NetworkCharacter => m_CharacterItemAction.NetworkCharacter;
+#endif
 
         public bool Enabled
         {
@@ -85,6 +97,9 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
                 return true;
             }
         }
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+        public virtual bool NetworkSync { get => false; }
+#endif
 
         /// <summary>
         /// Notify that the module is now enabled.
@@ -101,7 +116,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
         /// </summary>
         protected virtual void OnEnableInternal()
         {
-            RegisterEventsWhileEquippedAndEnabled();
+            UpdateRegisteredEvents();
         }
 
         /// <summary>
@@ -119,7 +134,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
         /// </summary>
         protected virtual void OnDisableInternal()
         {
-            RegisterEventsWhileEquippedAndEnabled();
+            UpdateRegisteredEvents();
         }
 
         /// <summary>
@@ -182,24 +197,23 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
         }
 
         /// <summary>
-        /// Register to events while the item is equipped and the module is enabled.
+        /// Updates the registered events when the item is equipped and the module is enabled.
         /// </summary>
-        protected void RegisterEventsWhileEquippedAndEnabled()
+        protected void UpdateRegisteredEvents()
         {
             var register = m_Enabled && IsEquipped;
-
             if (m_ListeningToEvents == register) {
                 return;
             }
 
             m_ListeningToEvents = register;
-            RegisterEventsWhileEquippedAndEnabledInternal(register);
+            UpdateRegisteredEventsInternal(register);
         }
 
         /// <summary>
-        /// Register to events while the item is equipped and the module is enabled.
+        /// Updates the registered events when the item is equipped and the module is enabled.
         /// </summary>
-        protected virtual void RegisterEventsWhileEquippedAndEnabledInternal(bool register) { }
+        protected virtual void UpdateRegisteredEventsInternal(bool register) { }
 
         /// <summary>
         /// Update item ability animator parameters.
@@ -216,9 +230,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
         /// <returns>The string representation of the module.</returns>
         public override string ToString()
         {
-            var typeName = GetType().Name;
-
-            return GetToStringPrefix()+typeName.Replace("CharacterItemActionModule", "");
+            return GetToStringPrefix() + GetType().Name.Replace("CharacterItemActionModule", "");
         }
 
         /// <summary>
@@ -231,8 +243,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
             var ignoreID = m_ID == -1;
             var ignoreName = string.IsNullOrWhiteSpace(m_Name);
             if (!ignoreID || !ignoreName) {
-                prefix =
-                    $"[{(ignoreID ? "" : m_ID.ToString())}{(!ignoreID && !ignoreName ? " " : "")}{(ignoreName ? "" : m_Name)}] ";
+                prefix = $"[{(ignoreID ? "" : m_ID.ToString())}{(!ignoreID && !ignoreName ? " " : "")}{(ignoreName ? "" : m_Name)}] ";
             }
 
             return prefix;
@@ -253,7 +264,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
         /// </summary>
         public virtual void Equip()
         {
-            RegisterEventsWhileEquippedAndEnabled();
+            UpdateRegisteredEvents();
         }
 
         /// <summary>
@@ -266,7 +277,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules
         /// </summary>
         public virtual void Unequip()
         {
-            RegisterEventsWhileEquippedAndEnabled();
+            UpdateRegisteredEvents();
             ResetModule(false);
         }
 

@@ -92,7 +92,8 @@ namespace Opsive.UltimateCharacterController.Character
         public float LookAtAdjustmentSpeed { get { return m_LookAtAdjustmentSpeed; } set { m_LookAtAdjustmentSpeed = value; } }
         public string ActiveLookAtStateName { get { return m_ActiveLookAtStateName; } set { m_ActiveLookAtStateName = value; } }
         public float LookAtWeightAdjustmentSpeed { get { return m_LookAtWeightAdjustmentSpeed; } set { m_LookAtWeightAdjustmentSpeed = value; } }
-        public float HipsPositionAdjustmentSpeed {
+        public float HipsPositionAdjustmentSpeed
+        {
             get { return m_HipsPositionAdjustmentSpeed; }
             set {
                 m_HipsPositionAdjustmentSpeed = value;
@@ -108,28 +109,32 @@ namespace Opsive.UltimateCharacterController.Character
         public float HandWeight { get { return m_HandWeight; } set { m_HandWeight = value; } }
         public float HandAdjustmentSpeed { get { return m_HandAdjustmentSpeed; } set { m_HandAdjustmentSpeed = value; } }
         public Vector3 HandPositionOffset { get { return m_HandPositionOffset; } set { m_HandPositionOffset = value; } }
-        public Spring LeftHandPositionSpring {
+        public Spring LeftHandPositionSpring
+        {
             get { return m_LeftHandPositionSpring; }
             set {
                 m_LeftHandPositionSpring = value;
                 if (m_LeftHandPositionSpring != null) { m_LeftHandPositionSpring.Initialize(false, true); }
             }
         }
-        public Spring LeftHandRotationSpring {
+        public Spring LeftHandRotationSpring
+        {
             get { return m_LeftHandRotationSpring; }
             set {
                 m_LeftHandRotationSpring = value;
                 if (m_LeftHandRotationSpring != null) { m_LeftHandRotationSpring.Initialize(true, true); }
             }
         }
-        public Spring RightHandPositionSpring {
+        public Spring RightHandPositionSpring
+        {
             get { return m_RightHandPositionSpring; }
             set {
                 m_RightHandPositionSpring = value;
                 if (m_RightHandPositionSpring != null) { m_RightHandPositionSpring.Initialize(false, true); }
             }
         }
-        public Spring RightHandRotationSpring {
+        public Spring RightHandRotationSpring
+        {
             get { return m_RightHandPositionSpring; }
             set {
                 m_RightHandPositionSpring = value;
@@ -159,6 +164,7 @@ namespace Opsive.UltimateCharacterController.Character
         private Transform m_RightUpperArm;
 
         private bool m_ImmediatePosition;
+        private bool m_IKPass;
         private bool m_Aiming;
         private bool m_ItemInUse;
 
@@ -220,6 +226,8 @@ namespace Opsive.UltimateCharacterController.Character
         private Vector3 m_PrevRightHandRotationSpringVelocity;
 
         private bool m_Enable;
+
+        public override bool UseOnAnimatorIK => true;
 
         /// <summary>
         /// Initialize the default values.
@@ -327,6 +335,7 @@ namespace Opsive.UltimateCharacterController.Character
 
             // The limbs should snap into position at the start.
             m_ImmediatePosition = true;
+            m_IKPass = false;
             m_LastCharacterPosition = m_Transform.position;
 
             // Perform measurements during initialization while in a T-Pose so they can be compared against during the IK pass.
@@ -609,11 +618,21 @@ namespace Opsive.UltimateCharacterController.Character
         /// <param name="layerIndex">The animator layer that is affected by IK.</param>
         private void OnAnimatorIK(int layerIndex)
         {
+            UpdateSolvers(layerIndex);
+        }
+
+        /// <summary>
+        /// Updates the IK solvers.
+        /// </summary>
+        /// <param name="index">The index of the animation layer.</param>
+        public override void UpdateSolvers(int layerIndex)
+        {
             m_CharacterLocomotion.EnableColliderCollisionLayer(false);
 
             if (layerIndex == m_BaseLayerIndex) { // Base layer.
                 m_CharacterMovement = m_Transform.position - m_LastCharacterPosition;
                 m_LastCharacterPosition = m_Transform.position;
+                m_IKPass = true;
 
                 // Any target interpolations should first be updated before ik is run.
                 UpdateTargetInterpolations();
@@ -654,8 +673,8 @@ namespace Opsive.UltimateCharacterController.Character
                     // Fire the first raycast from the foot.
                     var target = (i == 0 ? m_LeftFoot : m_RightFoot);
                     var lowerLeg = (i == 0 ? m_LeftLowerLeg : m_RightLowerLeg);
-                    if (Physics.Raycast(GetFootRaycastPosition(target, lowerLeg, out var distance), -m_CharacterLocomotion.Up, out m_RaycastHit, 
-                                            distance + m_FootOffset[i] + m_MaxLegLength[i], m_LayerMask, QueryTriggerInteraction.Ignore) && 
+                    if (Physics.Raycast(GetFootRaycastPosition(target, lowerLeg, out var distance), -m_CharacterLocomotion.Up, out m_RaycastHit,
+                                            distance + m_FootOffset[i] + m_MaxLegLength[i], m_LayerMask, QueryTriggerInteraction.Ignore) &&
                                             m_Transform.InverseTransformPoint(m_RaycastHit.point).y < m_CharacterLocomotion.Radius) {
                         m_RaycastDistance[i] = distance * m_Transform.lossyScale.y;
                         m_GroundDistance[i] = m_RaycastHit.distance;
@@ -1064,14 +1083,6 @@ namespace Opsive.UltimateCharacterController.Character
         }
 
         /// <summary>
-        /// Updates the hip position during the FixedUpdate loop.
-        /// </summary>
-        public void FixedUpdate()
-        {
-            m_Hips.position = m_Transform.TransformPoint(m_HipsPosition);
-        }
-
-        /// <summary>
         /// Updates the IK component after the animator has updated.
         /// </summary>
         public void LateUpdate()
@@ -1080,7 +1091,7 @@ namespace Opsive.UltimateCharacterController.Character
 
             // After the IK has finished positioning the limbs for the first time reset the immediate position. It should smoothly blend
             // during runtime.
-            if (m_ImmediatePosition) {
+            if (m_ImmediatePosition && m_IKPass) {
                 m_ImmediatePosition = false;
             }
         }
@@ -1091,6 +1102,7 @@ namespace Opsive.UltimateCharacterController.Character
         private void ImmediatePosition()
         {
             m_ImmediatePosition = true;
+            m_IKPass = false;
         }
 
         /// <summary>
@@ -1124,6 +1136,7 @@ namespace Opsive.UltimateCharacterController.Character
         {
             enabled = m_Enable;
             m_ImmediatePosition = true;
+            m_IKPass = false;
         }
 
         /// <summary>

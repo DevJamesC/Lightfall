@@ -101,7 +101,7 @@ namespace Opsive.UltimateCharacterController.Character
         [SerializeField] protected bool m_DetectVerticalCollisions = true;
         [Tooltip("Should the character check for collisions even when not moving?")]
         [SerializeField] protected bool m_ContinuousCollisionDetection = true;
-        [Tooltip("The layers that can act as colliders for the character.")]
+        [Tooltip("The layers that can act as colliders for the character. This does not affect the collision detection. For collision detection use the Character Layer Manager.")]
         [SerializeField] protected LayerMask m_ColliderLayerMask = ~(1 << LayerManager.IgnoreRaycast | 1 << LayerManager.SubCharacter |
                                                                      1 << LayerManager.Overlay | 1 << LayerManager.VisualEffect);
         [Tooltip("The maximum number of colliders that the character can detect.")]
@@ -212,6 +212,7 @@ namespace Opsive.UltimateCharacterController.Character
         private bool m_ForceUngrounded = false;
         private float m_GravityAccumulation;
         private bool m_ForceStickToGround;
+        private bool m_SlopedGround;
 
         private Vector3 m_MotorThrottle;
         private float m_SlopeFactor = 1;
@@ -267,7 +268,7 @@ namespace Opsive.UltimateCharacterController.Character
         public Quaternion RootMotionDeltaRotation { get { return m_RootMotionDeltaRotation; } set { m_RootMotionDeltaRotation = value; } }
         public Transform MovingPlatform { get { return m_MovingPlatform; } set { SetMovingPlatform(value); } }
         public Vector3 MovingPlatformMovement { get { return m_MovingPlatformMovement; } }
-        public Quaternion MovingPlatformRotation { get { return m_MovingPlatformRotation; } } 
+        public Quaternion MovingPlatformRotation { get { return m_MovingPlatformRotation; } }
         public bool InstantRigidbodyMove { get { return m_InstantRigidbodyMove; } set { m_InstantRigidbodyMove = value; } }
         public Vector3 TargetPosition { get { return m_Rigidbody.position + m_DesiredMovement; } }
         public Quaternion TargetRotation { get { return m_Rigidbody.rotation * m_DesiredRotation; } }
@@ -415,7 +416,7 @@ namespace Opsive.UltimateCharacterController.Character
             ResetRotationPosition();
 
             EnableColliderCollisionLayer(false);
-            DetectGround(false);
+            DetectGround();
             EnableColliderCollisionLayer(true);
         }
 
@@ -658,7 +659,7 @@ namespace Opsive.UltimateCharacterController.Character
                         var targetRotation = MathUtility.TransformQuaternion(rigidbodyRotation, MathUtility.QuaternionFromMatrix(matrix));
 
                         var overlap = false;
-                        hitCount = OverlapColliders(m_Colliders[i], targetPosition, targetRotation, true);
+                        hitCount = OverlapColliders(m_Colliders[i], targetPosition, targetRotation, c_ColliderSpacing);
                         if (hitCount > 0) {
                             Vector3 direction;
                             float distance;
@@ -717,42 +718,30 @@ namespace Opsive.UltimateCharacterController.Character
         /// <param name="overlapCollider">The collider to check against.</param>
         /// <param name="targetPosition">The position of the collider.</param>
         /// <param name="targetRotation">The rotation of the collider.</param>
-        /// <param name="addSizeBuffer">Should the size of the collider be increased by the collider spacing amount?</param>
+        /// <param name="sizeBuffer">The size of the collider that should be modified by when performing the check.</param>
         /// <returns>The number of objects which overlap the collider. These objects will be populated within m_OverlapCastResults.</returns>
-        public int OverlapColliders(Collider overlapCollider, Vector3 targetPosition, Quaternion targetRotation, bool addSizeBuffer)
+        public int OverlapColliders(Collider overlapCollider, Vector3 targetPosition, Quaternion targetRotation, float sizeBuffer = 0)
         {
             int hitCount;
             if (overlapCollider is CapsuleCollider) {
                 var capsuleCollider = overlapCollider as CapsuleCollider;
-                if (addSizeBuffer) {
-                    capsuleCollider.radius += c_ColliderSpacing;
-                }
+                capsuleCollider.radius += sizeBuffer;
                 MathUtility.CapsuleColliderEndCaps(capsuleCollider, targetPosition, targetRotation, out var capsuleEndCap1, out var capsuleEndCap2);
                 hitCount = Physics.OverlapCapsuleNonAlloc(capsuleEndCap1, capsuleEndCap2, capsuleCollider.radius * MathUtility.ColliderScaleMultiplier(capsuleCollider),
                                         m_OverlapCastResults, m_CharacterLayerManager.SolidObjectLayers, QueryTriggerInteraction.Ignore);
-                if (addSizeBuffer) {
-                    capsuleCollider.radius -= c_ColliderSpacing;
-                }
+                capsuleCollider.radius -= sizeBuffer;
             } else if (overlapCollider is SphereCollider) {
                 var sphereCollider = overlapCollider as SphereCollider;
-                if (addSizeBuffer) {
-                    sphereCollider.radius += c_ColliderSpacing;
-                }
+                sphereCollider.radius += sizeBuffer;
                 hitCount = Physics.OverlapSphereNonAlloc(targetPosition, sphereCollider.radius * MathUtility.ColliderScaleMultiplier(sphereCollider),
                                         m_OverlapCastResults, m_CharacterLayerManager.SolidObjectLayers, QueryTriggerInteraction.Ignore);
-                if (addSizeBuffer) {
-                    sphereCollider.radius -= c_ColliderSpacing;
-                }
+                sphereCollider.radius -= sizeBuffer;
             } else { // BoxCollider.
                 var boxCollider = overlapCollider as BoxCollider;
-                if (addSizeBuffer) {
-                    boxCollider.size = boxCollider.size + new Vector3(c_ColliderSpacing, c_ColliderSpacing, c_ColliderSpacing);
-                }
+                boxCollider.size = boxCollider.size + new Vector3(sizeBuffer, sizeBuffer, sizeBuffer);
                 var extents = (MathUtility.ColliderScaleMultiplier(boxCollider) - c_ColliderSpacing) * boxCollider.size / 2;
                 hitCount = Physics.OverlapBoxNonAlloc(targetPosition, extents, m_OverlapCastResults, targetRotation, m_CharacterLayerManager.SolidObjectLayers, QueryTriggerInteraction.Ignore);
-                if (addSizeBuffer) {
-                    boxCollider.size = boxCollider.size - new Vector3(c_ColliderSpacing, c_ColliderSpacing, c_ColliderSpacing);
-                }
+                boxCollider.size = boxCollider.size - new Vector3(sizeBuffer, sizeBuffer, sizeBuffer);
             }
             return hitCount;
         }
@@ -861,9 +850,11 @@ namespace Opsive.UltimateCharacterController.Character
                             continue;
                         }
 
-                        if (OverlapColliders(m_Colliders[i], m_Rigidbody.position, m_Rigidbody.rotation * m_DesiredRotation, false) > 0) {
+                        if (OverlapColliders(m_Colliders[i], m_Rigidbody.position + m_Up * c_ColliderSpacing, m_Rigidbody.rotation * m_DesiredRotation, -c_ColliderSpacing * 2) > 0) {
                             if (ResolvePenetrations(m_Colliders[i], Vector3.zero, out var offset)) {
-                                m_DesiredMovement += offset;
+                                var localOffset = m_Rigidbody.InverseTransformDirection(offset);
+                                localOffset.y = 0;
+                                m_DesiredMovement += m_Rigidbody.TransformDirection(offset);
                             }
                         }
 
@@ -934,27 +925,18 @@ namespace Opsive.UltimateCharacterController.Character
                         var slopeAngle = Vector3.Angle(m_Up, slopeRaycastHit.normal);
                         var directionalSlope = false;
                         var groundPoint = MathUtility.InverseTransformPoint(m_Rigidbody.position, m_Rigidbody.rotation, closestRaycastHit.point - m_MovingPlatformMovement);
-                        if (slopeAngle >= 89.999f && groundPoint.y <= m_MaxStepHeight && groundPoint.y > 0) {
-                            // Cast a ray directly in front of the character. If it doesn't hit an object then the object is shorter than the step height and should be stepped on.
-                            // Continue out of the loop to prevent the character from stopping in front of the object.
-                            if (!SingleCast(activeCollider, (targetPosition - m_Rigidbody.position).normalized, m_MovingPlatformMovement + m_Up * (m_MaxStepHeight - c_ColliderSpacing),
-                                                                (m_Radius + movementMagnitude), m_CharacterLayerManager.SolidObjectLayers)) {
-                                continue;
-                            }
-                        } else if (slopeAngle <= m_SlopeLimit && groundPoint.y <= m_MaxStepHeight && groundPoint.y > 0) {
-                            directionalSlope = true;
-                            // Do a cast from the desired position to ensure the slope is still valid.
-                            if (SingleCast(activeCollider, m_GravityDirection, targetMovement + m_Up * (m_MaxStepHeight + m_Radius), (m_Radius + m_MaxStepHeight) * 4, 
-                                                m_CharacterLayerManager.SolidObjectLayers, out var raycastHit)) {
-                                ray = new Ray(raycastHit.point + raycastHit.normal * c_ColliderSpacing, -raycastHit.normal);
-                                if (!Physics.Raycast(ray, out slopeRaycastHit, m_MaxStepHeight + c_ColliderSpacing * 2, m_CharacterLayerManager.SolidObjectLayers, QueryTriggerInteraction.Ignore)) {
-                                    slopeRaycastHit = closestRaycastHit;
-                                }
-                                
-                                slopeAngle = Vector3.Angle(m_Up, slopeRaycastHit.normal);
-                                if (slopeAngle <= m_SlopeLimit || slopeAngle >= 89.999f) {
+                        if (groundPoint.y > 0 && (groundPoint.y <= m_MaxStepHeight || groundPoint.y < movementMagnitude)) {
+                            if (slopeAngle >= 89.999f) {
+                                // Cast a ray directly in front of the character. If it doesn't hit an object then the object is shorter than the step height and should be stepped on.
+                                // Continue out of the loop to prevent the character from stopping in front of the object.
+                                if (!SingleCast(activeCollider, (targetPosition - m_Rigidbody.position).normalized, m_MovingPlatformMovement + m_Up * (m_MaxStepHeight - c_ColliderSpacing),
+                                                                    (m_Radius + movementMagnitude), m_CharacterLayerManager.SolidObjectLayers)) {
                                     continue;
                                 }
+                            } else if (slopeAngle <= m_SlopeLimit) {
+                                directionalSlope = true;
+                                m_SlopedGround = true;
+                                continue;
                             }
                         }
 
@@ -1070,7 +1052,7 @@ namespace Opsive.UltimateCharacterController.Character
 
             while (iterations < m_MaxPenetrationChecks && !resolved) {
                 resolved = true;
-                var hitCount = OverlapColliders(activeCollider, activeCollider.transform.position + moveDirection + offset, activeCollider.transform.rotation, false);
+                var hitCount = OverlapColliders(activeCollider, activeCollider.transform.position + moveDirection + offset, activeCollider.transform.rotation);
                 if (hitCount > 0) {
                     for (int i = 0; i < hitCount; ++i) {
                         if (Physics.ComputePenetration(activeCollider, activeCollider.transform.position + moveDirection + offset, activeCollider.transform.rotation, m_OverlapCastResults[i],
@@ -1115,36 +1097,43 @@ namespace Opsive.UltimateCharacterController.Character
             var grounded = false;
             var localDesiredMovement = m_Rigidbody.InverseTransformDirection(m_DesiredMovement - m_MovingPlatformMovement);
             // The target position should be above the current position to account for slopes.
-            var offset = m_Radius + m_MaxStepHeight;
-            var targetPosition = m_Rigidbody.position + m_Rigidbody.TransformDirection(new Vector3(localDesiredMovement.x, (localDesiredMovement.y < 0 ? 0 : localDesiredMovement.y) + offset, localDesiredMovement.z)) + m_MovingPlatformMovement;
+            var castOffset = m_Radius + m_MaxStepHeight + (m_SlopedGround ? m_DesiredMovement.magnitude : 0);
+            var targetPosition = m_Rigidbody.position + m_Rigidbody.TransformDirection(new Vector3(localDesiredMovement.x, (localDesiredMovement.y < 0 ? 0 : localDesiredMovement.y) + castOffset, localDesiredMovement.z)) + m_MovingPlatformMovement;
             var stickyGround = StickingToGround && m_Grounded;
-            var hitCount = CombinedCast(targetPosition, m_GravityDirection, (stickyGround ? (m_StickToGroundDistance + Mathf.Abs(localDesiredMovement.y)) : Mathf.Abs(localDesiredMovement.y)) + m_SkinWidth + offset + c_ColliderSpacing);
+            var hitCount = CombinedCast(targetPosition, m_GravityDirection, (stickyGround ? (m_StickToGroundDistance + Mathf.Abs(localDesiredMovement.y)) : Mathf.Abs(localDesiredMovement.y)) + m_SkinWidth + castOffset + c_ColliderSpacing);
             if (hitCount > 0) {
                 for (int i = 0; i < hitCount; ++i) {
                     var closestRaycastHit = QuickSelect.SmallestK(m_CombinedCastResults, hitCount, i, m_CastHitComparer);
                     if (closestRaycastHit.distance == 0) {
-                        continue;
+                        if (closestRaycastHit.collider.Raycast(new Ray(targetPosition + m_Up * (castOffset + localDesiredMovement.magnitude), m_GravityDirection), out var hit, Mathf.Infinity) &&
+                                    (closestRaycastHit.distance == 0 || MathUtility.InverseTransformPoint(m_Rigidbody.position + m_MovingPlatformMovement, m_Rigidbody.rotation * m_MovingPlatformRotation, closestRaycastHit.point).y > m_MaxStepHeight)) {
+                            var colliderIndex = 0;
+                            if (m_ColliderCount > 1) {
+                                colliderIndex = m_ColliderIndexMap[closestRaycastHit];
+                            }
+                            closestRaycastHit = hit;
+                            closestRaycastHit.distance = MathUtility.InverseTransformDirection(targetPosition - hit.point, m_Rigidbody.rotation).y;
+
+                            if (m_ColliderCount > 1) {
+                                m_ColliderIndexMap.Add(closestRaycastHit, colliderIndex);
+                            }
+                        } else {
+                            continue;
+                        }
                     }
 
-                    // The character cannot step above the height of the character.
-                    if (MathUtility.InverseTransformPoint(m_Rigidbody.position + m_MovingPlatformMovement, m_Rigidbody.rotation * m_MovingPlatformRotation, closestRaycastHit.point).y > m_Height) {
-                        continue;
-                    }
-
-                    var ray = new Ray(closestRaycastHit.point + closestRaycastHit.normal * c_ColliderSpacing, -closestRaycastHit.normal);
-                    if (!Physics.Raycast(ray, out var slopeRaycastHit, m_MaxStepHeight + c_ColliderSpacing * 2, m_CharacterLayerManager.SolidObjectLayers, QueryTriggerInteraction.Ignore)) {
-                        slopeRaycastHit = closestRaycastHit;
-                    }
-
-                    // The character is only grounded if they are on a slope that is within the limit.
-                    var slopeAngle = Vector3.Angle(m_Up, slopeRaycastHit.normal);
-                    if (slopeAngle > m_SlopeLimit && slopeAngle <= 89.999f) {
-                        continue;
+                    if (closestRaycastHit.rigidbody != null && !closestRaycastHit.rigidbody.isKinematic) {
+                        var groundPoint = MathUtility.InverseTransformPoint(m_Rigidbody.position, m_Rigidbody.rotation, closestRaycastHit.point - m_MovingPlatformMovement);
+                        if (groundPoint.y > m_MaxStepHeight) {
+                            continue;
+                        }
                     }
 
                     // Determine which collider caused the intersection.
-                    var activeCollider = m_ColliderCount > 1 ? m_Colliders[m_ColliderIndexMap[closestRaycastHit]] : m_Colliders[m_ColliderIndex];
-                    var distance = closestRaycastHit.distance - offset;
+                    var distance = closestRaycastHit.distance - castOffset;
+                    if (!Physics.autoSyncTransforms) {
+                        distance -= m_Rigidbody.InverseTransformDirection(m_MovingPlatformMovement).y;
+                    }
 
                     // The character is grounded if:
                     // - They should not be force ungrounded OR the desired movement is down.
@@ -1156,6 +1145,7 @@ namespace Opsive.UltimateCharacterController.Character
                             UpdateMovingPlatformTransform(closestRaycastHit.transform);
                         }
                         m_GroundedRaycastHit = closestRaycastHit;
+                        var activeCollider = m_ColliderCount > 1 ? m_Colliders[m_ColliderIndexMap[closestRaycastHit]] : m_Colliders[m_ColliderIndex];
                         m_CharacterGroundedCollider = activeCollider;
 
                         if (UsingVerticalCollisionDetection) {
@@ -1210,6 +1200,7 @@ namespace Opsive.UltimateCharacterController.Character
                     }
                 }
             }
+            m_SlopedGround = false;
             UpdateSlopeFactor();
         }
 
@@ -1419,7 +1410,7 @@ namespace Opsive.UltimateCharacterController.Character
             } else { // BoxCollider.
                 var boxCollider = castCollider as BoxCollider;
                 var extents = (MathUtility.ColliderScaleMultiplier(boxCollider) - ColliderSpacing) * boxCollider.size / 2;
-                hit =  Physics.BoxCast(boxCollider.transform.TransformPoint(boxCollider.center) + offset, extents, direction, out raycastHit,
+                hit = Physics.BoxCast(boxCollider.transform.TransformPoint(boxCollider.center) + offset, extents, direction, out raycastHit,
                                                             boxCollider.transform.rotation, distance + ColliderSpacing, layers, QueryTriggerInteraction.Ignore);
 #if UNITY_EDITOR
                 if (drawDebugLine) {
@@ -1556,6 +1547,10 @@ namespace Opsive.UltimateCharacterController.Character
         /// <param name="scaleByMass">Should the force be scaled by the character's mass?</param>
         public void AddForce(Vector3 force, int frames = 1, bool scaleByMass = true)
         {
+            if (force.sqrMagnitude == 0) {
+                return;
+            }
+
             if (scaleByMass) {
                 force /= m_Rigidbody.mass;
             }
@@ -1883,7 +1878,7 @@ namespace Opsive.UltimateCharacterController.Character
         {
             m_Transform.rotation = m_Rigidbody.rotation = m_PrevMotorRotation = rotation;
             m_Up = rotation * Vector3.up;
-            m_ApplyMovingPlatformDisconnectMovement = false;
+            m_SlopedGround = m_ApplyMovingPlatformDisconnectMovement = false;
         }
 
         /// <summary>
@@ -1896,7 +1891,7 @@ namespace Opsive.UltimateCharacterController.Character
             m_MotorThrottle = m_DesiredMovement = m_ExternalForce = Vector3.zero;
             m_GravityAccumulation = 0;
             Grounded = false;
-            m_ApplyMovingPlatformDisconnectMovement = false;
+            m_SlopedGround = m_ApplyMovingPlatformDisconnectMovement = false;
 
             EnableColliderCollisionLayer(false);
             DetectGround(false);
@@ -1913,7 +1908,7 @@ namespace Opsive.UltimateCharacterController.Character
             m_GravityDirection = -m_Up;
             m_DesiredRotation = Quaternion.identity;
             m_MotorThrottle = m_DesiredMovement = m_ExternalForce = Vector3.zero;
-            m_ApplyMovingPlatformDisconnectMovement = false;
+            m_SlopedGround = m_ApplyMovingPlatformDisconnectMovement = false;
 
             ResetRootMotion();
         }

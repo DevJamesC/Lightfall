@@ -17,7 +17,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Effect
     [Serializable]
     public class SpawnPrefab : ItemEffect
     {
-        [Tooltip("The Prefab to spawn.")]
+        [Tooltip("The prefab to spawn.")]
         [SerializeField] protected ItemPerspectiveProperty<GameObject> m_Prefab;
         [FormerlySerializedAs("m_Parent")]
         [Tooltip("The origin of the spawn, set the the character position if none is specified.")]
@@ -75,12 +75,11 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Effect
             if (prefab == null) {
                 return;
             }
-            
+
             var origin = m_Origin.GetValue();
             if (origin == null) {
                 origin = m_CharacterItemAction.Character.transform;
             }
-
 
             m_SpawnedObject = ObjectPoolBase.Instantiate(prefab, origin);
             var spawnedTransform = m_SpawnedObject.transform;
@@ -105,7 +104,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Effect
         /// <param name="obj">The object to destroy.</param>
         private void DoDestroyObject(GameObject obj)
         {
-            if(obj == null){ return; }
+            if (obj == null) { return; }
 
             if (ObjectPoolBase.IsPooledObject(obj)) {
                 ObjectPoolBase.Destroy(obj);

@@ -39,7 +39,7 @@ namespace Opsive.UltimateCharacterController.UI
         /// <returns>True if the specified module switcher can be displayed by this switcher.</returns>
         public virtual bool DoesSwitcherMatch(IModuleSwitcher moduleSwitcher)
         {
-            return m_ModuleSwitcherID == moduleSwitcher.ModuleID;
+            return m_ModuleSwitcherID == moduleSwitcher.ID;
         }
 
         /// <summary>

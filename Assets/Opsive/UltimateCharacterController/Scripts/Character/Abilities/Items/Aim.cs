@@ -224,6 +224,12 @@ namespace Opsive.UltimateCharacterController.Character.Abilities.Items
             }
             EventHandler.ExecuteEvent(m_GameObject, "OnAimAbilityStart", true, m_InputStart);
             EventHandler.ExecuteEvent(m_GameObject, "OnAimAbilityAim", true);
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+            // Item abilities only execute on the local client.
+            if (m_NetworkInfo != null) {
+                m_NetworkCharacter.ExecuteBoolEvent("OnAimAbilityAim", true);
+            }
+#endif
         }
 
         /// <summary>
@@ -293,6 +299,12 @@ namespace Opsive.UltimateCharacterController.Character.Abilities.Items
         {
             // The base AbilityStopped may have already been called within CanStopAbility - don't call it again to prevent duplicate calls.
             EventHandler.ExecuteEvent(m_GameObject, "OnAimAbilityAim", false);
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+            // Item abilities only execute on the local client.
+            if (m_NetworkInfo != null) {
+                m_NetworkCharacter.ExecuteBoolEvent("OnAimAbilityAim", false);
+            }
+#endif
             if (m_PerspectiveSwitch && !m_InputStart) {
                 if (m_AIAgent) {
                     base.AbilityStopped(force);
@@ -347,6 +359,12 @@ namespace Opsive.UltimateCharacterController.Character.Abilities.Items
             // If the ItemPullback ability is activated then the aim state should no longer be set. This will prevent the aim animator parameters from updating.
             if (IsActive && itemAbility == m_ItemPullback) {
                 EventHandler.ExecuteEvent(m_GameObject, "OnAimAbilityAim", !active);
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+                // Item abilities only execute on the local client.
+                if (m_NetworkInfo != null) {
+                    m_NetworkCharacter.ExecuteBoolEvent("OnAimAbilityAim", !active);
+                }
+#endif
             }
 #endif
         }

@@ -113,7 +113,7 @@ namespace Opsive.UltimateCharacterController.Editor.Inspectors.SurfaceSystem
                 EditorGUI.indentLevel--;
             }
 
-            if (EditorGUI.EndChangeCheck()) {
+            if (EditorGUI.EndChangeCheck() || Event.current.type == EventType.ExecuteCommand) {
                 Shared.Editor.Utility.EditorUtility.RecordUndoDirtyObject(target, "Change Value");
                 serializedObject.ApplyModifiedProperties();
             }

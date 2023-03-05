@@ -84,7 +84,7 @@ namespace Opsive.UltimateCharacterController.UI
                 m_ShouldFade = false;
                 m_ObjectPickup = null;
                 if (m_ScheduledFade != null) {
-                    SchedulerBase.Cancel(m_ScheduledFade);
+                    Scheduler.Cancel(m_ScheduledFade);
                     m_ScheduledFade = null;
                 }
             } else if (!canStart) {
@@ -104,7 +104,7 @@ namespace Opsive.UltimateCharacterController.UI
                 m_ShouldFade = true;
                 m_ObjectAlphaColor = 1;
                 if (m_ShouldFade) {
-                    SchedulerBase.Cancel(m_ScheduledFade);
+                    Scheduler.Cancel(m_ScheduledFade);
                 }
             } else {
                 // Keep showing the previous object message if the new message doesn't have text or icons.
@@ -147,7 +147,7 @@ namespace Opsive.UltimateCharacterController.UI
                 }
 
                 if (m_ShouldFade) {
-                    m_ScheduledFade = SchedulerBase.Schedule(m_ObjectVisiblityDuration, FadeMessage);
+                    m_ScheduledFade = Scheduler.Schedule(m_ObjectVisiblityDuration, FadeMessage);
                 }
             }
 
@@ -181,7 +181,7 @@ namespace Opsive.UltimateCharacterController.UI
             }
 
             // Keep fading until there is nothing left to fade.
-            m_ScheduledFade = SchedulerBase.Schedule(0.01f, FadeMessage);
+            m_ScheduledFade = Scheduler.Schedule(0.01f, FadeMessage);
         }
 
         /// <summary>

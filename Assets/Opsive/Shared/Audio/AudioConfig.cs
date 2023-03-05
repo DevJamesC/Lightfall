@@ -352,8 +352,8 @@ namespace Opsive.Shared.Audio
         {
             var audioSource = GetNextAudioSource(audioSourceGroup);
             
-            //Unlock the audio source after a frame so that it can be reused.
-            SchedulerBase.Schedule(0.16f, m_UnlockAudioSource, audioSourceGroup, audioSource);
+            // Unlock the audio source after a frame so that it can be reused.
+            Scheduler.Schedule(0.16f, m_UnlockAudioSource, audioSourceGroup, audioSource);
 
             return Play(audioSource, new AudioClipInfo(audioClip, this));
         }
@@ -368,14 +368,14 @@ namespace Opsive.Shared.Audio
         {
             var audioSource = GetNextAudioSource(audioSourceGroup);
             
-            //Unlock the audio source after the delay so that it can be reused.
+            // Unlock the audio source after the delay so that it can be reused.
             var delay = 0.16f;
             if (audioClipInfo.AudioModifier.DelayOverride.ValueOverride != FloatOverride.Override.NoOverride) {
                 delay += audioClipInfo.AudioModifier.DelayOverride.Value;
             } else if (m_AudioModifier.DelayOverride.ValueOverride != FloatOverride.Override.NoOverride) {
                 delay += m_AudioModifier.DelayOverride.Value;
             }
-            SchedulerBase.Schedule(delay, m_UnlockAudioSource, audioSourceGroup, audioSource);
+            Scheduler.Schedule(delay, m_UnlockAudioSource, audioSourceGroup, audioSource);
 
             return Play(audioSource, audioClipInfo);
         }
@@ -535,7 +535,7 @@ namespace Opsive.Shared.Audio
             if (m_ShareAudioSource) {
                 for (int i = 0; i < audioSourceGroup.SharedAudioSources.Count; i++) {
                     var sharedAudioSource = audioSourceGroup.SharedAudioSources[i];
-                    if (sharedAudioSource.isPlaying == false && audioSourceGroup.LockedAudioSources.Contains(sharedAudioSource) == false) {
+                    if (sharedAudioSource != null && !sharedAudioSource.isPlaying && !audioSourceGroup.LockedAudioSources.Contains(sharedAudioSource)) {
                         audioSourceGroup.LockedAudioSources.Add(sharedAudioSource);
                         return sharedAudioSource;
                     }

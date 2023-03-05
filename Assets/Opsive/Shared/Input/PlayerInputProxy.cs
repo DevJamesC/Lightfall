@@ -62,6 +62,9 @@ namespace Opsive.Shared.Input
                 parent = new GameObject(gameObject.name + "Input").transform;
             }
             m_PlayerInput.transform.parent = parent;
+            m_PlayerInput.transform.localPosition = Vector3.zero;
+            m_PlayerInput.transform.localRotation = Quaternion.identity;
+            m_PlayerInput.transform.localPosition = Vector3.zero;
             m_PlayerInput.RegisterEvents(gameObject);
 
 #if FIRST_PERSON_CONTROLLER || THIRD_PERSON_CONTROLLER

@@ -42,10 +42,11 @@ namespace MBS.AbilitySystem
             TitleText.text = stat.StatNameDisplayName == "" ? stat.StatName.ToString() : stat.StatNameDisplayName;
             DisplayValueText.text = (Mathf.Round(stat.CurrentValue * 100) / 100).ToString() + stat.statValueDisplaySuffix;
 
-
+           
             CurrentValueSlider.value = stat.CurrentValue / stat.MaxValue;
             if (stat.StatName == StatName.AbilityRecharge)
                 CurrentValueSlider.value = stat.MaxValue / stat.CurrentValue;
+
 
             if (stat.ProspectiveValue != stat.CurrentValue)
             {

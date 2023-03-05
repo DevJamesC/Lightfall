@@ -186,7 +186,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3ee2c1a75ff367a42ba5f16bd97e5519, type: 3}
-  m_Name: Right Hand Secondary Grenades
+  m_Name: RightHandSecondaryGrenades
   m_EditorClassIdentifier: 
   m_ID: 79718183
 --- !u!114 &114327507680120068
@@ -455,7 +455,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3ee2c1a75ff367a42ba5f16bd97e5519, type: 3}
-  m_Name: Left Hand Secondary Grenades
+  m_Name: LeftHandSecondaryGrenades
   m_EditorClassIdentifier: 
   m_ID: 946837701
 --- !u!114 &114735020259635174

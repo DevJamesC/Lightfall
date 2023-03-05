@@ -8,6 +8,10 @@ namespace Opsive.UltimateCharacterController.Character
 {
     using Opsive.Shared.Game;
     using Opsive.Shared.Events;
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+    using Opsive.Shared.Networking;
+    using Opsive.UltimateCharacterController.Networking.Character;
+#endif
     using System.Collections.Generic;
     using UnityEngine;
 
@@ -24,9 +28,14 @@ namespace Opsive.UltimateCharacterController.Character
 
         public GameObject[] AvailableModels { get => m_AvailableModels; set => m_AvailableModels = value; }
         public GameObject ActiveModel { get => m_ActiveModel; set => ChangeModels(value); }
+        public int ActiveModelIndex { get => m_ModelIndexMap[m_ActiveModel]; }
 
         [System.NonSerialized] private GameObject m_GameObject;
         private Dictionary<GameObject, int> m_ModelIndexMap;
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+        private INetworkInfo m_NetworkInfo;
+        private INetworkCharacter m_NetworkCharacter;
+#endif
 
         public Dictionary<GameObject, int> ModelIndexMap { get => m_ModelIndexMap; }
 
@@ -36,8 +45,12 @@ namespace Opsive.UltimateCharacterController.Character
         private void Awake()
         {
             m_GameObject = gameObject;
-            m_ModelIndexMap = new Dictionary<GameObject, int>();
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+            m_NetworkInfo = m_GameObject.GetCachedComponent<INetworkInfo>();
+            m_NetworkCharacter = m_GameObject.GetCachedComponent<INetworkCharacter>();
+#endif
 
+            m_ModelIndexMap = new Dictionary<GameObject, int>();
             if (m_AvailableModels != null) {
                 if (m_ActiveModel == null) {
                     m_ActiveModel = m_AvailableModels[0].gameObject;
@@ -67,11 +80,25 @@ namespace Opsive.UltimateCharacterController.Character
         /// Changes the character model to the target model.
         /// </summary>
         /// <param name="targetModel">The GameObject of the model that should be swiched to.</param>
-        public void ChangeModels(GameObject targetModel)
+        public void ChangeModels(GameObject targetModel
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+            , bool fromServer = false
+#endif
+            )
         {
             if (m_ActiveModel == targetModel) {
                 return;
             }
+
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+            if (m_NetworkInfo != null) {
+                if (!m_NetworkInfo.IsLocalPlayer() && !fromServer) {
+                    return;
+                } else if (m_NetworkInfo.IsLocalPlayer()) {
+                    m_NetworkCharacter.ChangeModels(m_ModelIndexMap[targetModel]);
+                }
+            }
+#endif
 
             var originalAniatorMonitor = m_ActiveModel.GetCachedComponent<AnimatorMonitor>();
             var targetAnimatorMonitor = targetModel.GetCachedComponent<AnimatorMonitor>();

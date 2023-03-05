@@ -358,7 +358,6 @@ namespace Opsive.UltimateCharacterController.FirstPersonController.Items
             EventHandler.RegisterEvent<bool>(m_Character, "OnCharacterImmediateTransformChange", OnImmediateTransformChange);
             EventHandler.RegisterEvent<bool>(m_Character, "OnCharacterChangePerspectives", OnChangePerspectives);
 
-
             return true;
         }
 
@@ -388,8 +387,8 @@ namespace Opsive.UltimateCharacterController.FirstPersonController.Items
                 }
             }
 
-            if (m_FirstPersonBaseObjectID >= 0 && foundMatch == false) {
-                Debug.LogWarning($"The First Person Base Object for item '{m_CharacterItem}' was not found for the ID {m_FirstPersonBaseObjectID}",m_CharacterItem);
+            if (m_FirstPersonBaseObjectID >= 0 && !foundMatch) {
+                Debug.LogWarning($"The First Person Base Object for item '{m_CharacterItem}' was not found for the ID {m_FirstPersonBaseObjectID}.", m_CharacterItem);
             }
 
             return firstPersonBaseObject;
@@ -407,6 +406,11 @@ namespace Opsive.UltimateCharacterController.FirstPersonController.Items
             var modelManager = character.GetCachedComponent<ModelManager>();
             if (modelManager != null) {
                 model = modelManager.ActiveModel;
+            } else {
+                var animatorMonitor = character.GetComponentInChildren<AnimatorMonitor>();
+                if (animatorMonitor != null) {
+                    model = animatorMonitor.gameObject;
+                }
             }
             
             // Check inside the character first.
@@ -416,7 +420,13 @@ namespace Opsive.UltimateCharacterController.FirstPersonController.Items
             }
 
             // Check on the camera too. The character camera, not the model camera.
-            var foundCamera = Shared.Camera.CameraUtility.FindCamera(m_Character);
+            if (character.GetCachedComponent<UltimateCharacterLocomotion>() == null) {
+                character = character.GetCachedParentComponent<UltimateCharacterLocomotion>().gameObject;
+            }
+            var foundCamera = Shared.Camera.CameraUtility.FindCamera(character);
+            if (foundCamera == null) {
+                return null;
+            }
                 
             // There might be multiple FirstPersonObjects for each model.
             var firstPersonObjectsInCamera = foundCamera.GetComponentsInChildren<FirstPersonObjects>(true);
@@ -460,7 +470,7 @@ namespace Opsive.UltimateCharacterController.FirstPersonController.Items
             }
             
             if (parent == null) {
-                Debug.LogError($"The Character Item Slot Transform with SlotID '{slotID}' could not be found in the Character hierarchy '{character}'", character);
+                Debug.LogError($"The Character Item Slot Transform with SlotID '{slotID}' could not be found in the Character hierarchy '{character}'.", character);
                 return null;
             }
             
@@ -1126,7 +1136,6 @@ namespace Opsive.UltimateCharacterController.FirstPersonController.Items
             }
 
             m_CharacterItem.SetPerspectiveAnimatorMonitors(this);
-            
             m_FirstPersonObjects.ItemObjectUpdated(m_CharacterItem);
         }
 

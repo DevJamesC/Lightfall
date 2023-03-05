@@ -308,7 +308,7 @@ namespace Opsive.UltimateCharacterController.Character.Abilities
                 AddJumpForce(force, m_Frames);
 
                 // Ensure the character is in the air after jumping.
-                SchedulerBase.ScheduleFixed(Time.deltaTime * 10, EnsureAirborne); 
+                Scheduler.ScheduleFixed(Time.deltaTime * 10, EnsureAirborne); 
             }
         }
 

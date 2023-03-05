@@ -111,11 +111,11 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Throwable
         }
 
         /// <summary>
-        /// Register to events while the item is equipped and the module is enabled.
+        /// Updates the registered events when the item is equipped and the module is enabled.
         /// </summary>
-        protected override void RegisterEventsWhileEquippedAndEnabledInternal(bool register)
+        protected override void UpdateRegisteredEventsInternal(bool register)
         {
-            base.RegisterEventsWhileEquippedAndEnabledInternal(register);
+            base.UpdateRegisteredEventsInternal(register);
             
             m_ReequipEvent.RegisterUnregisterEvent(register, Character, "OnAnimatorReequipThrowableItem", SlotID, HandleReequipeAnimationEvent);
         }
@@ -242,19 +242,6 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Throwable
             UpdateItemAbilityAnimatorParameters();
 
             ThrowableAction.OnReequipThrowableItem();
-
-            var nextAmmoData = ThrowableAction.GetNextAmmoData();
-
-            // The item shouldn't be reequipped if it is out of ammo.
-            if (nextAmmoData.Valid == false) {
-                return;
-            }
-            
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
-            if (m_NetworkInfo != null && m_NetworkInfo.IsLocalPlayer()) {
-                m_NetworkCharacter.EnableThrowableObjectMeshRenderers(this);
-            }
-#endif
         }
 
         /// <summary>

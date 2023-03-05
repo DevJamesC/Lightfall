@@ -383,7 +383,7 @@ namespace Opsive.UltimateCharacterController.FirstPersonController.Camera.ViewTy
                 EventHandler.UnregisterEvent<float>(m_Character, "OnHeightChangeAdjustHeight", AdjustVerticalOffset);
                 EventHandler.UnregisterEvent<GameObject>(m_GameObject, "OnCharacterSwitchModels", OnSwitchModels);
                 if (m_SmoothHeadBufferEvent != null) {
-                    SchedulerBase.Cancel(m_SmoothHeadBufferEvent);
+                    Scheduler.Cancel(m_SmoothHeadBufferEvent);
                     m_SmoothHeadBufferEvent = null;
                 }
                 m_CharacterAnchor = null;
@@ -436,7 +436,7 @@ namespace Opsive.UltimateCharacterController.FirstPersonController.Camera.ViewTy
             }
             if (m_CharacterAnchor != null && m_SmoothHeadOffsetBuffer != null) {
                 if (m_SmoothHeadBufferEvent != null) {
-                    SchedulerBase.Cancel(m_SmoothHeadBufferEvent);
+                    Scheduler.Cancel(m_SmoothHeadBufferEvent);
                     m_SmoothHeadBufferEvent = null;
                 }
                 InitializeSmoothHeadBuffer();
@@ -449,7 +449,7 @@ namespace Opsive.UltimateCharacterController.FirstPersonController.Camera.ViewTy
         public void InitializeSmoothHeadBuffer()
         {
             if (!m_CharacterLocomotion.Grounded || m_CharacterRigidbody.InverseTransformPoint(m_CharacterLocomotion.GroundedRaycastHit.point).y > m_CharacterLocomotion.ColliderSpacing + 0.011f) {
-                m_SmoothHeadBufferEvent = SchedulerBase.Schedule(Time.fixedDeltaTime, InitializeSmoothHeadBuffer);
+                m_SmoothHeadBufferEvent = Scheduler.Schedule(Time.fixedDeltaTime, InitializeSmoothHeadBuffer);
                 return;
             }
 
@@ -1099,6 +1099,10 @@ namespace Opsive.UltimateCharacterController.FirstPersonController.Camera.ViewTy
         /// </summary>
         public override void StateChange()
         {
+            if (m_Character == null) {
+                return;
+            }
+
             // Append the zoom state name so the combination of state names will be called, such as "CrouchZoom".
             if (!string.IsNullOrEmpty(m_CameraController.ZoomState) && !m_AppendingZoomState) {
                 m_AppendingZoomState = true;

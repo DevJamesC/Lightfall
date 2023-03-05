@@ -11,20 +11,19 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Impact
     using Opsive.Shared.Utility;
     using Opsive.UltimateCharacterController.Character;
     using Opsive.UltimateCharacterController.Items.Actions.Effect;
+    using Opsive.UltimateCharacterController.Objects;
     using Opsive.UltimateCharacterController.Objects.ItemAssist;
     using Opsive.UltimateCharacterController.Traits;
     using Opsive.UltimateCharacterController.Utility;
     using System;
     using System.Collections.Generic;
-    using Opsive.UltimateCharacterController.Character.Abilities;
-    using Opsive.UltimateCharacterController.Objects;
     using UnityEngine;
     using UnityEngine.Events;
     using EventHandler = Opsive.Shared.Events.EventHandler;
 
     [Serializable]
-    public class ImpactCallbackUnityEvent : UnityEvent<ImpactCallbackContext>{ }
-    
+    public class ImpactCallbackUnityEvent : UnityEvent<ImpactCallbackContext> { }
+
     /// <summary>
     /// This action will print the impact context in the console. 
     /// </summary>
@@ -40,7 +39,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Impact
             Debug.Log(ctx);
         }
     }
-    
+
     /// <summary>
     /// Calls a unity event on impact.
     /// </summary>
@@ -58,13 +57,13 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Impact
         /// <param name="ctx">Context about the hit.</param>
         protected override void OnImpactInternal(ImpactCallbackContext ctx)
         {
-            //Refactor this event to take in the impact data.
-            if (m_OnImpactEvent != null) {
+            if (m_OnImpactEvent != null)
+            {
                 m_OnImpactEvent.Invoke(ctx);
             }
         }
     }
-    
+
     /// <summary>
     /// Calls a events on impact.
     /// </summary>
@@ -82,17 +81,18 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Impact
         /// <param name="ctx">Context about the hit.</param>
         protected override void OnImpactInternal(ImpactCallbackContext ctx)
         {
-            if (m_CallImpactCallbackOnOriginator) {
+            if (m_CallImpactCallbackOnOriginator)
+            {
                 ctx.InvokeImpactOriginatorCallback();
             }
 
-            if (m_CallImpactCallbackOnTarget) {
+            if (m_CallImpactCallbackOnTarget)
+            {
                 ctx.InvokeImpactTargetCallback();
             }
         }
     }
 
-    
     /// <summary>
     /// Generic Item Effects invoked when the impact happens
     /// </summary>
@@ -108,7 +108,8 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Impact
             set
             {
                 m_EffectGroup = value;
-                if (m_EffectGroup != null) {
+                if (m_EffectGroup != null)
+                {
                     m_EffectGroup.Initialize(m_CharacterItemAction);
                 }
             }
@@ -122,7 +123,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Impact
         public override void Initialize(GameObject character, CharacterItemAction characterItemAction)
         {
             base.Initialize(character, characterItemAction);
-            
+
             m_EffectGroup.Initialize(characterItemAction);
         }
 
@@ -143,14 +144,15 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Impact
             base.OnDestroy();
             m_EffectGroup.OnDestroy();
         }
-        
+
         /// <summary>
         /// Write the module name in an easy to read format for debugging.
         /// </summary>
         /// <returns>The string representation of the module.</returns>
         public override string ToString()
         {
-            if (m_EffectGroup == null || m_EffectGroup.Effects == null) {
+            if (m_EffectGroup == null || m_EffectGroup.Effects == null)
+            {
                 return base.ToString();
             }
             return $"Generic ({m_EffectGroup.Effects.Length}): " + ListUtility.ToStringDeep(m_EffectGroup.Effects, true);
@@ -185,52 +187,54 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Impact
         protected override void OnImpactInternal(ImpactCallbackContext ctx)
         {
             var impactData = ctx.ImpactCollisionData;
-            uint castID = ctx.ImpactCollisionData.SourceID;
-            GameObject source = ctx.ImpactCollisionData.SourceGameObject;
-            GameObject target = ctx.ImpactCollisionData.TargetGameObject;
-            RaycastHit hit = ctx.ImpactCollisionData.RaycastHit;
-            var radius = ctx.ImpactDamageData?.ImpactRadius ?? 0;
-
+            var source = ctx.ImpactCollisionData.SourceGameObject;
             var localImpactForce = m_Amount * impactData.ImpactStrength;
+            var impactDirectionalForce = m_UseSourceDirection ? source.transform.TransformDirection(localImpactForce)
+                                                                : Vector3.Scale(localImpactForce, impactData.ImpactDirection);
 
-            var impactDirectionalForce = m_UseSourceDirection
-                ? source.transform.TransformDirection(localImpactForce)
-                : Vector3.Scale(localImpactForce, impactData.ImpactDirection);
-
-            
             var impactGameObject = ctx.ImpactCollisionData.ImpactGameObject;
             var opponentLocomotion = impactGameObject.GetCachedParentComponent<UltimateCharacterLocomotion>();
-            if (opponentLocomotion != null) {
+            if (opponentLocomotion != null)
+            {
                 opponentLocomotion.AddForce(impactDirectionalForce, m_Frames);
                 return;
             }
-            
-            var forceObject = impactData.TargetGameObject.GetCachedParentComponent<IForceObject>();
-            if (forceObject != null) {
+
+            var forceObject = impactData.ImpactGameObject.GetCachedParentComponent<IForceObject>();
+            if (forceObject != null)
+            {
                 forceObject.AddForce(impactDirectionalForce, m_Frames);
                 return;
             }
 
-            if(impactData.ImpactRigidbody != null && !impactData.ImpactRigidbody.isKinematic) {
+            if (impactData.ImpactRigidbody != null && !impactData.ImpactRigidbody.isKinematic)
+            {
                 var rigidbody = impactData.ImpactRigidbody;
-                
+
                 // If the damage target exists it will apply a force to the rigidbody in addition to procesing the damage.
                 // Otherwise just apply the force to the rigidbody. If the radius is bigger than 0 than it must be explosive.
-                if (radius > 0) {
+                var radius = ctx.ImpactDamageData?.ImpactRadius ?? 0;
+                if (radius > 0)
+                {
                     rigidbody.AddExplosionForce(localImpactForce.sqrMagnitude * MathUtility.RigidbodyForceMultiplier, impactData.ImpactPosition, radius);
 
-                } else {
+                }
+                else
+                {
                     var amount = impactDirectionalForce * MathUtility.RigidbodyForceMultiplier;
-                    if (m_AddForceAtPosition) {
+                    if (m_AddForceAtPosition)
+                    {
                         rigidbody.AddForceAtPosition(amount, impactData.ImpactPosition, m_Mode);
-                    } else {
+                    }
+                    else
+                    {
                         rigidbody.AddForce(amount, m_Mode);
                     }
                 }
             }
         }
     }
-    
+
     /// <summary>
     /// Adds a torque to the impacted object.
     /// </summary>
@@ -251,20 +255,17 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Impact
         /// <param name="ctx">The context of the impact.</param>
         protected override void OnImpactInternal(ImpactCallbackContext ctx)
         {
-            uint castID = ctx.ImpactCollisionData.SourceID;
-            GameObject source = ctx.ImpactCollisionData.SourceGameObject;
-            GameObject target = ctx.ImpactCollisionData.TargetGameObject;
-            RaycastHit hit = ctx.ImpactCollisionData.RaycastHit;
-            
-            var rigidbody = target.GetComponent<Rigidbody>();
-            if (rigidbody == null) {
+            var target = ctx.ImpactCollisionData.ImpactGameObject;
+            var rigidbody = target.GetCachedComponent<Rigidbody>();
+            if (rigidbody == null)
+            {
                 return;
             }
 
             rigidbody.AddTorque(m_Amount, m_Mode);
         }
     }
-    
+
     /// <summary>
     /// Heals the impacted object.
     /// </summary>
@@ -285,24 +286,23 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Impact
         /// <param name="ctx">The context of the impact.</param>
         protected override void OnImpactInternal(ImpactCallbackContext ctx)
         {
-            uint castID = ctx.ImpactCollisionData.SourceID;
-            GameObject source = ctx.ImpactCollisionData.SourceGameObject;
-            GameObject target = ctx.ImpactCollisionData.TargetGameObject;
-            RaycastHit hit = ctx.ImpactCollisionData.RaycastHit;
-
-            var health = target.GetComponent<Health>();
-            if (health == null) {
-                health = target.GetComponentInParent<Health>();
+            var target = ctx.ImpactCollisionData.ImpactGameObject;
+            var health = target.GetCachedComponent<Health>();
+            if (health == null)
+            {
+                health = target.GetCachedParentComponent<Health>();
             }
-          
-            if (health == null || !health.Heal(m_Amount)) {
-                if (m_InterruptImpactOnNullHealth) {
+
+            if (health == null || !health.Heal(m_Amount))
+            {
+                if (m_InterruptImpactOnNullHealth)
+                {
                     ctx.InvokeInterruptCallback(this);
                 }
             }
         }
     }
-    
+
     /// <summary>
     /// Modifies the specified attribute on the impacted object.
     /// </summary>
@@ -320,28 +320,29 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Impact
         /// <param name="ctx">The context of the impact.</param>
         protected override void OnImpactInternal(ImpactCallbackContext ctx)
         {
-            uint castID = ctx.ImpactCollisionData.SourceID;
-            GameObject source = ctx.ImpactCollisionData.SourceGameObject;
-            GameObject target = ctx.ImpactCollisionData.TargetGameObject;
-            RaycastHit hit = ctx.ImpactCollisionData.RaycastHit;
-
+            var target = ctx.ImpactCollisionData.ImpactGameObject;
             var targetAttributeManager = target.GetCachedParentComponent<AttributeManager>();
-            if (targetAttributeManager == null) {
+            if (targetAttributeManager == null)
+            {
                 return;
             }
 
             // The impact action can collide with multiple objects. Use a pooled version of the AttributeModifier for each collision.
             var attributeModifier = GenericObjectPool.Get<AttributeModifier>();
-            if (!attributeModifier.Initialize(m_AttributeModifier, targetAttributeManager)) {
+            if (!attributeModifier.Initialize(m_AttributeModifier, targetAttributeManager))
+            {
                 GenericObjectPool.Return(attributeModifier);
                 return;
             }
 
             // The attribute exists. Enable the modifier. Return the modifier as soon as it is complete (which may be immediate).
             attributeModifier.EnableModifier(true);
-            if (attributeModifier.AutoUpdating && attributeModifier.AutoUpdateDuration > 0) {
+            if (attributeModifier.AutoUpdating && attributeModifier.AutoUpdateDuration > 0)
+            {
                 Shared.Events.EventHandler.RegisterEvent<AttributeModifier, bool>(attributeModifier, "OnAttributeModifierAutoUpdateEnable", ModifierAutoUpdateEnabled);
-            } else {
+            }
+            else
+            {
                 GenericObjectPool.Return(attributeModifier);
             }
         }
@@ -353,7 +354,8 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Impact
         /// <param name="enable">True if the modifier has been enabled.</param>
         private void ModifierAutoUpdateEnabled(AttributeModifier attributeModifier, bool enable)
         {
-            if (enable) {
+            if (enable)
+            {
                 return;
             }
 
@@ -361,7 +363,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Impact
             GenericObjectPool.Return(attributeModifier);
         }
     }
-    
+
     /// <summary>
     /// Plays an AudioClip on the impacted object.
     /// </summary>
@@ -379,15 +381,10 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Impact
         /// <param name="ctx">The context of the impact.</param>
         protected override void OnImpactInternal(ImpactCallbackContext ctx)
         {
-            uint castID = ctx.ImpactCollisionData.SourceID;
-            GameObject source = ctx.ImpactCollisionData.SourceGameObject;
-            GameObject target = ctx.ImpactCollisionData.TargetGameObject;
-            RaycastHit hit = ctx.ImpactCollisionData.RaycastHit;
-
-            m_AudioClipSet.PlayAtPosition(hit.point);
+            m_AudioClipSet.PlayAtPosition(ctx.ImpactCollisionData.RaycastHit.point);
         }
     }
-    
+
     /// <summary>
     /// The Ricochet action will invoke the OnRicochet even when it detects target on impact, creating a ricochet effect.
     /// </summary>
@@ -408,7 +405,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Impact
         }
 
         public event Action<RicochetData> OnRicochet;
-        
+
         [Tooltip("The radius of the ricochet.")]
         [SerializeField] protected float m_Radius = 10;
         [Tooltip("The maximum number of ricochets that can occur from a single cast. Set to -1 to disable.")]
@@ -422,13 +419,12 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Impact
         [SerializeField] protected LayerMask m_DetectLayers;
 
         protected int m_CurrentChainCount;
-        
+
         public bool MergeDataLayers { get => m_MergeDataLayers; set => m_MergeDataLayers = value; }
         public LayerMask DetectLayers { get => m_DetectLayers; set => m_DetectLayers = value; }
 
         public float Radius { get { return m_Radius; } set { m_Radius = value; } }
 
-        private CharacterLayerManager m_CharacterLayerManager;
         private Collider[] m_HitColliders;
         private Dictionary<uint, int> m_ChainCountMap = new Dictionary<uint, int>();
 
@@ -442,7 +438,6 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Impact
         public override void Initialize(GameObject character, CharacterItemAction characterItemAction)
         {
             base.Initialize(character, characterItemAction);
-            m_CharacterLayerManager = character.GetCachedComponent<CharacterLayerManager>();
             m_HitColliders = new Collider[m_MaxCollisionCount];
             m_RicochetData = new RicochetData();
         }
@@ -453,58 +448,68 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Impact
         /// <param name="ctx">The context of the impact.</param>
         protected override void OnImpactInternal(ImpactCallbackContext ctx)
         {
-            uint castID = ctx.ImpactCollisionData.SourceID;
-            GameObject source = ctx.ImpactCollisionData.SourceGameObject;
-            GameObject target = ctx.ImpactCollisionData.TargetGameObject;
-            RaycastHit hit = ctx.ImpactCollisionData.RaycastHit;
-            LayerMask detectLayers = MergeDataLayers ? (ctx.ImpactCollisionData.DetectLayers | m_DetectLayers) : m_DetectLayers;
+            var castID = ctx.ImpactCollisionData.SourceID;
+            var source = ctx.ImpactCollisionData.SourceGameObject;
+            var target = ctx.ImpactCollisionData.ImpactGameObject;
+            var hit = ctx.ImpactCollisionData.RaycastHit;
+            LayerMask detectLayers = m_DetectLayers;
+            if (m_MergeDataLayers)
+                detectLayers = (ctx.ImpactCollisionData.DetectLayers | m_DetectLayers);
 
             // Prevent the ricochet from bouncing between too many objects.
-            if (m_ChainCountMap.TryGetValue(castID, out var count)) {
-                if (m_MaxChainCount != -1 && count >= m_MaxChainCount) {
+            if (m_ChainCountMap.TryGetValue(castID, out var count))
+            {
+                if (m_MaxChainCount != -1 && count >= m_MaxChainCount)
+                {
                     return;
                 }
                 m_ChainCountMap[castID] = count + 1;
-            } else {
+            }
+            else
+            {
                 m_ChainCountMap.Add(castID, 1);
             }
 
             var hitCount = Physics.OverlapSphereNonAlloc(hit.point, m_Radius, m_HitColliders, detectLayers, QueryTriggerInteraction.Ignore);
 #if UNITY_EDITOR
-            if (hitCount == m_HitColliders.Length) {
+            if (hitCount == m_HitColliders.Length)
+            {
                 Debug.LogWarning("Warning: The hit count is equal to the max collider array size. This will cause objects to be missed. Consider increasing the max collision count size.");
             }
 #endif
-            
+
             // Perform the cast action in the direction of each hit object.
-            for (int i = 0; i < hitCount; ++i) {
+            for (int i = 0; i < hitCount; ++i)
+            {
                 var hitTransform = m_HitColliders[i].transform;
-                if (HasImpacted(hitTransform)) {
+                if (HasImpacted(hitTransform))
+                {
                     continue;
                 }
-                
+
                 Vector3 position;
                 PivotOffset pivotOffset;
-                if ((pivotOffset = hitTransform.gameObject.GetCachedComponent<PivotOffset>()) != null) {
+                if ((pivotOffset = hitTransform.gameObject.GetCachedComponent<PivotOffset>()) != null)
+                {
                     position = hitTransform.TransformPoint(pivotOffset.Offset);
-                } else {
+                }
+                else
+                {
                     position = hitTransform.position;
                 }
 
-                if (m_CharacterItemAction.IsDebugging) {
-                    Debug.DrawLine(hit.point,position,Color.magenta, 0.1f);
+                if (m_CharacterItemAction.IsDebugging)
+                {
+                    Debug.DrawLine(hit.point, position, Color.magenta, 0.1f);
                 }
-
-                var direction = (position - hit.point).normalized;
 
                 m_RicochetData.Ricochet = this;
                 m_RicochetData.SourceImpactCollisionData = ctx.ImpactCollisionData;
                 m_RicochetData.HitCollider = m_HitColliders[i];
-                m_RicochetData.Direction = direction;
+                m_RicochetData.Direction = (position - hit.point).normalized;
                 m_RicochetData.SourcePosition = hit.point;
                 m_RicochetData.TargetPosition = position;
-                
-                
+
                 OnRicochet?.Invoke(m_RicochetData);
             }
         }
@@ -516,7 +521,8 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Impact
         /// <returns>The current number of chains effects.</returns>
         public int GetChainCountFor(uint castID)
         {
-            if (m_ChainCountMap.TryGetValue(castID, out var count)) {
+            if (m_ChainCountMap.TryGetValue(castID, out var count))
+            {
                 return count;
             }
 
@@ -531,12 +537,13 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Impact
         {
             base.Reset(castID);
 
-            if (m_ChainCountMap.ContainsKey(castID)) {
+            if (m_ChainCountMap.ContainsKey(castID))
+            {
                 m_ChainCountMap[castID] = 0;
             }
         }
     }
-    
+
     /// <summary>
     /// Spawns a ParticleSystem upon impact.
     /// </summary>
@@ -565,14 +572,13 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Impact
         /// <param name="ctx">The context of the impact.</param>
         protected override void OnImpactInternal(ImpactCallbackContext ctx)
         {
-            uint sourceID = ctx.ImpactCollisionData.SourceID;
-            GameObject source = ctx.ImpactCollisionData.SourceGameObject;
-            GameObject target = ctx.ImpactCollisionData.TargetGameObject;
-            RaycastHit hit = ctx.ImpactCollisionData.RaycastHit;
+            var sourceID = ctx.ImpactCollisionData.SourceID;
+            var target = ctx.ImpactCollisionData.ImpactGameObject;
             var impactPosition = ctx.ImpactCollisionData.ImpactPosition;
             var impactDirection = ctx.ImpactCollisionData.ImpactDirection;
 
-            if (m_ParticlePrefab == null) {
+            if (m_ParticlePrefab == null)
+            {
                 Debug.LogError("Error: A Particle Prefab must be specified.", m_CharacterItemAction);
                 return;
             }
@@ -580,20 +586,23 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Impact
             var rotation = Quaternion.LookRotation(impactDirection) * Quaternion.Euler(m_RotationOffset);
             var position = MathUtility.TransformPoint(impactPosition, rotation, m_PositionOffset);
 
-            if (m_CastIDParticleMap.TryGetValue(sourceID, out var existingParticleSystem)) {
+            if (m_CastIDParticleMap.TryGetValue(sourceID, out var existingParticleSystem))
+            {
                 existingParticleSystem.transform.SetPositionAndRotation(position, rotation);
                 return;
             }
 
             var obj = ObjectPoolBase.Instantiate(m_ParticlePrefab, position, rotation, m_ParentToImpactedObject ? target.transform : null);
             var particleSystem = obj.GetCachedComponent<ParticleSystem>();
-            if (particleSystem == null) {
+            if (particleSystem == null)
+            {
                 Debug.LogError($"Error: A Particle System must be specified on the particle {m_ParticlePrefab}.", m_CharacterItemAction);
                 return;
             }
 
             // If the particle loops then the same particle should be used instead of spawning new ones until it is reset.
-            if (particleSystem.main.loop) {
+            if (particleSystem.main.loop)
+            {
                 particleSystem.Clear(true);
                 m_CastIDParticleMap.Add(sourceID, particleSystem);
             }
@@ -608,7 +617,8 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Impact
             base.Reset(sourceID);
 
             // Stop the particle system from emitting.
-            if (m_CastIDParticleMap.TryGetValue(sourceID, out var particleSystem)) {
+            if (m_CastIDParticleMap.TryGetValue(sourceID, out var particleSystem))
+            {
                 particleSystem.Stop(true, ParticleSystemStopBehavior.StopEmitting);
             }
         }
@@ -622,19 +632,20 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Impact
     {
         [Tooltip("The id used by the Impact KnockBack ability to know what animation to play.")]
         [SerializeField] protected int m_ImpactKnockBackID;
-        
+
         protected override void OnImpactInternal(ImpactCallbackContext ctx)
         {
             var impactGameObject = ctx.ImpactCollisionData.ImpactGameObject;
             var opponentLocomotion = impactGameObject.GetCachedParentComponent<UltimateCharacterLocomotion>();
             if (opponentLocomotion == null) { return; }
-            
+
             // The opponent should play an animation which responds to the counter attack.
-            var opponentResponseAbility = opponentLocomotion.GetAbility<ImpactKnockBack>();
-            if (opponentResponseAbility == null) {
+            var opponentResponseAbility = opponentLocomotion.GetAbility<Character.Abilities.ImpactKnockBack>();
+            if (opponentResponseAbility == null)
+            {
                 return;
             }
-            
+
             opponentResponseAbility.StartKnockBackResponse(m_ImpactKnockBackID);
         }
     }

@@ -20,11 +20,19 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Throwable
     [Serializable]
     public class ThrowableProjectileData
     {
-        public ThrowableProjectileModule ProjectileModule;
-        public ThrowableAmmoData AmmoData;
-        public GameObject SpawnedProjectileGO;
-        public bool WasPrespawnedProjectile;
-        public TrajectoryObject SpawnedTrajectoryObject;
+        public GameObject m_ProjectilePrefab;
+        public ThrowableProjectileModule m_ProjectileModule;
+        public ThrowableAmmoData m_AmmoData;
+        public GameObject m_SpawnedProjectile;
+        public bool m_WasPrespawnedProjectile;
+        public TrajectoryObject m_SpawnedTrajectoryObject;
+
+        public GameObject ProjectilePrefab { get => m_ProjectilePrefab; set => m_ProjectilePrefab = value; }
+        public ThrowableProjectileModule ProjectileModule { get => m_ProjectileModule; set => m_ProjectileModule = value; }
+        public ThrowableAmmoData AmmoData { get => m_AmmoData; set => m_AmmoData = value; }
+        public GameObject SpawnedProjectile { get => m_SpawnedProjectile; set => m_SpawnedProjectile = value; }
+        public bool WasPrespawnedProjectile { get => m_WasPrespawnedProjectile; set => m_WasPrespawnedProjectile = value; }
+        public TrajectoryObject SpawnedTrajectoryObject { get => m_SpawnedTrajectoryObject; set => m_SpawnedTrajectoryObject = value; }
     }
 
     /// <summary>
@@ -106,8 +114,8 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Throwable
     /// </summary>
     [Serializable]
     [UnityEngine.Scripting.APIUpdating.MovedFrom(true, sourceClassName : "SpawnedProjectile", sourceNamespace: "Opsive.UltimateCharacterController.Items.Actions.Modules.Throwable")]
-    public class SpawnProjectile : ThrowableProjectileModule{
-        
+    public class SpawnProjectile : ThrowableProjectileModule
+    {
         [Tooltip("The object that is thrown.")]
         [SerializeField] protected GameObject m_ThrownObject;
         [Tooltip("Should the visible object be disabled?")]
@@ -178,17 +186,15 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Throwable
             
             m_Initialized = true;
             EnableObjectMeshRenderers(CanActivateVisibleObject());
-
-            //Cache function call to reduce garbage.
             m_OnReequipThrowableItemAction = OnReequipThrowableItem;
         }
 
         /// <summary>
-        /// Register to events while the item is equipped and the module is enabled.
+        /// Updates the registered events when the item is equipped and the module is enabled.
         /// </summary>
-        protected override void RegisterEventsWhileEquippedAndEnabledInternal(bool register)
+        protected override void UpdateRegisteredEventsInternal(bool register)
         {
-            base.RegisterEventsWhileEquippedAndEnabledInternal(register);
+            base.UpdateRegisteredEventsInternal(register);
             m_ActivateThrowableObjectEvent.RegisterUnregisterAnimationEvent(register, Character, "OnAnimatorActivateThrowableObject", ActivateThrowableObject);
             
             if (register) {
@@ -201,7 +207,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Throwable
         }
 
         /// <summary>
-        /// Re equip the throwable item.
+        /// Reequip the throwable item.
         /// </summary>
         private void OnReequipThrowableItem()
         {
@@ -213,14 +219,8 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Throwable
 
             if (!m_DisableVisibleObject) {
                 EnableObjectMeshRenderers(true);
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
-                if (m_NetworkInfo != null && m_NetworkInfo.IsLocalPlayer()) {
-                    m_NetworkCharacter.EnableThrowableObjectMeshRenderers(this);
-                }
-#endif
             }
         }
-
 
         /// <summary>
         /// Activates the throwable object.
@@ -249,11 +249,12 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Throwable
             Vector3 throwDirection, int index, bool remove)
         {
             var ammoData = ThrowableAction.GetNextAmmoData();
-            
+
+            m_ThrowableProjectileData.ProjectilePrefab = m_ThrownObject;
+            m_ThrowableProjectileData.SpawnedProjectile = m_InstantiatedThrownObject;
             m_ThrowableProjectileData.WasPrespawnedProjectile = true;
             m_ThrowableProjectileData.AmmoData = ammoData;
             m_ThrowableProjectileData.SpawnedTrajectoryObject = m_InstantiatedTrajectoryObject;
-            m_ThrowableProjectileData.SpawnedProjectileGO = m_InstantiatedThrownObject;
             
             if (remove) {
                 ThrowableAction.AmmoModuleGroup.FirstEnabledModule.LoadNextAmmoData();
@@ -268,6 +269,11 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Throwable
         /// <param name="enable">Should the renderers be enabled?</param>
         public void EnableObjectMeshRenderers(bool enable)
         {
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+            if (NetworkInfo != null && NetworkInfo.IsLocalPlayer()) {
+                NetworkCharacter.EnableThrowableObjectMeshRenderers(this, enable);
+            }
+#endif
             var renderers = CharacterLocomotion.FirstPersonPerspective ? m_FirstPersonObjectRenderers : m_ThirdPersonObjectRenderers;
             if (renderers != null) {
                 for (int i = 0; i < renderers.Length; ++i) {
@@ -305,22 +311,25 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Throwable
         /// </summary>
         protected virtual void SpawnThrowableObject()
         {
-            //Instantiate the object that will actually be thrown.
+            if (m_ThrownObject == null) {
+                Debug.LogError("Error: The thrown object is empty on the Projectile Module.", CharacterItemAction);
+                return;
+            }
+
+            // Instantiate the object that will actually be thrown.
             var previewData = ThrowableAction.GetThrowPreviewData();
 
             var location = previewData.ThrowTransform;
-            m_InstantiatedThrownObject =
-                ObjectPoolBase.Instantiate(m_ThrownObject, location.position, location.rotation, m_ObjectTransform.parent);
+            m_InstantiatedThrownObject = ObjectPoolBase.Instantiate(m_ThrownObject, location.position, location.rotation, m_ObjectTransform.parent);
             m_InstantiatedThrownObject.transform.localScale = location.localScale;
             m_InstantiatedThrownObject.transform.SetLayerRecursively(m_StartLayer);
             m_InstantiatedTrajectoryObject = m_InstantiatedThrownObject.GetCachedComponent<TrajectoryObject>();
             if (m_InstantiatedTrajectoryObject == null) {
-                Debug.LogError($"Error: {m_InstantiatedThrownObject.name} must contain the TrajectoryObject component.",
-                    m_InstantiatedThrownObject);
+                Debug.LogError($"Error: {m_InstantiatedThrownObject.name} must contain the TrajectoryObject component.", m_InstantiatedThrownObject);
                 return;
             }
             
-            //Initialize the projectile properties here in case the object is not thrown but dropped.
+            // Initialize the projectile properties here in case the object is not thrown but dropped.
             if (m_InstantiatedTrajectoryObject is ProjectileBase projectile) {
                 projectile.InitializeProjectileProperties();
             }
@@ -345,7 +354,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Throwable
         /// </summary>
         public override void ItemUseComplete()
         {
-            //Nothing
+            // Intentionally left blank.
         }
 
         /// <summary>

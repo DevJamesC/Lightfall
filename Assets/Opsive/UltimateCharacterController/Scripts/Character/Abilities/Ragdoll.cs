@@ -49,7 +49,7 @@ namespace Opsive.UltimateCharacterController.Character.Abilities
         private Vector3 m_Force;
         private Vector3 m_Position;
         private bool m_FromDeath;
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
         private object[] m_StartData;
 #endif
 
@@ -95,7 +95,7 @@ namespace Opsive.UltimateCharacterController.Character.Abilities
 
             EventHandler.ExecuteEvent(m_GameObject, "OnCameraRotationalForce", m_CameraRotationalForce * (m_FromDeath ? m_Force.magnitude : 1));
 
-            SchedulerBase.ScheduleFixed(m_StartDelay, EnableRagdoll, true, m_Force, m_Position);
+            Scheduler.ScheduleFixed(m_StartDelay, EnableRagdoll, true, m_Force, m_Position);
 
             m_FromDeath = false;
         }
@@ -201,7 +201,7 @@ namespace Opsive.UltimateCharacterController.Character.Abilities
             EventHandler.UnregisterEvent(m_GameObject, "OnWillRespawn", OnRespawn);
         }
 
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
         /// <summary>
         /// Returns any data required to start the ability.
         /// </summary>

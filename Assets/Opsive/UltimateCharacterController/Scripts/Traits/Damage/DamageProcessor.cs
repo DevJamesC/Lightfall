@@ -52,31 +52,24 @@ namespace Opsive.UltimateCharacterController.Traits.Damage
         public object UserData { get => m_UserData; set => m_UserData = value; }
 
         private DefaultDamageSource m_CachedDamageSource = new DefaultDamageSource();
-
+        
         /// <summary>
         /// Initializes the DamageData to the spciefied parameters.
         /// </summary>
         public virtual void SetDamage(float amount, Vector3 position, Vector3 direction, float forceMagnitude, int frames, float radius, GameObject attacker, object attackerObject, Collider hitCollider)
         {
             m_ImpactContext = null;
-            {
-                m_CachedDamageSource.OwnerDamageSource = null;
-                m_CachedDamageSource.SourceOwner = attacker;
-                if (attackerObject is Component component)
-                {
-                    m_CachedDamageSource.SourceGameObject = component.gameObject;
-                    m_CachedDamageSource.SourceComponent = component;
-                }
-                else if (attackerObject is GameObject attackerGO)
-                {
-                    m_CachedDamageSource.SourceGameObject = attackerGO;
-                    m_CachedDamageSource.SourceComponent = null;
-                }
-                else
-                {
-                    m_CachedDamageSource.SourceGameObject = null;
-                    m_CachedDamageSource.SourceComponent = null;
-                }
+            m_CachedDamageSource.OwnerDamageSource = null;
+            m_CachedDamageSource.SourceOwner = attacker;
+            if (attackerObject is Component component) {
+                m_CachedDamageSource.SourceGameObject = component.gameObject;
+                m_CachedDamageSource.SourceComponent = component;
+            } else if (attackerObject is GameObject attackerGO) {
+                m_CachedDamageSource.SourceGameObject = attackerGO;
+                m_CachedDamageSource.SourceComponent = null;
+            } else {
+                m_CachedDamageSource.SourceGameObject = null;
+                m_CachedDamageSource.SourceComponent = null;
             }
             m_DamageSource = m_CachedDamageSource;
             m_Amount = amount;
@@ -104,7 +97,7 @@ namespace Opsive.UltimateCharacterController.Traits.Damage
             m_Radius = radius;
             m_HitCollider = hitCollider;
         }
-
+        
         /// <summary>
         /// Initializes the DamageData to the parameters.
         /// </summary>
@@ -138,7 +131,6 @@ namespace Opsive.UltimateCharacterController.Traits.Damage
             m_HitCollider = damageData.HitCollider;
             m_UserData = damageData.UserData;
         }
-      
     }
 
     /// <summary>
@@ -170,19 +162,17 @@ namespace Opsive.UltimateCharacterController.Traits.Damage
         public static bool TryGetCharacterLocomotion(this IDamageSource damageSource, out CharacterLocomotion characterLocomotion)
         {
             characterLocomotion = damageSource.SourceOwner.GetCachedComponent<CharacterLocomotion>();
-            if (characterLocomotion != null)
-            {
+            if (characterLocomotion != null) {
                 return true;
             }
 
-            if (damageSource.OwnerDamageSource == null || damageSource.OwnerDamageSource == damageSource)
-            {
+            if (damageSource.OwnerDamageSource == null || damageSource.OwnerDamageSource == damageSource) {
                 return false;
             }
 
             return TryGetCharacterLocomotion(damageSource.OwnerDamageSource, out characterLocomotion);
         }
-
+        
         /// <summary>
         /// Get the root Damage Source.
         /// </summary>
@@ -191,12 +181,9 @@ namespace Opsive.UltimateCharacterController.Traits.Damage
         public static IDamageSource GetRootDamageSource(this IDamageSource damageSource)
         {
             var ownerSource = damageSource.OwnerDamageSource;
-            if (ownerSource == null)
-            {
+            if (ownerSource == null) {
                 return damageSource;
-            }
-            else
-            {
+            } else {
                 return GetRootDamageSource(ownerSource);
             }
         }
@@ -218,23 +205,28 @@ namespace Opsive.UltimateCharacterController.Traits.Damage
     public class DefaultDamageSource : IDamageSource
     {
         // The Damage Source of the owner, when it is nested. Example Character -> ItemAction -> Projectile -> Explosion.
-        public IDamageSource OwnerDamageSource { get; set; }
-        // The owner of the damage source. Example Turret for Projectiles OR ItemAction for HitBox
-        public GameObject SourceOwner { get; set; }
+        private IDamageSource m_OwnerDamageSource;
+        // The owner of the damage source. Example Turret for projectiles or ItemAction for hitbox.
+        private GameObject m_SourceOwner;
         // The Source GameObject of the damage. Example Projectile or Explosion GameObject.
-        public GameObject SourceGameObject { get; set; }
-        // The Source Component of the damage. Example Projectile or Explosion Component.
-        public Component SourceComponent { get; set; }
+        private GameObject m_SourceGameObject;
+        // The Source Component of the damage. Example Projectile or explosion component.
+        private Component m_SourceComponent;
+
+        public IDamageSource OwnerDamageSource { get => m_OwnerDamageSource; set => m_OwnerDamageSource = value; }
+        public GameObject SourceOwner  { get => m_SourceOwner; set { m_SourceOwner = value; Debug.Log(value); } }
+        public GameObject SourceGameObject  { get => m_SourceGameObject; set => m_SourceGameObject = value; }
+        public Component SourceComponent  { get => m_SourceComponent; set => m_SourceComponent = value; }
 
         /// <summary>
         /// Reset the values to default.
         /// </summary>
         public void Reset()
         {
-            OwnerDamageSource = null;
-            SourceOwner = null;
-            SourceGameObject = null;
-            SourceComponent = null;
+            m_OwnerDamageSource = null;
+            m_SourceOwner = null;
+            m_SourceGameObject = null;
+            m_SourceComponent = null;
         }
     }
 
@@ -267,12 +259,10 @@ namespace Opsive.UltimateCharacterController.Traits.Damage
     public class DamageProcessor : ScriptableObject
     {
         private static DamageProcessor m_Default;
-        public static DamageProcessor Default
-        {
+        public static DamageProcessor Default {
             get
             {
-                if (m_Default == null)
-                {
+                if (m_Default == null) {
                     m_Default = CreateInstance<DamageProcessor>();
                 }
 
@@ -304,21 +294,19 @@ namespace Opsive.UltimateCharacterController.Traits.Damage
         public static IDamageTarget GetDamageTarget(GameObject gameObject)
         {
             var damageTarget = gameObject.GetCachedParentComponent<IDamageTarget>();
-            if (damageTarget != null)
-            {
+            if (damageTarget != null) {
                 return damageTarget;
             }
             damageTarget = gameObject.GetCachedComponent<IDamageTarget>();
-
+            
             // The hit object could be a collider in the first person hands.
 #if FIRST_PERSON_CONTROLLER
             var firstpersonObjects = gameObject.GetCachedParentComponent<FirstPersonController.Character.FirstPersonObjects>();
-            if (firstpersonObjects != null)
-            {
+            if (firstpersonObjects != null) {
                 return firstpersonObjects.Character.GetCachedComponent<IDamageTarget>();
             }
 #endif
-
+            
             return damageTarget;
         }
     }

@@ -51,8 +51,7 @@ namespace Opsive.UltimateCharacterController.UI
             base.Awake();
 
             m_GameObject = gameObject;
-            if (m_ItemIcon == null)
-            {
+            if (m_ItemIcon == null) {
                 m_ItemIcon = GetComponent<Image>();
             }
             m_ItemRectTransform = m_ItemIcon.GetComponent<RectTransform>();
@@ -65,8 +64,7 @@ namespace Opsive.UltimateCharacterController.UI
         /// <param name="character">The character to attach the monitor to.</param>
         protected override void OnAttachCharacter(GameObject character)
         {
-            if (m_Character != null)
-            {
+            if (m_Character != null) {
                 EventHandler.UnregisterEvent<CharacterItem>(m_Character, "OnRefreshSlotItemMonitor", OnRefresh);
                 EventHandler.UnregisterEvent<CharacterItem, int>(m_Character, "OnAbilityWillEquipItem", OnEquipItem);
                 EventHandler.UnregisterEvent<CharacterItem, int>(m_Character, "OnAbilityUnequipItemComplete", OnUnequipItem);
@@ -76,8 +74,7 @@ namespace Opsive.UltimateCharacterController.UI
 
             base.OnAttachCharacter(character);
 
-            if (m_Character == null || m_CharacterInventory == null)
-            {
+            if (m_Character == null || m_CharacterInventory == null) {
                 return;
             }
 
@@ -87,11 +84,9 @@ namespace Opsive.UltimateCharacterController.UI
             EventHandler.RegisterEvent<CharacterItem, int>(m_Character, "OnAbilityUnequipItemComplete", OnUnequipItem);
             EventHandler.RegisterEvent<CharacterItem, int>(m_Character, "OnInventoryRemoveItem", OnRemoveItem);
             // An item may already be equipped.
-            for (int i = 0; i < m_CharacterInventory.SlotCount; ++i)
-            {
+            for (int i = 0; i < m_CharacterInventory.SlotCount; ++i) {
                 var item = m_CharacterInventory.GetActiveCharacterItem(i);
-                if (item != null)
-                {
+                if (item != null) {
                     OnEquipItem(item, i);
                 }
             }
@@ -106,18 +101,14 @@ namespace Opsive.UltimateCharacterController.UI
         /// <param name="forceEquip">Should the item be force equipped?</param>
         protected override void OnPickupItemIdentifier(IItemIdentifier itemIdentifier, int amount, bool immediatePickup, bool forceEquip)
         {
-            if (itemIdentifier != m_ConsumableItemIdentifier)
-            {
+            if (itemIdentifier != m_ConsumableItemIdentifier) {
                 return;
             }
 
             var countString = m_CharacterInventory.GetItemIdentifierAmount(m_ConsumableItemIdentifier).ToString();
-            if (m_PrimaryCount.enabled)
-            {
+            if (m_PrimaryCount.enabled) {
                 m_PrimaryCount.text = countString;
-            }
-            else
-            {
+            } else {
                 m_UnloadedCount.text = countString;
             }
         }
@@ -129,48 +120,43 @@ namespace Opsive.UltimateCharacterController.UI
         /// <param name="slotID">The slot that the item now occupies.</param>
         private void OnEquipItem(CharacterItem characterItem, int slotID)
         {
-            if (!characterItem.DominantItem || characterItem.UIMonitorID != m_ID)
-            {
+            if (!characterItem.DominantItem || characterItem.UIMonitorID != m_ID) {
                 return;
             }
-
+            
             m_EquippedCharacterItem = characterItem;
             OnMonitoredCharacterItemChanged(m_EquippedCharacterItem);
-
+            
             OnRefresh(characterItem);
         }
-
+        
         /// <summary>
         /// Refresh the Monitor by drawing the character item.
         /// </summary>
         /// <param name="characterItem">The character item to draw.</param>
         protected virtual void OnRefresh(CharacterItem characterItem)
         {
-            if (!characterItem.DominantItem || characterItem.UIMonitorID != m_ID)
-            {
+            if (!characterItem.DominantItem || characterItem.UIMonitorID != m_ID) {
                 return;
             }
-
+            
             m_ItemIcon.sprite = characterItem.Icon;
             UnityEngineUtility.SizeSprite(m_ItemIcon.sprite, m_ItemRectTransform);
             m_GameObject.SetActive(CanShowUI());
 
             // Multiple item actions can be attached to the same item.
             CharacterItemAction itemAction = null;
-            if (m_ItemActionID < characterItem.ItemActions.Length)
-            {
+            if (m_ItemActionID < characterItem.ItemActions.Length) {
                 itemAction = characterItem.ItemActions[m_ItemActionID];
             }
 
-            if (itemAction == null)
-            {
+            if (itemAction == null) {
                 DisableCountText();
                 return;
             }
 
             var slotItemMonitorModule = itemAction.GetFirstActiveModule<IModuleSlotItemMonitor>();
-            if (slotItemMonitorModule == null)
-            {
+            if (slotItemMonitorModule == null) {
                 DisableCountText();
                 return;
             }
@@ -179,31 +165,24 @@ namespace Opsive.UltimateCharacterController.UI
             var hasUnloadedCount = slotItemMonitorModule.TryGetUnLoadedCount(out var unloadedCount);
             var hasItemIcon = slotItemMonitorModule.TryGetItemIcon(out var itemIcon);
 
-            if (hasLoadedCount || hasUnloadedCount)
-            {
+            if (hasLoadedCount || hasUnloadedCount) {
 
-                if (hasLoadedCount && hasUnloadedCount)
-                {
+                if (hasLoadedCount && hasUnloadedCount) {
                     m_LoadedCount.text = loadedCount.ToString();
                     m_UnloadedCount.text = unloadedCount.ToString();
                     m_LoadedCount.enabled = m_UnloadedCount.enabled = true;
                     m_PrimaryCount.enabled = false;
-                }
-                else
-                {
+                } else {
                     m_PrimaryCount.text = (hasLoadedCount ? loadedCount : unloadedCount).ToString();
                     m_PrimaryCount.enabled = true;
                     m_LoadedCount.enabled = m_UnloadedCount.enabled = false;
                 }
-
-
-                if (m_CountParent != null)
-                {
+                
+                
+                if (m_CountParent != null) {
                     m_CountParent.SetActive(true);
                 }
-            }
-            else
-            {
+            }else {
                 DisableCountText();
             }
         }
@@ -213,20 +192,16 @@ namespace Opsive.UltimateCharacterController.UI
         /// </summary>
         private void DisableCountText()
         {
-            if (m_CountParent != null)
-            {
+            if (m_CountParent != null) {
                 m_CountParent.SetActive(false);
             }
-            if (m_PrimaryCount.gameObject != null)
-            {
+            if (m_PrimaryCount.gameObject != null) {
                 m_PrimaryCount.enabled = false;
             }
-            if (m_LoadedCount.gameObject != null)
-            {
+            if (m_LoadedCount.gameObject != null) {
                 m_LoadedCount.enabled = false;
             }
-            if (m_UnloadedCount.gameObject != null)
-            {
+            if (m_UnloadedCount.gameObject != null) {
                 m_UnloadedCount.enabled = false;
             }
         }
@@ -238,17 +213,13 @@ namespace Opsive.UltimateCharacterController.UI
         /// <param name="dominantItem">True if the item is now a dominant item.</param>
         protected override void OnUpdateDominantItem(CharacterItem characterItem, bool dominantItem)
         {
-            if ((m_EquippedCharacterItem != null && characterItem != m_EquippedCharacterItem) || m_CharacterInventory.GetItemIdentifierAmount(characterItem.ItemIdentifier) == 0 || m_CharacterInventory.GetActiveCharacterItem(characterItem.SlotID) != characterItem)
-            {
+            if ((m_EquippedCharacterItem != null && characterItem != m_EquippedCharacterItem) || m_CharacterInventory.GetItemIdentifierAmount(characterItem.ItemIdentifier) == 0 || m_CharacterInventory.GetActiveCharacterItem(characterItem.SlotID) != characterItem) {
                 return;
             }
 
-            if (characterItem.DominantItem)
-            {
+            if (characterItem.DominantItem) {
                 OnEquipItem(characterItem, characterItem.SlotID);
-            }
-            else
-            {
+            } else {
                 ResetMonitor();
             }
         }
@@ -270,7 +241,6 @@ namespace Opsive.UltimateCharacterController.UI
         /// <param name="slotID">The slot that the item previously occupied.</param>
         private void OnUnequipItem(CharacterItem characterItem, int slotID)
         {
-            //Debug.Log("unequipping: " + characterItem?.name);
             TryResetMonitor(characterItem, slotID);
         }
 
@@ -302,8 +272,7 @@ namespace Opsive.UltimateCharacterController.UI
             OnMonitoredCharacterItemChanged(m_EquippedCharacterItem);
             m_ConsumableItemIdentifier = null;
 
-            if (m_GameObject != null)
-            {
+            if (m_GameObject != null) {
                 m_GameObject.SetActive(false);
             }
         }

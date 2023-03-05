@@ -76,13 +76,14 @@ namespace Opsive.UltimateCharacterController.Character
         protected Transform m_Transform;
         protected Animator m_Animator;
         private UltimateCharacterLocomotion m_CharacterLocomotion;
+        private CharacterIK m_CharacterIK;
 
         private float m_HorizontalMovement;
         private float m_ForwardMovement;
         private float m_Pitch;
         private float m_Yaw;
         private float m_Speed;
-        private int m_Height;
+        private float m_Height;
         private bool m_Moving;
         private bool m_Aiming;
         private int m_MovementSetID;
@@ -109,7 +110,7 @@ namespace Opsive.UltimateCharacterController.Character
         public float Pitch { get { return m_Pitch; } }
         public float Yaw { get { return m_Yaw; } }
         public float Speed { get { return m_Speed; } }
-        public int Height { get { return m_Height; } }
+        public float Height { get { return m_Height; } }
         public bool Moving { get { return m_Moving; } }
         public bool Aiming { get { return m_Aiming; } }
         public int MovementSetID { get { return m_MovementSetID; } }
@@ -136,6 +137,7 @@ namespace Opsive.UltimateCharacterController.Character
             m_GameObject = m_CharacterLocomotion.gameObject;
             m_Transform = m_GameObject.transform;
             m_Animator = gameObject.GetComponent<Animator>(); // The Animator does not have to exist on the same GameObject as the CharacterLocomotion.
+            m_CharacterIK = gameObject.GetComponent<CharacterIK>();
 
 #if UNITY_EDITOR
             // If the animator doesn't have the required parameters then it's not a valid animator.
@@ -301,6 +303,13 @@ namespace Opsive.UltimateCharacterController.Character
                     EventHandler.ExecuteEvent(m_GameObject, "OnAnimatorWillSnap");
                 }
 
+                // Keep the IK component disabled until the animator is snapped. This will prevent the OnAnimatorIK callback from occurring.
+                var ikEnabled = false;
+                if (m_CharacterIK != null) {
+                    ikEnabled = m_CharacterIK.enabled;
+                    m_CharacterIK.enabled = false;
+                }
+
                 // Root motion should not move the character when snapping.
                 var position = m_Transform.position;
                 var rotation = m_Transform.rotation;
@@ -337,6 +346,9 @@ namespace Opsive.UltimateCharacterController.Character
                 SetAbilityChangeParameter(false);
 
                 m_Transform.SetPositionAndRotation(position, rotation);
+                if (ikEnabled) {
+                    m_CharacterIK.enabled = true;
+                }
             }
 
             // The item animators should also snap.
@@ -634,7 +646,7 @@ namespace Opsive.UltimateCharacterController.Character
         /// </summary>
         /// <param name="value">The new value.</param>
         /// <returns>True if the parameter was changed.</returns>
-        public virtual bool SetHeightParameter(int value)
+        public virtual bool SetHeightParameter(float value)
         {
             var change = m_Height != value;
             if (change) {
@@ -1125,12 +1137,6 @@ namespace Opsive.UltimateCharacterController.Character
         /// <param name="forceChange">Force the trigger to be changed?</param>
         public void UpdateItemAbilityAnimatorParameters(bool immediateUpdate = false, bool forceChange = false)
         {
-#if UNITY_EDITOR
-            if (m_LogItemParameterChanges) {
-                Debug.Log($"Update Item Ability Animator Parameters. Imediate: {immediateUpdate} ForceChange: {forceChange}");
-            }
-#endif
-
             // Wait to update until the proper time so the animator synchronizes properly.
             if (!immediateUpdate) {
                 m_DirtyItemAbilityParameters = true;
@@ -1161,13 +1167,6 @@ namespace Opsive.UltimateCharacterController.Character
                     if (!m_DirtyItemSubstateIndexParameters[j] 
                         && (value = m_CharacterLocomotion.ActiveItemAbilities[i].GetItemSubstateIndex(j)) != -1) {
                         m_DirtyItemSubstateIndexParameters[j] = true;
-                        
-#if UNITY_EDITOR
-                        if (m_LogItemParameterChanges) {
-                            Debug.Log("substate slot"+j+" : "+value);
-                        }
-#endif
-                        
                         SetItemSubstateIndexParameter(j, value, forceChange);
                     }
                 }
@@ -1178,12 +1177,6 @@ namespace Opsive.UltimateCharacterController.Character
                 if (!m_DirtyItemStateIndexParameters[i]) { SetItemStateIndexParameter(i, 0, forceChange); }
 
                 if (!m_DirtyItemSubstateIndexParameters[i]) {
-                    
-#if UNITY_EDITOR
-                    if (m_LogItemParameterChanges) {
-                        Debug.Log("dirty substate slot"+i+" : "+0);
-                    }
-#endif
                     SetItemSubstateIndexParameter(i, 0, forceChange);
                 }
             }

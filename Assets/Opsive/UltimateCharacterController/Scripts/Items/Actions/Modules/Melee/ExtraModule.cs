@@ -72,10 +72,10 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Melee
         }
 
         /// <summary>
-        /// Register to events while the item is equipped and the module is enabled.
+        /// Updates the registered events when the item is equipped and the module is enabled.
         /// </summary>
-        protected override void RegisterEventsWhileEquippedAndEnabledInternal(bool register) {
-            base.RegisterEventsWhileEquippedAndEnabledInternal(register);
+        protected override void UpdateRegisteredEventsInternal(bool register) {
+            base.UpdateRegisteredEventsInternal(register);
             m_AttackStopTrailEvent.RegisterUnregisterAnimationEvent(register,Character,"OnAnimatorStopTrail", HandleStopTrail);
         }
 
@@ -87,7 +87,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Melee
             base.Equip();
 
             if (m_Trail != null && m_TrailVisibility == TrailVisibilityType.Always) {
-                m_TrailSpawnEvent = SchedulerBase.Schedule(m_TrailSpawnDelay, SpawnTrail);
+                m_TrailSpawnEvent = Scheduler.Schedule(m_TrailSpawnDelay, SpawnTrail);
             }
         }
         
@@ -106,7 +106,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Melee
             m_TrailSpawnEvent = null;
 
             if (m_TrailVisibility == TrailVisibilityType.Attack && !m_AttackStopTrailEvent.WaitForAnimationEvent) {
-                m_TrailStopEvent = SchedulerBase.ScheduleFixed(m_AttackStopTrailEvent.Duration, HandleStopTrail);
+                m_TrailStopEvent = Scheduler.ScheduleFixed(m_AttackStopTrailEvent.Duration, HandleStopTrail);
             }
         }
 
@@ -121,7 +121,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Melee
             }
 
             if (m_Trail != null && m_TrailVisibility == TrailVisibilityType.Attack) {
-                m_TrailSpawnEvent = SchedulerBase.Schedule(m_TrailSpawnDelay, SpawnTrail);
+                m_TrailSpawnEvent = Scheduler.Schedule(m_TrailSpawnDelay, SpawnTrail);
             }
         }
         
@@ -168,11 +168,11 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Melee
             }
 
             if (m_TrailSpawnEvent != null) {
-                SchedulerBase.Cancel(m_TrailSpawnEvent);
+                Scheduler.Cancel(m_TrailSpawnEvent);
                 m_TrailSpawnEvent = null;
             }
             if (m_TrailStopEvent != null) {
-                SchedulerBase.Cancel(m_TrailStopEvent);
+                Scheduler.Cancel(m_TrailStopEvent);
                 m_TrailStopEvent = null;
             }
             if (m_ActiveTrail != null) {

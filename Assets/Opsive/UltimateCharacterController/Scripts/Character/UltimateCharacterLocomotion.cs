@@ -8,12 +8,18 @@ namespace Opsive.UltimateCharacterController.Character
 {
     using Opsive.Shared.Events;
     using Opsive.Shared.Game;
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+    using Opsive.Shared.Networking;
+#endif
     using Opsive.Shared.StateSystem;
     using Opsive.UltimateCharacterController.Character.Abilities;
     using Opsive.UltimateCharacterController.Character.Abilities.Items;
     using Opsive.UltimateCharacterController.Character.Effects;
     using Opsive.UltimateCharacterController.Character.MovementTypes;
     using Opsive.UltimateCharacterController.Events;
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+    using Opsive.UltimateCharacterController.Networking.Character;
+#endif
     using Opsive.UltimateCharacterController.Utility;
     using System.Collections.Generic;
     using UnityEngine;
@@ -194,7 +200,7 @@ namespace Opsive.UltimateCharacterController.Character
         public UnityTransformEvent OnChangeMovingPlatformsEvent { get { return m_OnChangeMovingPlatformsEvent; } set { m_OnChangeMovingPlatformsEvent = value; } }
 
         [System.NonSerialized] private GameObject m_GameObject;
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
         private INetworkInfo m_NetworkInfo;
         private INetworkCharacter m_NetworkCharacter;
 #endif
@@ -278,7 +284,7 @@ namespace Opsive.UltimateCharacterController.Character
         protected override void AwakeInternal()
         {
             m_GameObject = gameObject;
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
             m_NetworkInfo = m_GameObject.GetCachedComponent<INetworkInfo>();
             m_NetworkCharacter = m_GameObject.GetCachedComponent<INetworkCharacter>();
 #endif
@@ -460,7 +466,7 @@ namespace Opsive.UltimateCharacterController.Character
         /// <summary>
         /// Starts the abilities.
         /// </summary>
-        protected void Start()
+        public void Start()
         {
             for (int i = 0; i < m_Abilities.Length; ++i) {
                 m_Abilities[i].Start();
@@ -1508,7 +1514,7 @@ namespace Opsive.UltimateCharacterController.Character
 
             EventHandler.ExecuteEvent(m_GameObject, "OnCharacterImmediateTransformChange", snapAnimator);
 
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
             if (m_NetworkInfo != null && m_NetworkInfo.IsLocalPlayer()) {
                 m_NetworkCharacter.SetRotation(rotation, snapAnimator);
             }
@@ -1537,7 +1543,7 @@ namespace Opsive.UltimateCharacterController.Character
             }
             EventHandler.ExecuteEvent(m_GameObject, "OnCharacterImmediateTransformChange", snapAnimator);
 
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
             if (m_NetworkInfo != null && m_NetworkInfo.IsLocalPlayer()) {
                 m_NetworkCharacter.SetPosition(position, snapAnimator);
             }
@@ -1559,7 +1565,7 @@ namespace Opsive.UltimateCharacterController.Character
             m_MaxHeight = float.NegativeInfinity;
             m_MaxHeightPosition = m_Rigidbody.position;
 
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
             if (m_NetworkInfo != null && m_NetworkInfo.IsLocalPlayer()) {
                 m_NetworkCharacter.ResetRotationPosition();
             }
@@ -1587,7 +1593,7 @@ namespace Opsive.UltimateCharacterController.Character
             SetPositionAndRotation(position, rotation, snapAnimator, true);
         }
 
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
         /// <summary>
         /// Sets the position and rotation of the character.
         /// </summary>
@@ -1610,7 +1616,7 @@ namespace Opsive.UltimateCharacterController.Character
         /// <param name="stopAllAbilities">Should all abilities be stopped?</param>
         /// <param name="sendOverNetwork">Should the position and rotation be sent over the network?</param>
         public void SetPositionAndRotation(Vector3 position, Quaternion rotation, bool snapAnimator, bool stopAllAbilities
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
                                             , bool sendOverNetwork
 #endif
             )
@@ -1631,7 +1637,7 @@ namespace Opsive.UltimateCharacterController.Character
 
             EventHandler.ExecuteEvent(m_GameObject, "OnCharacterImmediateTransformChange", snapAnimator);
 
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
             if (sendOverNetwork && m_NetworkInfo != null && m_NetworkInfo.IsLocalPlayer()) {
                 m_NetworkCharacter.SetPositionAndRotation(position, rotation, snapAnimator, stopAllAbilities);
             }

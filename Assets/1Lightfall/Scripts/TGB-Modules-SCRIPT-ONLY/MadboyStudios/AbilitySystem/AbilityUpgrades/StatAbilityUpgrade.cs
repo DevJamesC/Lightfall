@@ -27,9 +27,9 @@ namespace MBS.AbilitySystem
                 switch (item.StatName)
                 {
                     //for special case, set here...
-                    //case StatName.AbilityCapacity:
-                    //customCode
-                    //break;              
+                    case StatName.AbilityRecharge:
+                        wrapperAbility.ChangeStatModifierValue(item.StatName, item.Value * -1f, !item.flatValueChange);
+                        break;
 
                     default:
                         wrapperAbility.ChangeStatModifierValue(item.StatName, item.Value, !item.flatValueChange);
@@ -98,7 +98,7 @@ namespace MBS.AbilitySystem
                     else
                         statVal = stat.Value;
 
-                    if (statVal >= 0)
+                    if ((statVal >= 0 && stat.StatName != StatName.AbilityRecharge) || (statVal < 0 && stat.StatName == StatName.AbilityRecharge))
                         results[0].MaxValue += stat.flatValueChange ? statVal : (results[0].MaxValue * statVal);
                     else
                         results[0].InitalValue += stat.flatValueChange ? statVal : (results[0].MaxValue * statVal);

@@ -58,7 +58,7 @@ namespace Opsive.UltimateCharacterController.Character
         private float m_Pitch;
         private float m_Yaw;
         private float m_Speed;
-        private int m_Height;
+        private float m_Height;
         private bool m_Moving;
         private bool m_Aiming;
         private int m_MovementSetID;
@@ -88,17 +88,21 @@ namespace Opsive.UltimateCharacterController.Character
 
             m_CharacterLocomotion = gameObject.GetCachedParentComponent<UltimateCharacterLocomotion>();
 #if FIRST_PERSON_CONTROLLER
-            var firstPersonObjects = GetComponentInParent<FirstPersonController.Character.FirstPersonObjects>();
+            var firstPersonObjects = GetComponentInParent<FirstPersonController.Character.FirstPersonObjects>(true);
             m_FirstPersonAnimatorMonitor = firstPersonObjects != null;
             // If the locomotion component doesn't exist then the item is already placed under the camera.
             if (m_CharacterLocomotion == null) {
+                if (firstPersonObjects == null) {
+                    Debug.LogError($"Cannot find the First Person Objects above GameObject {gameObject.name}.", gameObject);
+                    return;
+                }
                 m_CharacterLocomotion = firstPersonObjects.Character.GetCachedComponent<UltimateCharacterLocomotion>();
             }
 #endif
             m_Character = m_CharacterLocomotion.gameObject;
             var animatorMonitors = m_Character.GetComponentsInChildren<AnimatorMonitor>(false);
             if (animatorMonitors == null || animatorMonitors.Length == 0) {
-                Debug.LogError("Error: Unable to find an active Animator.");
+                Debug.LogError("Error: Unable to find an active Animator.", gameObject);
                 return;
             }
 
@@ -379,11 +383,11 @@ namespace Opsive.UltimateCharacterController.Character
         /// Sets the Height parameter to the specified value.
         /// </summary>
         /// <param name="value">The new value.</param>
-        public virtual void SetHeightParameter(int value)
+        public virtual void SetHeightParameter(float value)
         {
             if (m_Height != value && m_Animator.isActiveAndEnabled) {
                 m_Animator.SetFloat(s_HeightHash, value, 0, 0);
-                m_Height = (int)m_Animator.GetFloat(s_HeightHash);
+                m_Height = m_Animator.GetFloat(s_HeightHash);
             }
         }
 

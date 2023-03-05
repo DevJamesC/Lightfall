@@ -8,25 +8,27 @@ namespace Opsive.UltimateCharacterController.Items
 {
     using Opsive.Shared.Game;
     using Opsive.Shared.Inventory;
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+    using Opsive.Shared.Networking;
+#endif
     using Opsive.Shared.StateSystem;
     using Opsive.Shared.Utility;
     using Opsive.UltimateCharacterController.Character;
     using Opsive.UltimateCharacterController.Inventory;
     using Opsive.UltimateCharacterController.Items.Actions;
     using Opsive.UltimateCharacterController.Items.AnimatorAudioStates;
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+    using Opsive.UltimateCharacterController.Networking.Character;
+#endif
     using Opsive.UltimateCharacterController.Utility;
+#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_VR
+    using Opsive.UltimateCharacterController.VR;
+#endif
     using System;
     using System.Collections.Generic;
     using UnityEngine;
     using UnityEngine.Events;
     using EventHandler = Opsive.Shared.Events.EventHandler;
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
-    using Opsive.UltimateCharacterController.Networking;
-    using Opsive.UltimateCharacterController.Networking.Character;
-#endif
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_VR
-    using Opsive.UltimateCharacterController.VR;
-#endif
 
     /// <summary>
     /// An item represents anything that can be picked up by the character. 
@@ -169,7 +171,7 @@ namespace Opsive.UltimateCharacterController.Items
         private ChildAnimatorMonitor m_ThirdPersonItemAnimatorMonitor;
         private CharacterItemAction[] m_ItemActions;
         private Dictionary<int, CharacterItemAction> m_IDItemActionMap;
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
         private INetworkInfo m_NetworkInfo;
 #endif
 #if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_VR
@@ -229,7 +231,7 @@ namespace Opsive.UltimateCharacterController.Items
             m_CharacterLocomotion = m_GameObject.GetCachedParentComponent<UltimateCharacterLocomotion>();
             m_Character = m_CharacterLocomotion.gameObject;
             m_Inventory = m_Character.GetCachedComponent<InventoryBase>();
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
             m_NetworkInfo = m_Character.GetCachedComponent<INetworkInfo>();
 #endif
 #if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_VR
@@ -361,7 +363,7 @@ namespace Opsive.UltimateCharacterController.Items
             }
             m_Started = true;
 
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
             var remotePlayer = false;
             // Perform any initialization for a non-local network player.
             if (m_NetworkInfo != null && !m_NetworkInfo.IsLocalPlayer()) {
@@ -398,7 +400,7 @@ namespace Opsive.UltimateCharacterController.Items
 #if FIRST_PERSON_CONTROLLER
                 && m_FirstPersonPerspectiveItem != null
 #endif
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
                 && !remotePlayer
 #endif
                 ) {
@@ -727,6 +729,9 @@ namespace Opsive.UltimateCharacterController.Items
         /// <returns>True if the item is active.</returns>
         public bool IsActive()
         {
+            if (m_ActivePerspectiveItem == null) {
+                return false;
+            }
             return m_VisibleObjectActive && m_ActivePerspectiveItem.IsActive();
         }
 
@@ -1043,7 +1048,7 @@ namespace Opsive.UltimateCharacterController.Items
         /// Sets the Animator's Height parameter to the specified value.
         /// </summary>
         /// <param name="value">The new value.</param>
-        public void SetHeightParameter(int value)
+        public void SetHeightParameter(float value)
         {
 #if FIRST_PERSON_CONTROLLER
             if (m_FirstPersonObjectsAnimatorMonitor != null) {
@@ -1154,12 +1159,8 @@ namespace Opsive.UltimateCharacterController.Items
                 m_ActivePerspectiveItem = m_ThirdPersonPerspectiveItem;
             }
 
-            if (isActive) {
-                var active = IsItemActiveInInventory();
-                var hasItem = HasItemInInventory();
-                if (m_ActivePerspectiveItem != null) {
-                    m_ActivePerspectiveItem.SetActive(active, hasItem);
-                }
+            if (isActive && m_ActivePerspectiveItem != null) {
+                m_ActivePerspectiveItem.SetActive(IsItemActiveInInventory(), HasItemInInventory());
             }
         }
 

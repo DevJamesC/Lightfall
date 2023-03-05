@@ -365,10 +365,10 @@ namespace Opsive.UltimateCharacterController.Character.Abilities
             if (!m_Arrived) {
                 if (m_CharacterLocomotion.Velocity.sqrMagnitude <= 0.0001f && m_CharacterLocomotion.Torque.eulerAngles.sqrMagnitude <= 0.0001f) {
                     if (m_ForceStartEvent == null) {
-                        m_ForceStartEvent = SchedulerBase.Schedule(m_InactiveTimeout, MoveTimeout);
+                        m_ForceStartEvent = Scheduler.Schedule(m_InactiveTimeout, MoveTimeout);
                     }
                 } else if (m_ForceStartEvent != null) {
-                    SchedulerBase.Cancel(m_ForceStartEvent);
+                    Scheduler.Cancel(m_ForceStartEvent);
                     m_ForceStartEvent = null;
                 }
             }
@@ -464,7 +464,7 @@ namespace Opsive.UltimateCharacterController.Character.Abilities
                 m_OnArriveAbility = null;
             }
             if (m_ForceStartEvent != null) {
-                SchedulerBase.Cancel(m_ForceStartEvent);
+                Scheduler.Cancel(m_ForceStartEvent);
                 m_ForceStartEvent = null;
             }
             if (m_DisableGameplayInput) {

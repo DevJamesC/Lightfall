@@ -7,11 +7,13 @@
 namespace Opsive.UltimateCharacterController.Objects
 {
     using Opsive.Shared.Game;
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+    using Opsive.Shared.Networking;
+#endif
     using Opsive.UltimateCharacterController.Character;
     using Opsive.UltimateCharacterController.Game;
     using Opsive.UltimateCharacterController.Items.Actions.Impact;
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
-    using Opsive.UltimateCharacterController.Networking;
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
     using Opsive.UltimateCharacterController.Networking.Game;
     using Opsive.UltimateCharacterController.Networking.Objects;
 #endif
@@ -25,7 +27,7 @@ namespace Opsive.UltimateCharacterController.Objects
     /// </summary>
     public interface IProjectileOwner
     {
-        public GameObject Originator { get; }
+        public GameObject Owner { get; }
         Component SourceComponent { get; }
         
         IDamageSource DamageSource { get; }
@@ -96,7 +98,7 @@ namespace Opsive.UltimateCharacterController.Objects
         protected bool m_Destroyed;
 
         protected UltimateCharacterLocomotion m_StickyCharacterLocomotion;
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
         private INetworkInfo m_NetworkInfo;
         private IDestructibleMonitor m_DestructibleMonitor;
 #endif
@@ -129,7 +131,7 @@ namespace Opsive.UltimateCharacterController.Objects
                 destructableRigidbody.isKinematic = true;
                 destructableRigidbody.constraints = RigidbodyConstraints.FreezeAll;
             }
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
             m_NetworkInfo = GetComponent<INetworkInfo>();
             m_DestructibleMonitor = GetComponent<IDestructibleMonitor>();
 #endif
@@ -146,14 +148,14 @@ namespace Opsive.UltimateCharacterController.Objects
         /// <param name="id">The id used to differentiate this projectile from others.</param>
         /// <param name="velocity">The velocity to apply.</param>
         /// <param name="torque">The torque to apply.</param>
-        /// <param name="impactDamageData">Processes the damage dealt to a Damage Target.</param>
-        /// <param name="originator">The object that instantiated the trajectory object.</param>
-        public virtual void Initialize(uint id, Vector3 velocity, Vector3 torque, GameObject originator, IImpactDamageData impactDamageData)
+        /// <param name="impactDamageData">Processes the damage dealt to a damage target.</param>
+        /// <param name="owner">The object that instantiated the trajectory object.</param>
+        public virtual void Initialize(uint id, Vector3 velocity, Vector3 torque, GameObject owner, IImpactDamageData impactDamageData)
         {
             InitializeProjectileProperties(id, impactDamageData);
             m_ProjectileOwner = null;
 
-            base.Initialize(velocity, torque, originator);
+            base.Initialize(velocity, torque, owner);
         }
         
         /// <summary>
@@ -196,13 +198,13 @@ namespace Opsive.UltimateCharacterController.Objects
             m_ID = id;
             
             if (impactDamageData == null) {
-                Debug.LogError("The impact damage data cannot be null");
+                Debug.LogError("The impact damage data cannot be null.");
                 return;
             }
             
             m_Destroyed = false;
             if (m_DestroyEvent != null) {
-                SchedulerBase.Cancel(m_DestroyEvent);
+                Scheduler.Cancel(m_DestroyEvent);
                 m_DestroyEvent = null;
             }
 
@@ -325,7 +327,7 @@ namespace Opsive.UltimateCharacterController.Objects
 
             // The object can destroy itself after a small delay.
             if (m_DestroyEvent == null && (m_DestroyOnCollision || forceDestruct || destructionDelay > 0)) {
-                m_DestroyEvent = SchedulerBase.ScheduleFixed(destructionDelay, Destruct, hit);
+                m_DestroyEvent = Scheduler.ScheduleFixed(destructionDelay, Destruct, hit);
             }
         }
 
@@ -339,7 +341,7 @@ namespace Opsive.UltimateCharacterController.Objects
                 return;
             }
 
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
             // The object can only explode on the server.
             if (m_NetworkInfo != null && !m_NetworkInfo.IsServer()) {
                 return;
@@ -350,7 +352,7 @@ namespace Opsive.UltimateCharacterController.Objects
             // The RaycastHit will be null if the destruction happens with no collision.
             var hitPosition = (hit != null && hit.HasValue) ? hit.Value.point : m_Transform.position;
             var hitNormal = (hit != null && hit.HasValue) ? hit.Value.normal : m_Transform.up;
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
             if (m_NetworkInfo != null && m_NetworkInfo.IsServer()) {
                 m_DestructibleMonitor.Destruct(hitPosition, hitNormal);
             }
@@ -395,7 +397,7 @@ namespace Opsive.UltimateCharacterController.Objects
             enabled = false;
 
             // The destructible should be destroyed.
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
             if (NetworkObjectPool.IsNetworkActive()) {
                 // The object may have already been destroyed over the network.
                 if (!m_GameObject.activeSelf) {
@@ -408,11 +410,6 @@ namespace Opsive.UltimateCharacterController.Objects
             ObjectPoolBase.Destroy(m_GameObject);
         }
 
-        protected void InvokeOnDestruct(Vector3 hitPosition, Vector3 hitNormal)
-        {
-            OnDestruct?.Invoke(this, hitPosition, hitNormal);
-        }
-
         /// <summary>
         /// The component has been disabled.
         /// </summary>
@@ -420,10 +417,19 @@ namespace Opsive.UltimateCharacterController.Objects
         {
             base.OnDisable();
 
+            if (m_TrailRenderer != null) {
+                m_TrailRenderer.enabled = false;
+            }
+
             if (m_DestroyOnCollision && m_StickyCharacterLocomotion != null) {
                 m_StickyCharacterLocomotion.RemoveIgnoredCollider(m_Collider);
                 m_StickyCharacterLocomotion = null;
             }
+        }
+
+        public void InvokeOnDestruct(Vector3 hitPosition, Vector3 hitNormal)
+        {
+            OnDestruct?.Invoke(this, hitPosition, hitNormal);
         }
     }
 }

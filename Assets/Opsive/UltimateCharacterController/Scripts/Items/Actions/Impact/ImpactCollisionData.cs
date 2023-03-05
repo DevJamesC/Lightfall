@@ -92,7 +92,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Impact
         /// </summary>
         public virtual void InvokeImpactTargetCallback()
         {
-            var target = m_ImpactCollisionData.TargetGameObject;
+            var target = m_ImpactCollisionData.ImpactGameObject;
             if (target == null) {
                 Debug.LogWarning("Cannot call Impact event on a null target.");
                 return;
@@ -107,9 +107,45 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Impact
         public override string ToString()
         {
             return "Impact Callback Context:\n  " +
-                   "Character Item Action: " + (m_CharacterItemAction == null? "(null)" : m_CharacterItemAction) + "\n  " +
+                   "Character Item Action: " + (m_CharacterItemAction == null? "(null)" : m_CharacterItemAction.ToString()) + "\n  " +
                    m_ImpactCollisionData + "\n  " +
-                   "Damage Data: "+(ImpactDamageData == null? "(null)" : ImpactDamageData);
+                   "Damage Data: "+(ImpactDamageData == null? "(null)" : ImpactDamageData.ToString());
+        }
+
+        
+        /// <summary>
+        /// Get a duplicate version of this object that is pooled pooled.
+        /// </summary>
+        /// <returns>The pooled duplicate.</returns>
+        public virtual ImpactCallbackContext GetPooledDuplicate()
+        {
+            var duplicate = GenericObjectPool.Get<ImpactCallbackContext>();
+            duplicate.PooledCopy(this);
+            return duplicate;
+        }
+
+        /// <summary>
+        /// Copy the contents of another impact callback context.
+        /// </summary>
+        /// <param name="other">The other callback context to copy the data from.</param>
+        protected virtual void PooledCopy(ImpactCallbackContext other)
+        {
+            var duplicateImpactCollisionData = GenericObjectPool.Get<ImpactCollisionData>();
+            duplicateImpactCollisionData.Copy(other.ImpactCollisionData);
+            var duplicateDamageData = GenericObjectPool.Get<ImpactDamageData>();
+            duplicateDamageData.Copy(other.ImpactDamageData);
+
+            m_CharacterItemAction = other.CharacterItemAction;
+        }
+
+        /// <summary>
+        /// Return this object to the pool.
+        /// </summary>
+        public virtual void ReturnToPool()
+        {
+            GenericObjectPool.Return(m_ImpactCollisionData);
+            GenericObjectPool.Return(ImpactDamageData);
+            GenericObjectPool.Return(this);
         }
     }
 
@@ -135,8 +171,6 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Impact
         protected IDamageSource m_DamageSource;
         protected Component m_SourceComponent;
         protected GameObject m_SourceGameObject;
-        protected GameObject m_SourceOwner;
-        protected GameObject m_SourceRootOwner;
         protected CharacterLocomotion m_SourceCharacterLocomotion;
         protected int m_HitCount;
         protected ListSlice<Collider> m_HitColliders;
@@ -190,17 +224,9 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Impact
         /// </summary>
         public Component SourceComponent { get=> m_SourceComponent; set=> m_SourceComponent = value; }
         /// <summary>
-        /// The gameobject that caused the impact.
+        /// The GameObject that caused the impact.
         /// </summary>
         public GameObject SourceGameObject { get => m_SourceGameObject; set => m_SourceGameObject = value; }
-        /// <summary>
-        /// The gameobject that caused the impact.
-        /// </summary>
-        public GameObject SourceOwner { get => m_SourceOwner; set => m_SourceOwner = value; }
-        /// <summary>
-        /// The character that caused the impact.
-        /// </summary>
-        public GameObject SourceRootOwner { get => m_SourceRootOwner; set => m_SourceRootOwner = value; }
         /// <summary>
         /// The character locomotion of the character that caused the impact.
         /// </summary>
@@ -225,8 +251,6 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Impact
         /// All the colliders that were detected during the collision
         /// </summary>
         public ListSlice<Collider> HitColliders { get=> m_HitColliders; set=> m_HitColliders = value; }
-        public GameObject TargetGameObject => m_ImpactGameObject;
-
 
         /// <summary>
         /// Reset the data such that the object can be reused.
@@ -234,26 +258,24 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Impact
         public virtual void Reset()
         {
             m_Initialized = false;
-            
-            SourceID = 0;
-            ImpactPosition = Vector3.zero;
-            ImpactGameObject = null;
-            ImpactRigidbody = null;
-            ImpactCollider = null;
-            ImpactDirection = Vector3.zero;
-            ImpactStrength = 0;
-            SourceComponent = null;
-            SourceGameObject = null;
-            SourceOwner = null;
-            SourceRootOwner = null;
-            SourceCharacterLocomotion = null;
-            SourceItemAction = null;
-            RaycastHit = default;
-            DetectLayers = 0;
-            HitCount = -1;
-            HitColliders = default;
-            DamageTarget = null;
-            DamageSource = null;
+
+            m_SourceID = 0;
+            m_ImpactPosition = Vector3.zero;
+            m_ImpactGameObject = null;
+            m_ImpactRigidbody = null;
+            m_ImpactCollider = null;
+            m_ImpactDirection = Vector3.zero;
+            m_ImpactStrength = 0;
+            m_SourceComponent = null;
+            m_SourceGameObject = null;
+            m_SourceCharacterLocomotion = null;
+            m_SourceItemAction = null;
+            m_RaycastHit = default;
+            m_LayerMask = 0;
+            m_HitCount = -1;
+            m_HitColliders = default;
+            m_DamageTarget = null;
+            m_DamageSource = null;
             m_SurfaceImpact = null;
         }
 
@@ -263,25 +285,23 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Impact
         /// <param name="other">The other impact collision data to copy.</param>
         public virtual void Copy(ImpactCollisionData other)
         {
-            SourceID = other.SourceID;
-            ImpactPosition = other.ImpactPosition;
-            ImpactGameObject = other.ImpactGameObject;
-            ImpactRigidbody = other.ImpactRigidbody;
-            ImpactCollider = other.ImpactCollider;
-            ImpactDirection = other.ImpactDirection;
-            ImpactStrength = other.ImpactStrength;
-            SourceComponent = other.SourceComponent;
-            SourceGameObject = other.SourceGameObject;
-            SourceOwner = other.SourceOwner;
-            SourceRootOwner = other.SourceRootOwner;
-            SourceCharacterLocomotion = other.SourceCharacterLocomotion;
-            SourceItemAction = other.SourceItemAction;
-            RaycastHit = other.RaycastHit;
-            DetectLayers = other.DetectLayers;
-            HitCount = other.HitCount;
-            HitColliders = other.HitColliders;
-            DamageTarget = other.DamageTarget;
-            DamageSource = other.DamageSource;
+            m_SourceID = other.SourceID;
+            m_ImpactPosition = other.ImpactPosition;
+            m_ImpactGameObject = other.ImpactGameObject;
+            m_ImpactRigidbody = other.ImpactRigidbody;
+            m_ImpactCollider = other.ImpactCollider;
+            m_ImpactDirection = other.ImpactDirection;
+            m_ImpactStrength = other.ImpactStrength;
+            m_SourceComponent = other.SourceComponent;
+            m_SourceGameObject = other.SourceGameObject;
+            m_SourceCharacterLocomotion = other.SourceCharacterLocomotion;
+            m_SourceItemAction = other.SourceItemAction;
+            m_RaycastHit = other.RaycastHit;
+            m_LayerMask = other.DetectLayers;
+            m_HitCount = other.HitCount;
+            m_HitColliders = other.HitColliders;
+            m_DamageTarget = other.DamageTarget;
+            m_DamageSource = other.DamageSource;
             m_SurfaceImpact = other.SurfaceImpact;
         }
 
@@ -299,9 +319,9 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Impact
         /// <param name="hit">The raycast hit.</param>
         public virtual void SetRaycast(RaycastHit hit)
         {
-            RaycastHit = hit;
-            ImpactPosition = hit.point;
-            ImpactDirection = -hit.normal;
+            m_RaycastHit = hit;
+            m_ImpactPosition = hit.point;
+            m_ImpactDirection = -hit.normal;
             
             SetImpactTarget(hit.collider);
         }
@@ -312,13 +332,11 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Impact
         /// <param name="sourceItemAction">The usable action that caused the impact.</param>
         public void SetImpactSource(UsableAction sourceItemAction)
         {
-            DamageSource = sourceItemAction;
-            SourceComponent = sourceItemAction;
-            SourceGameObject = sourceItemAction.gameObject;
-            SourceOwner = DamageSource.SourceOwner;
-            SourceItemAction = sourceItemAction;
-            SourceRootOwner = sourceItemAction.Character;
-            SourceCharacterLocomotion = sourceItemAction.CharacterLocomotion;
+            m_DamageSource = sourceItemAction;
+            m_SourceComponent = sourceItemAction;
+            m_SourceGameObject = sourceItemAction.gameObject;
+            m_SourceItemAction = sourceItemAction;
+            m_SourceCharacterLocomotion = sourceItemAction.CharacterLocomotion;
         }
         
         /// <summary>
@@ -328,15 +346,14 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Impact
         /// <param name="sourceCharacter">The character that owns the component that caused the impact.</param>
         public void SetImpactSource(Component sourceComponent, GameObject sourceCharacter)
         {
-            SourceComponent = sourceComponent;
-            SourceGameObject = sourceComponent.gameObject;
-            DamageSource = sourceComponent as IDamageSource;
-            if (DamageSource == null) {
-                DamageSource = sourceComponent.gameObject.GetCachedComponent<IDamageSource>();
+            m_SourceComponent = sourceComponent;
+            m_SourceGameObject = sourceComponent.gameObject;
+            m_DamageSource = sourceComponent as IDamageSource;
+            if (m_DamageSource == null) {
+                m_DamageSource = sourceComponent.gameObject.GetCachedComponent<IDamageSource>();
             }
-            SourceItemAction = sourceComponent as UsableAction;
-            SourceRootOwner = sourceCharacter;
-            SourceCharacterLocomotion = sourceCharacter?.GetCachedComponent<CharacterLocomotion>();
+            m_SourceItemAction = sourceComponent as UsableAction;
+            m_SourceCharacterLocomotion = sourceCharacter?.GetCachedComponent<CharacterLocomotion>();
             
             if (DamageSource == null) {
                 m_CachedDamageSource.Reset();
@@ -347,9 +364,8 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Impact
                 } else {
                     m_CachedDamageSource.SourceOwner = sourceCharacter;
                 }
-                DamageSource = m_CachedDamageSource;
+                m_DamageSource = m_CachedDamageSource;
             }
-            SourceOwner = DamageSource.SourceOwner;
         }
         
         /// <summary>
@@ -359,21 +375,20 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Impact
         /// <param name="sourceCharacter">The character originator gameobject.</param>
         public void SetImpactSource(GameObject sourceGameObject, GameObject sourceCharacter)
         {
-            SourceGameObject = sourceGameObject;
-            SourceItemAction = sourceGameObject.GetCachedComponent<UsableAction>();
+            m_SourceGameObject = sourceGameObject;
+            m_SourceItemAction = sourceGameObject.GetCachedComponent<UsableAction>();
 
             if (SourceItemAction != null) {
-                DamageSource = SourceItemAction;
+                m_DamageSource = SourceItemAction;
             } else {
-                DamageSource = sourceGameObject.GetCachedComponent<IDamageSource>();
+                m_DamageSource = sourceGameObject.GetCachedComponent<IDamageSource>();
             }
-            if (DamageSource is Component component) {
+            if (m_DamageSource is Component component) {
                 SourceComponent = component;
             } else {
                 SourceComponent = SourceItemAction;
             }
-            SourceRootOwner = sourceCharacter;
-            SourceCharacterLocomotion = sourceCharacter?.GetCachedComponent<CharacterLocomotion>();
+            m_SourceCharacterLocomotion = sourceCharacter?.GetCachedComponent<CharacterLocomotion>();
             
             if (DamageSource == null) {
                 m_CachedDamageSource.Reset();
@@ -384,9 +399,8 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Impact
                 } else {
                     m_CachedDamageSource.SourceOwner = sourceCharacter;
                 }
-                DamageSource = m_CachedDamageSource;
+                m_DamageSource = m_CachedDamageSource;
             }
-            SourceOwner = DamageSource.SourceOwner;
         }
         
         /// <summary>
@@ -395,34 +409,30 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Impact
         /// <param name="damageSource">The damage originator that caused the impact.</param>
         public void SetImpactSource(IDamageSource damageSource)
         {
-            DamageSource = damageSource;
+            m_DamageSource = damageSource;
             if (DamageSource == null) {
                 m_CachedDamageSource.Reset();
-                DamageSource = m_CachedDamageSource;
-                SourceComponent = null;
-                SourceGameObject = null;
-                SourceOwner = null;
-                SourceItemAction = null;
-                SourceRootOwner = null;
-                SourceCharacterLocomotion = null;
+                m_DamageSource = m_CachedDamageSource;
+                m_SourceComponent = null;
+                m_SourceGameObject = null;
+                m_SourceItemAction = null;
+                m_SourceCharacterLocomotion = null;
                 return;
             }
             
-            SourceGameObject = damageSource.SourceGameObject;
-            SourceComponent = damageSource.SourceComponent;
-            SourceOwner = damageSource.SourceOwner;
+            m_SourceGameObject = damageSource.SourceGameObject;
+            m_SourceComponent = damageSource.SourceComponent;
             
             if (DamageSource is UsableAction itemAction) {
-                SourceItemAction = itemAction;
+                m_SourceItemAction = itemAction;
             } else {
-                SourceItemAction = damageSource.SourceOwner.GetCachedComponent<UsableAction>();
+                m_SourceItemAction = m_SourceGameObject.GetCachedComponent<UsableAction>();
             }
-            if (SourceComponent == null) {
-                SourceComponent = SourceItemAction;
+            if (m_SourceComponent == null) {
+                m_SourceComponent = SourceItemAction;
             }
 
             damageSource.TryGetCharacterLocomotion(out m_SourceCharacterLocomotion);
-            SourceRootOwner = damageSource.GetRootOwner();
         }
 
         /// <summary>
@@ -432,10 +442,10 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Impact
         /// <param name="impactGameObject">The gameobject that was impacted (if null the attached rigid body is used).</param>
         public void SetImpactTarget(Collider impactCollider, GameObject impactGameObject = null)
         {
-            ImpactCollider = impactCollider;
-            ImpactRigidbody = impactCollider.attachedRigidbody;
-            ImpactGameObject = impactGameObject == null ? impactCollider.gameObject : impactGameObject;
-            DamageTarget = DamageUtility.GetDamageTarget(ImpactGameObject);
+            m_ImpactCollider = impactCollider;
+            m_ImpactRigidbody = impactCollider.attachedRigidbody;
+            m_ImpactGameObject = impactGameObject == null ? impactCollider.gameObject : impactGameObject;
+            m_DamageTarget = DamageUtility.GetDamageTarget(ImpactGameObject);
         }
 
         /// <summary>
@@ -447,25 +457,24 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Impact
             return "Impact Data: \n\t" +
                    "Source ID: " + m_SourceID + "\n\t" +
                    "\n\tIMPACT \n\t" +
-                   "RaycastHit: " + RaycastHit + "\n\t"+
+                   "RaycastHit: " + m_RaycastHit + "\n\t"+
                    "Impact Position: " + m_ImpactPosition + "\n\t" +
                    "Impact GameObject: " + m_ImpactGameObject + "\n\t" +
                    "Impact Rigidbody: " + ImpactRigidbody + "\n\t"+
                    "Impact Collider: " + m_ImpactCollider + "\n\t"+
                    "Impact Direction: " + ImpactDirection + "\n\t"+
                    "Impact Strength: " + m_ImpactStrength + "\n\t"+
-                   "DetectLayers: " + DetectLayers + "\n\t"+
-                   "HitCount: " + HitCount + "\n\t"+
-                   "HitColliders: " + HitColliders.ToStringDeep()+ "\n\t"+
-                   "SurfaceImpact: " + SurfaceImpact + "\n\t"+
-                   "DamageTarget: " + DamageTarget + "\n\t"+
+                   "DetectLayers: " + m_LayerMask + "\n\t"+
+                   "HitCount: " + m_HitCount + "\n\t"+
+                   "HitColliders: " + m_HitColliders.ToStringDeep()+ "\n\t"+
+                   "SurfaceImpact: " + m_SurfaceImpact + "\n\t"+
+                   "DamageTarget: " + m_DamageTarget + "\n\t"+
                    "\n\tSOURCE \n\t" +
-                   "Source Component: " + SourceComponent + "\n\t"+
-                   "Originator: " + SourceGameObject + "\n\t"+
-                   "Character Initiator: " + SourceRootOwner + "\n\t"+
-                   "Character Locomotion Initiator: " + SourceCharacterLocomotion + "\n\t"+
-                   "Item Action Initiator: " + SourceItemAction + "\n\t"+
-                   "DamageOriginator: " + DamageSource + "\n\t";
+                   "Source Component: " + m_SourceComponent + "\n\t"+
+                   "Originator: " + m_SourceGameObject + "\n\t"+
+                   "Character Locomotion Initiator: " + m_SourceCharacterLocomotion + "\n\t"+
+                   "Item Action Initiator: " + m_SourceItemAction + "\n\t"+
+                   "DamageOriginator: " + m_DamageSource + "\n\t";
         }
     }
 
@@ -483,6 +492,8 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Impact
         string ImpactStateName { get; set; }
         float ImpactStateDisableTimer { get; set; }
         SurfaceImpact SurfaceImpact { get; set; }
+
+        void Copy(IImpactDamageData other);
     }
     
     /// <summary>
@@ -514,8 +525,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Impact
         [SerializeField] protected float m_ImpactStateDisableTimer = 10;
         [Tooltip("The Surface Impact defines what effects happen on impact.")]
         [SerializeField] protected SurfaceImpact m_SurfaceImpact;
-
-
+        
         public LayerMask LayerMask { get => m_LayerMask; set => m_LayerMask = value; }
         public DamageProcessor DamageProcessor { get => m_DamageProcessor; set => m_DamageProcessor = value; }
         public float DamageAmount { get => m_DamageAmount; set => m_DamageAmount = value; }
@@ -530,17 +540,17 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Impact
         /// Copy all the values of the another impact damage data.
         /// </summary>
         /// <param name="other">The other impact data data.</param>
-        public void Copy(ImpactDamageData other)
+        public void Copy(IImpactDamageData other)
         {
-            LayerMask = other.LayerMask;
-            DamageProcessor = other.DamageProcessor;
-            DamageAmount = other.DamageAmount;
-            ImpactForce = other.ImpactForce;
-            ImpactForceFrames = other.ImpactForceFrames;
-            ImpactRadius = other.ImpactRadius;
-            ImpactStateName = other.ImpactStateName;
-            ImpactStateDisableTimer = other.ImpactStateDisableTimer;
-            SurfaceImpact = other.SurfaceImpact;
+            m_LayerMask = other.LayerMask;
+            m_DamageProcessor = other.DamageProcessor;
+            m_DamageAmount = other.DamageAmount;
+            m_ImpactForce = other.ImpactForce;
+            m_ImpactForceFrames = other.ImpactForceFrames;
+            m_ImpactRadius = other.ImpactRadius;
+            m_ImpactStateName = other.ImpactStateName;
+            m_ImpactStateDisableTimer = other.ImpactStateDisableTimer;
+            m_SurfaceImpact = other.SurfaceImpact;
         }
 
         /// <summary>
@@ -551,14 +561,14 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Impact
         {
             return "Impact Damage Data: \n\t" +
                    "Layer Mask: " + m_LayerMask + "\n\t" +
-                   "Damage Processor: " + DamageProcessor + "\n\t" +
-                   "Damage Amount: " + DamageAmount + "\n\t" +
-                   "Impact Force: " + ImpactForce + "\n\t" +
-                   "Impact Force Frames: " + ImpactForceFrames + "\n\t" +
-                   "Impact Radius: " + ImpactRadius + "\n\t" +
-                   "Impact State Name: " + ImpactStateName + "\n\t" +
-                   "Impact State Disable Timer: " + ImpactStateDisableTimer + "\n\t" +
-                   "Surface Impact: " + SurfaceImpact + "\n\t";
+                   "Damage Processor: " + m_DamageProcessor + "\n\t" +
+                   "Damage Amount: " + m_DamageAmount + "\n\t" +
+                   "Impact Force: " + m_ImpactForce + "\n\t" +
+                   "Impact Force Frames: " + m_ImpactForceFrames + "\n\t" +
+                   "Impact Radius: " + m_ImpactRadius + "\n\t" +
+                   "Impact State Name: " + m_ImpactStateName + "\n\t" +
+                   "Impact State Disable Timer: " + m_ImpactStateDisableTimer + "\n\t" +
+                   "Surface Impact: " + m_SurfaceImpact + "\n\t";
         }
     }
 }

@@ -127,7 +127,7 @@ namespace Opsive.UltimateCharacterController.Motion
             }
 
             m_SoftForceFrames = new Vector3[m_MaxSoftForceFrames];
-            m_ScheduledEvent = fixedUpdate ? SchedulerBase.ScheduleFixed(-1, Tick) : SchedulerBase.Schedule(-1, Tick);
+            m_ScheduledEvent = fixedUpdate ? Scheduler.ScheduleFixed(-1, Tick) : Scheduler.Schedule(-1, Tick);
             m_VelocityFadeInEndTime = Time.time + m_VelocityFadeInLength;
             m_Resting = false;
             m_RotationalSpring = rotationalSpring;
@@ -290,7 +290,7 @@ namespace Opsive.UltimateCharacterController.Motion
         public void Destroy()
         {
             if (m_ScheduledEvent != null) {
-                SchedulerBase.Cancel(m_ScheduledEvent);
+                Scheduler.Cancel(m_ScheduledEvent);
                 m_ScheduledEvent = null;
             }
             m_SoftForceFrames = null;

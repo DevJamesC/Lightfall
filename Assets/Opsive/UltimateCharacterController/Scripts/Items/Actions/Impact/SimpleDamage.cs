@@ -50,9 +50,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Impact
         protected override void OnImpactInternal(ImpactCallbackContext ctx)
         {
             var impactData = ctx.ImpactCollisionData;
-
-            var surfaceImpact = (m_UseContextData == false || ctx.ImpactDamageData == null) ? m_SurfaceImpact : ctx.ImpactDamageData.SurfaceImpact;
-
+            var surfaceImpact = (!m_UseContextData || ctx.ImpactDamageData == null || ctx.ImpactDamageData.SurfaceImpact == null) ? m_SurfaceImpact : ctx.ImpactDamageData.SurfaceImpact;
             var originator = impactData.SourceItemAction?.CharacterItem?.GetVisibleObject() ?? impactData.SourceGameObject;
             
             // The surface manager will apply effects based on the type of impact.
@@ -194,7 +192,6 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Impact
             var impactDirectionalForce = impactForceMagnitude * impactData.ImpactDirection;
 
             var target = impactData.ImpactGameObject;
-            
             var damageTarget = DamageUtility.GetDamageTarget(impactData.ImpactGameObject);
             if (damageTarget != null) {
                 target = damageTarget.HitGameObject;
@@ -208,7 +205,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Impact
                         radius, impactData.ImpactCollider);
                 
                     // Then find how to apply this damage data, through a damage processor or processor module.
-                    var damageProcessorModule = impactData.SourceRootOwner?.GetCachedComponent<DamageProcessorModule>();
+                    var damageProcessorModule = impactData.SourceCharacterLocomotion?.gameObject?.GetCachedComponent<DamageProcessorModule>();
                     if (damageProcessorModule != null) {
                         damageProcessorModule.ProcessDamage(damageProcessor, damageTarget, pooledDamageData);
                     } else {
@@ -220,7 +217,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Impact
                 }
                
             } else {
-                var forceObject = impactData.TargetGameObject.GetCachedParentComponent<IForceObject>();
+                var forceObject = impactData.ImpactGameObject.GetCachedParentComponent<IForceObject>();
                 if (forceObject != null) {
                     forceObject.AddForce(impactDirectionalForce);
                 } else if(impactForceMagnitude > 0 && impactData.ImpactRigidbody != null && !impactData.ImpactRigidbody.isKinematic) {
@@ -247,7 +244,6 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Impact
                 }
 
                 ctx.ImpactCollisionData.ImpactGameObject = target;
-                    
                 ctxImpactData.DamageAmount = damageAmount;
                 ctxImpactData.DamageProcessor = damageProcessor;
                 ctxImpactData.ImpactForce = impactForce;
@@ -257,7 +253,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Impact
                 ctx.ImpactDamageData = ctxImpactData;
             }
 
-            //Send the event to the , the collider and its rigidbody, target.
+            // Send the event to the collider and its rigidbody.
             if (m_InvokeOnObjectImpact) {
                 target = ctx.ImpactCollisionData.ImpactGameObject;
 
@@ -280,7 +276,6 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Impact
                 }
                 
                 ctx.ImpactCollisionData.ImpactGameObject = target;
-                
             }
         }
     }

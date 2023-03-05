@@ -121,8 +121,8 @@ namespace Opsive.UltimateCharacterController.ThirdPersonController.Character
             m_Inventory = m_GameObject.GetCachedComponent<Inventory.InventoryBase>();
             m_FirstPersonPerspective = m_CharacterLocomotion.FirstPersonPerspective;
 
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
-            var networkInfo = m_GameObject.GetCachedComponent<Networking.INetworkInfo>();
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+            var networkInfo = m_GameObject.GetCachedComponent<Shared.Networking.INetworkInfo>();
             if (networkInfo != null && !networkInfo.IsLocalPlayer()) {
                 // Remote players should always be in the third person view.
                 OnChangePerspectives(false);

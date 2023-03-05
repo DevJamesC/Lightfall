@@ -39,7 +39,7 @@ namespace Opsive.UltimateCharacterController.Objects.ItemAssist
             m_LineRenderer.SetPosition(0, m_Transform.position);
             m_LineRenderer.SetPosition(1, hitPoint);
 
-            SchedulerBase.Schedule(m_VisibleTime, DestroyObject);
+            Scheduler.Schedule(m_VisibleTime, DestroyObject);
         }
 
         /// <summary>

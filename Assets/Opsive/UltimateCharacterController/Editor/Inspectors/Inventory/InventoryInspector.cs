@@ -87,7 +87,7 @@ namespace Opsive.UltimateCharacterController.Editor.Inspectors.Inventory
                 listRect.xMax -= EditorGUI.indentLevel * Shared.Editor.Inspectors.Utility.InspectorUtility.IndentWidth;
                 m_RemoveExceptionReorderableList.DoList(listRect);
 
-                // Ensure the Item Types are valid.
+                // Ensure the Item Definitions are valid.
                 if (!Application.isPlaying) {
                     var itemSetManager = (target as Inventory).GetComponent<ItemSetManager>();
                     if (itemSetManager != null) {
@@ -96,21 +96,21 @@ namespace Opsive.UltimateCharacterController.Editor.Inspectors.Inventory
                             var removeExceptions = (target as Inventory).RemoveExceptions;
                             if (removeExceptions != null) {
                                 for (int i = 0; i < removeExceptions.Length; ++i) {
-                                    if (removeExceptions[i].ItemDefinition == null) {
+                                    if (removeExceptions[i] == null) {
                                         continue;
                                     }
 
                                     var validItemType = false;
                                     if (itemCollection.ItemTypes != null) {
                                         for (int j = 0; j < itemCollection.ItemTypes.Length; ++j) {
-                                            if (removeExceptions[i].ItemDefinition == itemCollection.ItemTypes[j]) {
+                                            if (removeExceptions[i] == itemCollection.ItemTypes[j].GetItemDefinition()) {
                                                 validItemType = true;
                                                 break;
                                             }
                                         }
                                     }
                                     if (!validItemType) {
-                                        EditorGUILayout.HelpBox($"The ItemType {removeExceptions[i].ItemDefinition} does not belong to the Item Collection specified on the Item Set Manager.", MessageType.Error);
+                                        EditorGUILayout.HelpBox($"The Item Definition {removeExceptions[i]} does not belong to the Item Collection specified on the Item Set Manager.", MessageType.Error);
                                         break;
                                     }
                                 }
@@ -165,19 +165,20 @@ namespace Opsive.UltimateCharacterController.Editor.Inspectors.Inventory
         }
         
         /// <summary>
-        /// Draws the DefaultLoadout ReordableList header.
+        /// Draws the RemoveExceptions ReordableList header.
         /// </summary>
         private void OnRemoveExceptionHeaderDraw(Rect rect)
         {
-            ItemDefinitionAmountInspector.OnItemDefinitionAmountHeaderDraw(rect);
+            EditorGUI.LabelField(new Rect(rect.x, rect.y, rect.width, EditorGUIUtility.singleLineHeight), "Item Definition");
         }
 
         /// <summary>
-        /// Draws the DefaultLoadout ReordableList element.
+        /// Draws the RemoveExceptions ReordableList element.
         /// </summary>
         private void OnRemoveExceptionElementDraw(Rect rect, int index, bool isActive, bool isFocused)
         {
-            ItemDefinitionAmountInspector.OnItemDefinitionAmountElementDraw(PropertyFromName("m_RemoveExceptions"), rect, index, isActive, isFocused);
+            rect.height = 16;
+            EditorGUI.PropertyField(rect, PropertyFromName("m_RemoveExceptions").GetArrayElementAtIndex(index), new GUIContent());
         }
     }
 }

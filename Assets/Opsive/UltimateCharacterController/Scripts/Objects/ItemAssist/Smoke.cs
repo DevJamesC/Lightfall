@@ -69,7 +69,7 @@ namespace Opsive.UltimateCharacterController.Objects.ItemAssist
                 }
             }
 
-            SchedulerBase.Schedule(maxLifeTime, DestroySelf);
+            Scheduler.Schedule(maxLifeTime, DestroySelf);
         }
 
         /// <summary>

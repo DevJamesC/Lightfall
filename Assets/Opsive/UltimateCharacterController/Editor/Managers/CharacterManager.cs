@@ -732,8 +732,10 @@ namespace Opsive.UltimateCharacterController.Editor.Managers
                             Array.Resize(ref m_OriginalThirdPersonObjects, m_AnimatorControllers.Length + 1);
                             Array.Resize(ref m_OriginalItemSlotParents, m_OriginalItemSlotParents.Length + 1);
                         }
-                        Array.Resize(ref m_FirstPersonArms, m_FirstPersonArms.Length + 1);
-                        Array.Resize(ref m_FirstPersonArmsAnimatorController, m_FirstPersonArmsAnimatorController.Length + 1);
+                        if (m_FirstPersonArms != null) {
+                            Array.Resize(ref m_FirstPersonArms, m_FirstPersonArms.Length + 1);
+                            Array.Resize(ref m_FirstPersonArmsAnimatorController, m_FirstPersonArmsAnimatorController.Length + 1);
+                        }
 #endif
                         Array.Resize(ref m_ThirdPersonObjects, m_ThirdPersonObjects.Length + 1);
                         Array.Resize(ref m_ItemSlotParents, m_ItemSlotParents.Length + 1);
@@ -1427,7 +1429,7 @@ namespace Opsive.UltimateCharacterController.Editor.Managers
                                                 m_Perspective != Perspective.First ? m_ThirdPersonMovementTypes[m_ThirdPersonMovementTypeIndex].FullName : string.Empty,
                                                 m_StartFirstPersonPerspective, m_ThirdPersonObjects, m_InvisibleShadowCaster, m_AIAgent);
             if (m_TemplateCharacter == null) {
-                CharacterBuilder.BuildCharacterComponents(m_Character, m_AIAgent, m_Items, m_ItemCollection, m_ItemSetRule, m_Perspective == Perspective.First || m_Perspective == Perspective.Both || (m_FirstPersonArms != null && m_FirstPersonArms.Length > 1),
+                CharacterBuilder.BuildCharacterComponents(m_Character, m_AIAgent, m_Items, m_ItemCollection, m_ItemSetRule, (m_Perspective == Perspective.First || m_Perspective == Perspective.Both) && (m_FirstPersonArms != null && m_FirstPersonArms.Length > 1),
                     m_Health, m_UnityIK, m_FootEffects, m_StandardAbilities, m_NavMeshAgent);
             }
 
@@ -1549,7 +1551,7 @@ namespace Opsive.UltimateCharacterController.Editor.Managers
                     var firstPersonObjects = m_Character.GetComponentInChildren<FirstPersonController.Character.FirstPersonObjects>();
                     if (m_Perspective != Perspective.Third && firstPersonObjects == null) {
                         var firstPersonObjectsGameObject = new GameObject("FirstPersonObjects");
-                        firstPersonObjectsGameObject.transform.parent = m_Character.transform;
+                        firstPersonObjectsGameObject.transform.SetParentOrigin(m_Character.transform);
                         firstPersonObjectsGameObject.AddComponent<FirstPersonController.Character.FirstPersonObjects>();
                     } else if (m_Perspective == Perspective.Third && firstPersonObjects != null) {
                         var prefabPath = PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(m_Character);
@@ -1614,7 +1616,7 @@ namespace Opsive.UltimateCharacterController.Editor.Managers
                 }
             } else if (m_Animator) {
                 // The animator controller may have changed.
-                var animatorMonitors = m_Character.GetComponents<AnimatorMonitor>();
+                var animatorMonitors = m_Character.GetComponentsInChildren<AnimatorMonitor>(true);
                 for (int i = 0; i < animatorMonitors.Length; ++i) {
                     var animator = animatorMonitors[i].GetComponent<Animator>();
                     if (animator == null) {
@@ -1834,8 +1836,8 @@ namespace Opsive.UltimateCharacterController.Editor.Managers
                         }
 
                         var addThirdPersonObject = false;
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
-                        var networkInfo = m_Character.GetComponent<Networking.INetworkInfo>();
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+                        var networkInfo = m_Character.GetComponent<Shared.Networking.INetworkInfo>();
                         if (networkInfo != null) {
                             addThirdPersonObject = true;
                         }

@@ -295,6 +295,7 @@ namespace Opsive.UltimateCharacterController.Editor.Managers
             for (int i = 0; i < m_AddOnInspectors.Length; ++i) {
                 var nameLabel = new Label(m_AddOnNames[i]);
                 nameLabel.AddToClassList("large-title");
+                nameLabel.style.marginTop = 10;
                 m_InstalledContainer.Add(nameLabel);
                 m_AddOnInspectors[i].ShowInspector(m_InstalledContainer);
             }

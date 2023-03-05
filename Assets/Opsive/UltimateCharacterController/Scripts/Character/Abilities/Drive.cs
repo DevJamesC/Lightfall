@@ -8,8 +8,8 @@ namespace Opsive.UltimateCharacterController.Character.Abilities
 {
     using Opsive.Shared.Events;
     using Opsive.Shared.Game;
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
-    using Opsive.UltimateCharacterController.Networking;
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+    using Opsive.Shared.Networking;
 #endif
     using Opsive.UltimateCharacterController.Objects.CharacterAssist;
     using Opsive.UltimateCharacterController.Utility;
@@ -63,7 +63,7 @@ namespace Opsive.UltimateCharacterController.Character.Abilities
         private DriveState m_DriveState;
         private Collider[] m_OverlapColliders;
         private SkinnedMeshRenderer[] m_SkinnedMeshRenderers;
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
         private INetworkInfo m_NetworkInfo;
 #endif
         private float m_Epsilon = 0.99999f;
@@ -82,7 +82,7 @@ namespace Opsive.UltimateCharacterController.Character.Abilities
             base.Awake();
 
             m_OverlapColliders = new Collider[1];
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
             m_NetworkInfo = m_GameObject.GetCachedComponent<INetworkInfo>();
 #endif
 
@@ -193,7 +193,7 @@ namespace Opsive.UltimateCharacterController.Character.Abilities
         {
             base.AbilityStarted();
 
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
             // The IDriveSource is responsible for notifying the remote players for the changes.
             if (m_NetworkInfo != null && !m_NetworkInfo.IsLocalPlayer()) {
                 return;
@@ -221,7 +221,7 @@ namespace Opsive.UltimateCharacterController.Character.Abilities
         /// </summary>
         private void OnEnteredVehicle()
         {
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
             // The IDriveSource is responsible for notifying the remote players for the changes.
             if (m_NetworkInfo != null && !m_NetworkInfo.IsLocalPlayer()) {
                 return;
@@ -332,7 +332,7 @@ namespace Opsive.UltimateCharacterController.Character.Abilities
         /// </summary>
         public override void WillTryStopAbility()
         {
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
             // The IDriveSource is responsible for notifying the remote players for the changes.
             if (m_NetworkInfo != null && !m_NetworkInfo.IsLocalPlayer()) {
                 return;
@@ -377,7 +377,7 @@ namespace Opsive.UltimateCharacterController.Character.Abilities
         /// </summary>
         private void OnExitedVehicle()
         {
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
             // The IDriveSource is responsible for notifying the remote players for the changes.
             if (m_NetworkInfo != null && !m_NetworkInfo.IsLocalPlayer()) {
                 return;
@@ -423,7 +423,7 @@ namespace Opsive.UltimateCharacterController.Character.Abilities
         {
             base.AbilityStopped(force);
 
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
             if (m_NetworkInfo != null && !m_NetworkInfo.IsLocalPlayer()) {
                 return;
             }

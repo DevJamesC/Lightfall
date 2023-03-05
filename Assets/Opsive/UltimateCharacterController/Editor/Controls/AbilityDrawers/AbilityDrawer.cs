@@ -58,19 +58,6 @@ namespace Opsive.UltimateCharacterController.Editor.Controls.Types.AbilityDrawer
         public virtual void AbilityRemoved(Ability ability, UnityEngine.Object parent) { }
 
         /// <summary>
-        /// Generates the code necessary to recreate the states/transitions that are affected by the ability.
-        /// </summary>
-        /// <param name="ability">The ability to generate the states/transitions for.</param>
-        /// <param name="animatorControllers">The Animator Controllers to generate the states/transitions from.</param>
-        /// <param name="firstPersonAnimatorControllers">The first person Animator Controllers to generate the states/transitions from.</param>
-        /// <param name="baseDirectory">The directory that the scripts are located.</param>
-        /// <returns>The file path of the generated code.</returns>
-        public string GenerateAnimatorCode(Ability ability, UnityEditor.Animations.AnimatorController[] animatorControllers, UnityEditor.Animations.AnimatorController[] firstPersonAnimatorControllers, string baseDirectory)
-        {
-            return AnimatorBuilder.GenerateAnimatorCode(animatorControllers, firstPersonAnimatorControllers, "AbilityIndex", ability.AbilityIndexParameter, ability, baseDirectory);
-        }
-
-        /// <summary>
         /// Returns true if the ability can build to the animator.
         /// </summary>
         public virtual bool CanBuildAnimator { get => true; }

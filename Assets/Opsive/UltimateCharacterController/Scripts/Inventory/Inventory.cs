@@ -7,10 +7,10 @@
 namespace Opsive.UltimateCharacterController.Inventory
 {
     using Opsive.Shared.Inventory;
+    using Opsive.Shared.Utility;
     using Opsive.UltimateCharacterController.Items;
     using System;
     using System.Collections.Generic;
-    using Opsive.Shared.Utility;
     using UnityEngine;
 
     /// <summary>
@@ -21,7 +21,9 @@ namespace Opsive.UltimateCharacterController.Inventory
         [Serializable]
         public class AutoEquipSettings
         {
-            
+            /// <summary>
+            /// Specifies the auto equip options.
+            /// </summary>
             [Serializable]
             public enum Options
             {
@@ -88,16 +90,16 @@ namespace Opsive.UltimateCharacterController.Inventory
 
         [Tooltip("Choose the item to equip on start.")]
         [SerializeField] protected AutoEquipSettings m_AutoEquip;
-        [Tooltip("Items to load when the Inventory is initially created or on a character respawn.")]
+        [Tooltip("Items to load when the inventory is initially created or on a character respawn.")]
         [SerializeField] protected ItemIdentifierAmount[] m_DefaultLoadout;
-        [Tooltip("The Character items that cannot be removed.")]
-        [SerializeField] protected ItemIdentifierAmount[] m_RemoveExceptions;
+        [Tooltip("The items that cannot be removed.")]
+        [SerializeField] protected ItemDefinitionBase[] m_RemoveExceptions;
 
         private Dictionary<IItemIdentifier, CharacterItem>[] m_ItemIdentifierMap;
         private Dictionary<IItemIdentifier, int> m_ItemIdentifierAmount = new Dictionary<IItemIdentifier, int>();
         private CharacterItem[] m_ActiveItem;
         public ItemIdentifierAmount[] DefaultLoadout { get { return m_DefaultLoadout; } set { m_DefaultLoadout = value; } }
-        public ItemIdentifierAmount[] RemoveExceptions { get { return m_RemoveExceptions; } set { m_RemoveExceptions = value; } }
+        public ItemDefinitionBase[] RemoveExceptions { get { return m_RemoveExceptions; } set { m_RemoveExceptions = value; } }
         
         /// <summary>
         /// Internal method which initializes the default values.
@@ -119,8 +121,15 @@ namespace Opsive.UltimateCharacterController.Inventory
         protected override void StartInternal()
         {
             base.StartInternal();
-            
-            EquipStartItem();
+
+
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+            if (m_NetworkInfo == null || m_NetworkInfo.IsLocalPlayer()) {
+#endif
+                EquipStartItem();
+#if ULTIMATE_CHARACTER_CONTROLLER_MULTIPLAYER
+            }
+#endif
         }
 
         /// <summary>
@@ -254,7 +263,7 @@ namespace Opsive.UltimateCharacterController.Inventory
             }
             
             if (!m_ItemIdentifierAmount.TryGetValue(itemIdentifier, out var existingAmount)) {
-                m_ItemIdentifierAmount[itemIdentifier] =  Mathf.Min(amount, capacity);
+                m_ItemIdentifierAmount[itemIdentifier] = Mathf.Min(amount, capacity);
             } else {
                 m_ItemIdentifierAmount[itemIdentifier] = Mathf.Min(amount + existingAmount, capacity);
             }
@@ -291,7 +300,7 @@ namespace Opsive.UltimateCharacterController.Inventory
             }
 
             for (int i = 0; i < m_RemoveExceptions.Length; i++) {
-                if (m_RemoveExceptions[i].ItemIdentifier == itemIdentifier) {
+                if (m_RemoveExceptions[i] == itemIdentifier.GetItemDefinition()) {
                     return false;
                 }
             }

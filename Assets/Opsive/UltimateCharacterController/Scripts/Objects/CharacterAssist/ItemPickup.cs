@@ -8,7 +8,6 @@ namespace Opsive.UltimateCharacterController.Objects.CharacterAssist
 {
     using Opsive.Shared.Game;
     using Opsive.Shared.StateSystem;
-    using Opsive.Shared.Utility;
     using Opsive.UltimateCharacterController.Inventory;
     using UnityEngine;
 
@@ -17,7 +16,7 @@ namespace Opsive.UltimateCharacterController.Objects.CharacterAssist
     /// </summary>
     public class ItemPickup : ItemPickupBase
     {
-        [Tooltip("The Item Set Group to equip on pickup.")]
+        [Tooltip("Should the item be equipped on pickup?")]
         [SerializeField] protected bool m_Equip = true;
         [Tooltip("The Item Set Group to equip on pickup.")]
         [SerializeField] protected int m_ItemSetGroup = -1;
@@ -65,21 +64,26 @@ namespace Opsive.UltimateCharacterController.Objects.CharacterAssist
                 var itemIdentifier = m_ItemDefinitionAmounts[i].ItemIdentifier;
                 if (itemIdentifier == null) {
 #if UNITY_EDITOR
-                    Debug.LogWarning("Null Items cannot be picked up", gameObject);
+                    Debug.LogWarning("Empty items cannot be picked up.", gameObject);
 #endif
                     continue;
                     
                 }
                 
-                if (0 < inventory.PickupItem(itemIdentifier,
-                        m_ItemDefinitionAmounts[i].Amount, slotID, immediatePickup, forceEquip)) {
+                if (inventory.PickupItem(itemIdentifier, slotID, m_ItemDefinitionAmounts[i].Amount, immediatePickup, forceEquip) >= 0) {
                     pickedUp = true;
                 }
             }
 
             // If the item was picked up the pickup events should equip/unequip the item.
             if (m_Equip) {
-                var itemSetManager = inventory.gameObject.GetCachedComponent<ItemSetManager>();
+                // The item can't be equipped if the use or reload abilities are active.
+                var characterLocomotion = inventory.gameObject.GetCachedComponent<Character.UltimateCharacterLocomotion>();
+                if (characterLocomotion.IsAbilityTypeActive<Character.Abilities.Items.Use>() || characterLocomotion.IsAbilityTypeActive<Character.Abilities.Items.Reload>()) {
+                    return pickedUp;
+                }
+
+                var itemSetManager = inventory.gameObject.GetCachedComponent<ItemSetManagerBase>();
                 itemSetManager.UpdateItemSets();
 
                 if (string.IsNullOrWhiteSpace(m_ItemSetName) == false) {
@@ -90,18 +94,16 @@ namespace Opsive.UltimateCharacterController.Objects.CharacterAssist
                     }
                 }
                 
-                
                 for (int i = 0; i < m_ItemDefinitionAmounts.Length; i++) {
                     var itemIdentifierAmount = m_ItemDefinitionAmounts[i];
                     for (int j = inventory.SlotCount - 1; j >= 0; j--) {
                         var characterItem = inventory.GetCharacterItem(itemIdentifierAmount.ItemIdentifier, j);
-                        if(characterItem == null){ continue; }
+                        if (characterItem == null) { continue; }
 
                         // Only equip if the item is not already equipped or about to be equipped.
                         // It can sometimes be equipping from the Pickup event.
-                        if(itemSetManager.IsItemContainedInActiveItemSet(m_ItemSetGroup, characterItem.ItemIdentifier)
-                           || itemSetManager.IsItemContainedInNextItemSet(m_ItemSetGroup, characterItem.ItemIdentifier))
-                        {
+                        if (itemSetManager.IsItemContainedInActiveItemSet(m_ItemSetGroup, characterItem.ItemIdentifier) ||
+                                        itemSetManager.IsItemContainedInNextItemSet(m_ItemSetGroup, characterItem.ItemIdentifier)) {
                             continue;
                         }
 
@@ -110,7 +112,6 @@ namespace Opsive.UltimateCharacterController.Objects.CharacterAssist
 
                         itemSetManager.TryEquipItemSet(itemSet, forceEquip, false);
                     }
-                
                 }
             }
 

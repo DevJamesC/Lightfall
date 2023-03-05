@@ -63,7 +63,7 @@ namespace Opsive.UltimateCharacterController.StateSystem
             StateBehavior stateBehavior;
             if ((m_RequireCharacter && (stateBehavior = other.GetComponentInParent<Character.UltimateCharacterLocomotion>()) != null) ||
                 (!m_RequireCharacter && (stateBehavior = other.GetComponentInParent<StateBehavior>()) != null)) {
-                m_ActivateStateEvent = SchedulerBase.Schedule(m_Delay, ChangeState, stateBehavior.gameObject, true);
+                m_ActivateStateEvent = Scheduler.Schedule(m_Delay, ChangeState, stateBehavior.gameObject, true);
 
                 m_ActivateAudioClipSet.PlayAudioClip(null);
             }
@@ -89,7 +89,7 @@ namespace Opsive.UltimateCharacterController.StateSystem
 
             // The state can be disabled automatically.
             if (activate && m_Duration > 0) {
-                SchedulerBase.Schedule(m_Duration, ChangeState, stateGameObject, false);
+                Scheduler.Schedule(m_Duration, ChangeState, stateGameObject, false);
             }
         }
 
@@ -116,7 +116,7 @@ namespace Opsive.UltimateCharacterController.StateSystem
             if ((m_RequireCharacter && (stateBehavior = other.GetComponentInParent<Character.UltimateCharacterLocomotion>()) != null) ||
                 (!m_RequireCharacter && (stateBehavior = other.GetComponentInParent<StateBehavior>()) != null)) {
                 if (m_ActivateStateEvent != null && m_ActivateStateEvent.Active) {
-                    SchedulerBase.Cancel(m_ActivateStateEvent);
+                    Scheduler.Cancel(m_ActivateStateEvent);
                     m_ActivateStateEvent = null;
                 } else {
                     // The state shouldn't change when the object dies. It can be changed when the character respawns.

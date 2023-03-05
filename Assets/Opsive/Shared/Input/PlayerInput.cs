@@ -177,7 +177,7 @@ namespace Opsive.Shared.Input
             if (Time.frameCount > m_FrameWaitCount) {
                 m_Focus = true;
             } else {
-                m_FocusEvent = SchedulerBase.Schedule(Time.fixedDeltaTime, FrameCheck);
+                m_FocusEvent = Scheduler.Schedule(Time.fixedDeltaTime, FrameCheck);
             }
         }
 
@@ -399,7 +399,7 @@ namespace Opsive.Shared.Input
             // Schedule the controller check event if the rate is positive.
             // UnityEngine.Input.GetJoystickNames generates garbage so limit the amount of time the controller is checked.
             if (m_ControllerConnectedCheckRate > 0 && (m_ControllerCheckEvent == null || !m_ControllerCheckEvent.Active)) {
-                m_ControllerCheckEvent = SchedulerBase.Schedule(m_ControllerConnectedCheckRate, CheckForController);
+                m_ControllerCheckEvent = Scheduler.Schedule(m_ControllerConnectedCheckRate, CheckForController);
             }
         }
 
@@ -587,7 +587,7 @@ namespace Opsive.Shared.Input
                 if (hasFocus) {
                     return;
                 } else {
-                    SchedulerBase.Cancel(m_FocusEvent);
+                    Scheduler.Cancel(m_FocusEvent);
                     m_FocusEvent = null;
                 }
             }
@@ -606,7 +606,7 @@ namespace Opsive.Shared.Input
         private void OnDestroy()
         {
             if (m_ControllerCheckEvent != null) {
-                SchedulerBase.Cancel(m_ControllerCheckEvent);
+                Scheduler.Cancel(m_ControllerCheckEvent);
                 m_ControllerCheckEvent = null;
             }
             

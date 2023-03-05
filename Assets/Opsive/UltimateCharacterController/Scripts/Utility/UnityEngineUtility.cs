@@ -74,7 +74,7 @@ namespace Opsive.UltimateCharacterController.Utility
             s_ObjectUpdated.Add(obj);
 
             if (autoClear && s_ObjectClearEvent == null) {
-                s_ObjectClearEvent = SchedulerBase.Schedule(0.0001f, ClearUpdatedObjectsEvent);
+                s_ObjectClearEvent = Scheduler.Schedule(0.0001f, ClearUpdatedObjectsEvent);
             }
         }
 

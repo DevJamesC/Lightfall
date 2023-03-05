@@ -27,7 +27,8 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Effect
         public float LifeTime { get => m_RevertTime; set => m_RevertTime = value; }
 
         protected Action<bool, bool> m_DoEnableDisable;
-        
+        protected ScheduledEventBase m_EnableDisableScheduledEvent;
+
         /// <summary>
         /// Initialize the effect.
         /// </summary>
@@ -56,10 +57,15 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Effect
             var obj = m_Object.GetValue();
             if(obj == null){ return; }
 
-            var previousActiveState = obj.activeSelf;
+            if (m_EnableDisableScheduledEvent != null) {
+                Scheduler.Cancel(m_EnableDisableScheduledEvent);
+                m_EnableDisableScheduledEvent = null;
+            }
+            
+            var previousActiveState = !enable;
             obj.SetActive(enable);
             if (revert && m_RevertTime > 0) {
-                Scheduler.Schedule(m_RevertTime, m_DoEnableDisable, previousActiveState, false);
+                m_EnableDisableScheduledEvent = Scheduler.Schedule(m_RevertTime, m_DoEnableDisable, previousActiveState, false);
             }
         }
     }

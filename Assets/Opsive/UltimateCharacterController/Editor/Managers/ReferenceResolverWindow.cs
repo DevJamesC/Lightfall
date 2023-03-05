@@ -281,6 +281,11 @@ namespace Opsive.Shared.Editor.UIElements.Managers
                 }
             }
 
+            // The default parameter assignment type may be different.
+            if (templateValue.GetType().IsClass && targetValue != null && templateValue.GetType() != targetValue.GetType()) {
+                targetValue = Activator.CreateInstance(templateValue.GetType());
+            }
+
             // If the transform is a child of the parent then that value should persist.
             Transform targetTransform = null;
             if (targetValue != null && !targetValue.Equals(null)) {

@@ -32,6 +32,11 @@ namespace Opsive.UltimateCharacterController.Character
             m_PlayerInput = m_GameObject.GetCachedComponent<IPlayerInput>();
 
             if (m_PlayerInput != null) {
+                if (m_PlayerInput is PlayerInputProxy) {
+                    var proxy = m_PlayerInput as PlayerInputProxy;
+                    m_PlayerInput = proxy.PlayerInput;
+                }
+
                 EventHandler.RegisterEvent<Ability, bool>(m_GameObject, "OnCharacterAbilityActive", OnAbilityActive);
                 EventHandler.RegisterEvent<ItemAbility, bool>(m_GameObject, "OnCharacterItemAbilityActive", OnItemAbilityActive);
                 EventHandler.RegisterEvent<int, int>(m_GameObject, "OnItemSetManagerUpdateItemSet", OnUpdateItemSet);

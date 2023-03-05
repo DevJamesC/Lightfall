@@ -134,6 +134,11 @@ namespace Opsive.UltimateCharacterController.Objects
                 return false;
             }
 
+            if (gameObject == null) {
+                obj = null;
+                return false;
+            }
+
             var objectIDs = inChildren
                 ? gameObject.GetComponentsInChildren<ObjectIdentifier>(true)
                 : gameObject.GetComponentsInParent<ObjectIdentifier>(true);

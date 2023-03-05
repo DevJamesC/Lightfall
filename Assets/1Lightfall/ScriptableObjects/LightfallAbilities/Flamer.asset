@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   icon: {fileID: 0}
   title: Flamer
-  description: 
+  description: Activate a flamethrower for a short time.
   possibleUpgrades:
     Upgrade1:
       Icon: {fileID: 0}
@@ -84,6 +84,7 @@ MonoBehaviour:
         itemSO: {fileID: -8176295628259016961, guid: 47ae2c93518327d4da717b3cdbcd8ee3,
           type: 2}
         UseChargeEveryUse: 1
+        ItemBaseStats: []
     - rid: 3613694050531016704
       type: {class: RechargeCondition, ns: MBS.AbilitySystem, asm: Assembly-CSharp}
       data:

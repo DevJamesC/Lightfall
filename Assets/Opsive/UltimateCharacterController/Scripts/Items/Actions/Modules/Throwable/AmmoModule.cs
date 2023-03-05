@@ -143,10 +143,10 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Throwable
     public class ItemAmmo : ThrowableAmmoModule, IModuleCanStartUseItem
     {
         /// <summary>
-        /// Register to events while the item is equipped and the module is enabled.
+        /// Updates the registered events when the item is equipped and the module is enabled.
         /// </summary>
-        protected override void RegisterEventsWhileEquippedAndEnabledInternal(bool register) {
-            base.RegisterEventsWhileEquippedAndEnabledInternal(register);
+        protected override void UpdateRegisteredEventsInternal(bool register) {
+            base.UpdateRegisteredEventsInternal(register);
             Shared.Events.EventHandler.RegisterUnregisterEvent<IItemIdentifier, int, int>(register, Character, "OnInventoryAdjustItemIdentifierAmount",
                 OnAdjustItemIdentifierAmount);
         }

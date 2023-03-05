@@ -32,15 +32,30 @@ namespace MBS.AbilitySystem
             //If we don't have this stat, create it.
             if (results.Count <= 0)
             {
+                float currentValue = 0;
+                float prospectiveValue = 0;
+
+                if (hasUpgrade)
+                {
+                    currentValue += AdditionalAbilityUses;
+                    prospectiveValue += AdditionalAbilityUses;
+                }
+                else if (isProspectiveUpgrade)
+                {
+                    prospectiveValue += AdditionalAbilityUses;
+                }
+
                 stats.Add(new AbilityUIStat()
                 {
                     StatName = StatName.None,
                     StatNameDisplayName = "Ability Use",
                     MaxValue = AdditionalAbilityUses,
-                    CurrentValue = AdditionalAbilityUses,
-                    InitalValue = AdditionalAbilityUses,
-                    ProspectiveValue = AdditionalAbilityUses
+                    CurrentValue = currentValue,
+                    InitalValue = 0,
+                    ProspectiveValue = prospectiveValue
                 });
+
+
             }
             else//else handle incrimenting the stat
             {

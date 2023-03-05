@@ -96,8 +96,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
         public ILookSource LookSource => ShootableAction.LookSource;
 
         private RaycastHit[] m_HitscanRaycastHits;
-        private UnityEngineUtility.RaycastHitComparer
-            m_RaycastHitComparer = new UnityEngineUtility.RaycastHitComparer();
+        private UnityEngineUtility.RaycastHitComparer m_RaycastHitComparer = new UnityEngineUtility.RaycastHitComparer();
         protected ShootableImpactCallbackContext m_ShootableImpactCallbackContext;
 
         /// <summary>
@@ -110,7 +109,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
 
             m_HitscanRaycastHits = new RaycastHit[m_MaxHitscanCollisionCount];
             m_ShootableImpactCallbackContext = new ShootableImpactCallbackContext();
-            m_ShootableImpactCallbackContext.m_ShootableAction = ShootableAction;
+            m_ShootableImpactCallbackContext.ShootableAction = ShootableAction;
             m_ShootableImpactCallbackContext.ImpactCollisionData = new ImpactCollisionData();
 
             m_FirePointLocation.Initialize(itemAction);
@@ -133,20 +132,8 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
         public override ShootableFireData GetFirePreviewData()
         {
             var dataStream = ShootableAction.ShootableUseDataStream;
-
-            var firePoint = GetFirePoint(dataStream);
-            var fireDirection = GetFireDirection(firePoint, dataStream);
-
-            var projectileData =
-                ShootableAction.GetPreviewProjectileDataToFire(dataStream, firePoint, fireDirection, 0);
-            m_ShootableFireData.FirePoint = firePoint;
-            m_ShootableFireData.FireDirection = fireDirection;
-            m_ShootableFireData.ProjectileData = projectileData;
-            m_ShootableFireData.Velocity = Vector3.zero;
-            m_ShootableFireData.ImpactLayers = m_ImpactLayers;
-            m_ShootableFireData.TrajectoryOffset = Vector3.zero;
-            m_ShootableFireData.FireTransform = GetFirePointLocation();
-            m_ShootableFireData.TracerTransform = m_TracerLocation.GetValue();
+            m_ShootableFireData.FirePoint = GetFirePoint(dataStream);
+            m_ShootableFireData.FireDirection = GetFireDirection(m_ShootableFireData.FirePoint, dataStream);
 
             return m_ShootableFireData;
         }
@@ -179,9 +166,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
         /// <param name="fireDirection">The fire direction.</param>
         /// <param name="ammoData">The ammo data.</param>
         /// <returns>Returns the projectile to fire.</returns>
-        public override ShootableProjectileData GetProjectileDataToFire(ShootableUseDataStream dataStream,
-            Vector3 firePoint,
-            Vector3 fireDirection, ShootableAmmoData ammoData)
+        public override ShootableProjectileData GetProjectileDataToFire(ShootableUseDataStream dataStream, Vector3 firePoint, Vector3 fireDirection, ShootableAmmoData ammoData)
         {
             // Destroy the projectiles when getting the data to fire.
             return ShootableAction.GetProjectileDataToFire(dataStream, firePoint, fireDirection, ammoData, true, true);
@@ -201,32 +186,30 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
                 return;
             }
 
-            //Get the preview data to set things up.
+            // Get the preview data to set things up.
             GetFirePreviewData();
 
-            //remove the ammo before it is fired.
+            // Remove the ammo before it is fired.
             ShootableAction.ClipModuleGroup.FirstEnabledModule.AmmoUsed(1, ammoIndex);
 
             // Fire as many projectiles or hitscan bullets as the fire count specifies.
             for (int i = 0; i < m_FireCount; ++i) {
-                SchedulerBase.Schedule(m_HitscanFireDelay, HitscanFire, dataStream, ammoData);
+                Scheduler.Schedule(m_HitscanFireDelay, HitscanFire, dataStream, ammoData);
             }
 
-            //Notify that the shooter fired.
+            // Notify that the shooter fired.
             ShootableAction.OnFire(m_ShootableFireData);
-
         }
 
         /// <summary>
-        /// Get the Fire point.
+        /// Get the fire point.
         /// </summary>
         /// <param name="dataStream">The use data stream.</param>
         /// <returns>The fire point.</returns>
         public virtual Vector3 GetFirePoint(ShootableUseDataStream dataStream)
         {
             var fireInLookSourceDirection = m_FireInLookSourceDirection;
-            var useLookPosition = fireInLookSourceDirection &&
-                                  !CharacterLocomotion.ActiveMovementType.UseIndependentLook(false);
+            var useLookPosition = fireInLookSourceDirection && !CharacterLocomotion.ActiveMovementType.UseIndependentLook(false);
 
             if (useLookPosition) { return LookSource.LookPosition(true); }
 
@@ -240,9 +223,8 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
         public virtual Vector3 GetFireDirection(Vector3 firePoint, ShootableUseDataStream dataStream)
         {
             var fireInLookSourceDirection = m_FireInLookSourceDirection;
-            var direction = fireInLookSourceDirection
-                ? LookSource.LookDirection(firePoint, false, m_ImpactLayers, true, true)
-                : m_FirePointLocation.GetValue().forward;
+            var direction = fireInLookSourceDirection ? LookSource.LookDirection(firePoint, false, m_ImpactLayers, true, true)
+                                                        : m_FirePointLocation.GetValue().forward;
 
             // Add the spread in a random direction.
             if (m_Spread > 0) {
@@ -260,36 +242,30 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
         /// <param name="ammoData">The shootable ammo data.</param>
         protected virtual void HitscanFire(ShootableUseDataStream dataStream, ShootableAmmoData ammoData)
         {
-            var fireInLookSourceDirection = m_FireInLookSourceDirection;
-            var strength = dataStream.TriggerData.Force;
-
             // The hitscan should be fired from the center of the camera so the hitscan will always hit the correct crosshairs location.
-            var useLookPosition = fireInLookSourceDirection &&
-                                  !CharacterLocomotion.ActiveMovementType.UseIndependentLook(false);
             var firePoint = GetFirePoint(dataStream);
             var fireDirection = GetFireDirection(firePoint, dataStream);
-            var fireRay = new Ray(firePoint, fireDirection);
-
-            var projectileData = GetProjectileDataToFire(dataStream, firePoint, fireDirection, ammoData);
 
             m_ShootableFireData.FirePoint = firePoint;
             m_ShootableFireData.FireDirection = fireDirection;
-            m_ShootableFireData.ProjectileData = projectileData;
 
-            if (projectileData.AmmoData.Valid == false) {
+            var projectileData = GetProjectileDataToFire(dataStream, firePoint, fireDirection, ammoData);
+            if (!projectileData.AmmoData.Valid) {
                 // Dry fire.
                 return;
             }
 
             // Prevent the ray between the character and the look source from causing a false collision.
+            var useLookPosition = m_FireInLookSourceDirection && !CharacterLocomotion.ActiveMovementType.UseIndependentLook(false);
+            var fireRay = new Ray(firePoint, fireDirection);
             if (useLookPosition && !CharacterLocomotion.FirstPersonPerspective) {
                 var direction = CharacterTransform.InverseTransformPoint(firePoint);
                 direction.y = 0;
                 fireRay.origin = fireRay.GetPoint(direction.magnitude);
             }
 
-            var hitCount = Physics.RaycastNonAlloc(fireRay, m_HitscanRaycastHits, m_HitscanFireRange * strength,
-                m_ImpactLayers.value, m_HitscanTriggerInteraction);
+            var strength = dataStream.TriggerData.Force;
+            var hitCount = Physics.RaycastNonAlloc(fireRay, m_HitscanRaycastHits, m_HitscanFireRange * strength, m_ImpactLayers.value, m_HitscanTriggerInteraction);
             var hasHit = false;
 
 #if UNITY_EDITOR
@@ -326,7 +302,7 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
 
                 // Spawn a tracer which moves to the hit point.
                 if (m_Tracer != null) {
-                    SchedulerBase.ScheduleFixed(m_TracerSpawnDelay, AddHitscanTracer, closestRaycastHit.point);
+                    Scheduler.ScheduleFixed(m_TracerSpawnDelay, AddHitscanTracer, closestRaycastHit.point);
                 }
 
                 hasHit = true;
@@ -335,9 +311,8 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
 
             // A tracer should still be spawned if no object was hit.
             if (!hasHit && m_Tracer != null) {
-                SchedulerBase.ScheduleFixed(m_TracerSpawnDelay, AddHitscanTracer,
-                    MathUtility.TransformPoint(firePoint, Quaternion.LookRotation(fireDirection),
-                        new Vector3(0, 0, m_TracerDefaultLength)));
+                Scheduler.ScheduleFixed(m_TracerSpawnDelay, AddHitscanTracer, MathUtility.TransformPoint(firePoint, Quaternion.LookRotation(fireDirection),
+                                            new Vector3(0, 0, m_TracerDefaultLength)));
             }
         }
 
@@ -347,7 +322,6 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Shootable
         /// <param name="position">The position that the tracer should move towards.</param>
         protected virtual void AddHitscanTracer(Vector3 position)
         {
-            //var tracerLocation = m_ShootableWeaponPerspectiveProperties.TracerLocation;
             var tracerLocation = m_TracerLocation.GetValue();
             var tracerObject = ObjectPoolBase.Instantiate(m_Tracer, tracerLocation.position, tracerLocation.rotation);
             var tracer = tracerObject.GetCachedComponent<Tracer>();

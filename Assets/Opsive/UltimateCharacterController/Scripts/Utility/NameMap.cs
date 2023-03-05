@@ -32,7 +32,8 @@ namespace Opsive.UltimateCharacterController.Utility
         public SortOption SortOrder
         {
             get => m_SortOrder;
-            set {
+            set
+            {
                 m_SortOrder = value;
                 OnValidate();
             }
@@ -43,7 +44,8 @@ namespace Opsive.UltimateCharacterController.Utility
         /// </summary>
         protected override void SortAllObjects()
         {
-            switch (m_SortOrder) {
+            switch (m_SortOrder)
+            {
                 case SortOption.ByNameAscending:
                     Array.Sort(EditableObjects, NameComparison(true));
                     Array.Sort(ReadOnlyObjects, NameComparison(true));
@@ -64,7 +66,8 @@ namespace Opsive.UltimateCharacterController.Utility
         {
             var rawLineArray = line.Split(',');
 
-            if (rawLineArray.Length == 0) {
+            if (rawLineArray.Length == 0)
+            {
                 return String.Empty;
             }
 
@@ -87,8 +90,10 @@ namespace Opsive.UltimateCharacterController.Utility
         public override bool IsDataValid()
         {
             var nameHashSet = new HashSet<string>();
-            for (int i = 0; i < m_AllObjects.Length; i++) {
-                if (!nameHashSet.Add(m_AllObjects[i])) {
+            for (int i = 0; i < m_AllObjects.Length; i++)
+            {
+                if (!nameHashSet.Add(m_AllObjects[i]))
+                {
                     return false;
                 }
             }
@@ -104,10 +109,13 @@ namespace Opsive.UltimateCharacterController.Utility
         {
             duplicateNames.Clear();
             var nameHashSet = new HashSet<string>();
-            for (int i = 0; i < m_AllObjects.Length; i++) {
+            for (int i = 0; i < m_AllObjects.Length; i++)
+            {
                 var name = m_AllObjects[i];
-                if (!nameHashSet.Add(name)) {
-                    if (!duplicateNames.Contains(name)) {
+                if (!nameHashSet.Add(name))
+                {
+                    if (!duplicateNames.Contains(name))
+                    {
                         duplicateNames.Add(name);
                     }
                 }
@@ -121,13 +129,16 @@ namespace Opsive.UltimateCharacterController.Utility
         /// <returns>True if no existing objects have the same name.</returns>
         public override bool IsNameValid(string name)
         {
-            if (string.IsNullOrWhiteSpace(name) || name.Contains(',')) { // The mapping is saved with a csv so the name cannot contain a comma.
+            if (string.IsNullOrWhiteSpace(name) || name.Contains(','))
+            { // The mapping is saved with a csv so the name cannot contain a comma.
                 return false;
             }
 
             name = name.ToLowerInvariant();
-            for (int i = 0; i < m_AllObjects.Length; i++) {
-                if (m_AllObjects[i].ToLowerInvariant() == name) {
+            for (int i = 0; i < m_AllObjects.Length; i++)
+            {
+                if (m_AllObjects[i].ToLowerInvariant() == name)
+                {
                     return false;
                 }
             }
@@ -152,9 +163,10 @@ namespace Opsive.UltimateCharacterController.Utility
         /// <returns>The comparison for names.</returns>
         public Comparison<string> NameComparison(bool ascending)
         {
-            return ascending
-                ? (x, y) => String.Compare(x, y, StringComparison.OrdinalIgnoreCase)
-                : (x, y) => String.Compare(y, x, StringComparison.OrdinalIgnoreCase);
+            if (ascending)
+                return (x, y) => String.Compare(x, y, StringComparison.OrdinalIgnoreCase);
+            else
+                return (x, y) => String.Compare(y, x, StringComparison.OrdinalIgnoreCase);
         }
 
         /// <summary>
@@ -177,7 +189,8 @@ namespace Opsive.UltimateCharacterController.Utility
         {
             var name = baseName;
             var count = 0;
-            while (!IsNameValid(name)) {
+            while (!IsNameValid(name))
+            {
                 count++;
                 name = baseName + " " + count;
             }

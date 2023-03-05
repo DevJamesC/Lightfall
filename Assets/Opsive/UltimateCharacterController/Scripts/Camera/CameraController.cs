@@ -200,13 +200,13 @@ namespace Opsive.UltimateCharacterController.Camera
 
             // The items need to know if they are in a first person perspective within Awake.
             if (m_Character != null) {
-                var CharacterLocomotion = m_Character.GetCachedComponent<UltimateCharacterLocomotion>();
-                if (CharacterLocomotion == null) {
+                var characterLocomotion = m_Character.GetCachedComponent<UltimateCharacterLocomotion>();
+                if (characterLocomotion == null) {
                     Debug.LogError($"Error: the character {m_Character} doesn't have the Ultimate Character Locomotion component.");
                     m_Character = null;
                     return;
                 }
-                CharacterLocomotion.FirstPersonPerspective = m_ActiveViewType.FirstPersonPerspective;
+                characterLocomotion.FirstPersonPerspective = m_ActiveViewType.FirstPersonPerspective;
             }
         }
 

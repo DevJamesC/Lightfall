@@ -88,7 +88,7 @@ namespace Opsive.UltimateCharacterController.Character.Abilities
             UpdateAbilityAnimatorParameters();
 
             // A new value should be chosen between the min and max duration.
-            m_FloatChangeEvent = SchedulerBase.ScheduleFixed(Random.Range(m_MinDuration, m_MaxDuration), DetermineAbilityFloatDataValue);
+            m_FloatChangeEvent = Scheduler.ScheduleFixed(Random.Range(m_MinDuration, m_MaxDuration), DetermineAbilityFloatDataValue);
         }
 
         /// <summary>
@@ -115,7 +115,7 @@ namespace Opsive.UltimateCharacterController.Character.Abilities
             m_CanStartTime = -1;
 
             // DetermineAbilityFloatDataValue no longer needs to be called.
-            SchedulerBase.Cancel(m_FloatChangeEvent);
+            Scheduler.Cancel(m_FloatChangeEvent);
             m_FloatChangeEvent = null;
         }
     }

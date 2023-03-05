@@ -41,7 +41,7 @@ namespace Opsive.UltimateCharacterController.Inventory
         [System.NonSerialized] protected bool m_Initialized;
         protected GameObject m_GameObject;
         protected InventoryBase m_Inventory;
-        protected bool m_ScheduleUpdate;
+        protected bool m_ItemSetDirty;
 
         protected Dictionary<uint, int> m_CategoryIndexMap;
         protected Dictionary<IItemSetRule, Stack<ItemSet>> m_ItemSetPool;
@@ -77,7 +77,6 @@ namespace Opsive.UltimateCharacterController.Inventory
             Initialize(false);
 
             EventHandler.RegisterEvent<CharacterItem>(m_GameObject, "OnInventoryAddItem", OnAddItem);
-            //EventHandler.RegisterEvent<CharacterItem, int>(m_GameObject, "OnInventoryRemoveItem", OnRemoveItem);
             EventHandler.RegisterEvent<CharacterItem>(m_GameObject, "OnInventoryDestroyItem", OnDestroyItem);
             EventHandler.RegisterEvent(m_GameObject, "OnInventoryLoadDefaultLoadoutComplete", OnInventoryLoadDefaultLoadoutComplete);
         }
@@ -122,17 +121,17 @@ namespace Opsive.UltimateCharacterController.Inventory
         /// </summary>
         private void LateUpdate()
         {
-            if(m_ScheduleUpdate == false){ return; }
+            if (!m_ItemSetDirty) { return; }
 
             UpdateItemSets();
         }
 
         /// <summary>
-        /// Schedule the Item Sets to be updated at the end of the frame
+        /// Schedule the Item Sets to be updated at the end of the frame.
         /// </summary>
         public void ScheduleItemSetUpdate()
         {
-            m_ScheduleUpdate = true;
+            m_ItemSetDirty = true;
         }
         
         /// <summary>
@@ -385,7 +384,7 @@ namespace Opsive.UltimateCharacterController.Inventory
         {
             OnEventToUpdateItemSets();
         }
-
+        
         /// <summary>
         /// The inventory has removed the specified item.
         /// </summary>
@@ -412,8 +411,7 @@ namespace Opsive.UltimateCharacterController.Inventory
         {
             if (m_OnAddItemUpdateItemSetsOption == OnAddItemUpdateItemSetsOptions.Immediately) {
                 UpdateItemSets();
-            } else if
-                (m_OnAddItemUpdateItemSetsOption == OnAddItemUpdateItemSetsOptions.ScheduleToLateUpdate) {
+            } else if (m_OnAddItemUpdateItemSetsOption == OnAddItemUpdateItemSetsOptions.ScheduleToLateUpdate) {
                 ScheduleItemSetUpdate();
             }
         }
@@ -440,7 +438,7 @@ namespace Opsive.UltimateCharacterController.Inventory
             }
 
             var itemSetGroup = m_ItemSetGroups[groupIndex];
-            return itemSetGroup.GetItemSetIndex(characterItem.ItemIdentifier,characterItem.SlotID, checkIfValid);
+            return itemSetGroup.GetItemSetIndex(characterItem.ItemIdentifier, characterItem.SlotID, checkIfValid);
         }
 
         /// <summary>
@@ -728,7 +726,7 @@ namespace Opsive.UltimateCharacterController.Inventory
         /// </summary>
         public virtual void UpdateItemSets()
         {
-            if (m_Initialized == false) {
+            if (!m_Initialized) {
                 return;
             }
             UpdateItemSets(m_Inventory.GetAllCharacterItems());
@@ -766,7 +764,7 @@ namespace Opsive.UltimateCharacterController.Inventory
                 m_ItemSetGroups[i].UpdateItemSets(characterItemsBySlot);
             }
 
-            m_ScheduleUpdate = false;
+            m_ItemSetDirty = false;
         }
 
         /// <summary>

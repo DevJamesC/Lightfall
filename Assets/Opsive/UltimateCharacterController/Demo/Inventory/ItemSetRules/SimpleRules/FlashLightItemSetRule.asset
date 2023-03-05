@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4ec260a890112d841bfeddef6035c253, type: 3}
-  m_Name: FlashLightItemSetRule
+  m_Name: FlashlightItemSetRule
   m_EditorClassIdentifier: 
   m_DefaultItemSet:
     m_States:

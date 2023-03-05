@@ -58,10 +58,6 @@ namespace Opsive.UltimateCharacterController.UI
                 m_Slider = GetComponent<Slider>();
             }
 
-            if (m_AttributeManager != null) {
-                EventHandler.RegisterEvent<Attribute>(m_AttributeManager.gameObject, "OnAttributeUpdateValue", OnUpdateValue);
-            }
-
             // The monitor can't display if there is no slider.
             if (m_Slider != null) {
                 base.Awake();

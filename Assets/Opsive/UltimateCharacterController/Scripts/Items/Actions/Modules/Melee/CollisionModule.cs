@@ -142,8 +142,11 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Melee
         /// <param name="startUse">Is the item just starting to be used?</param>
         public void Reset(bool startUse)
         {
-            m_PreviousPosition = m_Transform.position;
-            m_PreviousRotation = m_Transform.rotation;
+            if (m_Transform != null) {
+                m_PreviousPosition = m_Transform.position;
+                m_PreviousRotation = m_Transform.rotation;
+            }
+            
             if (startUse) {
                 m_HitCollider = false;
             }
@@ -157,6 +160,11 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Melee
         {
             // The hitbox may only allow a single collision.
             if (m_SingleHit && m_HitCollider) {
+                return false;
+            }
+            
+            // If the collider transform is null it can't be used.
+            if (m_Transform == null) {
                 return false;
             }
 
@@ -225,11 +233,11 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Melee
         }
 
         /// <summary>
-        /// Register to events while the item is equipped and the module is enabled.
+        /// Updates the registered events when the item is equipped and the module is enabled.
         /// </summary>
-        protected override void RegisterEventsWhileEquippedAndEnabledInternal(bool register)
+        protected override void UpdateRegisteredEventsInternal(bool register)
         {
-            base.RegisterEventsWhileEquippedAndEnabledInternal(register);
+            base.UpdateRegisteredEventsInternal(register);
 
             if (register) {
                 m_CharacterItemAction.OnDrawGizmosHybridE += DrawGizmosHybrid;

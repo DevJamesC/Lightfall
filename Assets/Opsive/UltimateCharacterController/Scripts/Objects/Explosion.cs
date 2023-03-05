@@ -237,7 +237,7 @@ namespace Opsive.UltimateCharacterController.Objects
             // An audio clip can play when the object explodes.
             m_ExplosionAudioClipSet.PlayAudioClip(m_GameObject);
 
-            m_DestructionEvent = SchedulerBase.Schedule(m_Lifespan, Destroy);
+            m_DestructionEvent = Scheduler.Schedule(m_Lifespan, Destroy);
         }
 
         /// <summary>
@@ -258,7 +258,7 @@ namespace Opsive.UltimateCharacterController.Objects
         public void OnDisable()
         {
             if (m_DestructionEvent != null) {
-                SchedulerBase.Cancel(m_DestructionEvent);
+                Scheduler.Cancel(m_DestructionEvent);
                 m_DestructionEvent = null;
             }
         }

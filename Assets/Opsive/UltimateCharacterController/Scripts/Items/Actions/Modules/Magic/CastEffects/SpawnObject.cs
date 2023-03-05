@@ -40,27 +40,20 @@ namespace Opsive.UltimateCharacterController.Items.Actions.Modules.Magic.CastEff
         /// <param name="useDataStream">The use data stream, contains the cast data.</param>
         protected override void DoCastInternal(MagicUseDataStream useDataStream)
         {
-            Transform origin = useDataStream.CastData.CastOrigin;
-            Vector3 direction = useDataStream.CastData.Direction;
-            Vector3 targetPosition = useDataStream.CastData.CastTargetPosition;
             m_CastID = (uint)useDataStream.CastData.CastID;
             
             if (m_SpawnedObject != null) {
                 return;
             }
 
-#if ULTIMATE_CHARACTER_CONTROLLER_VERSION_2_MULTIPLAYER
-            // The server will cast the object.
-            if (m_MagicItem.NetworkInfo != null && m_MagicItem.NetworkInfo.IsLocalPlayer()) {
-                m_MagicItem.NetworkCharacter.MagicCast(m_MagicItem, m_Index, m_CastID, direction, targetPosition);
-            }
-#endif
-
             if (m_Object == null) {
                 Debug.LogError("Error: An Object must be specified.", MagicAction);
                 return;
             }
 
+            var origin = useDataStream.CastData.CastOrigin;
+            var direction = useDataStream.CastData.Direction;
+            var targetPosition = useDataStream.CastData.CastTargetPosition;
             var position = MathUtility.TransformPoint(origin.position, CharacterTransform.rotation, m_PositionOffset);
             if (targetPosition != position) {
                 direction = (targetPosition - position).normalized;
