@@ -46,7 +46,7 @@ namespace MBS.Lightfall
                 {
                     if (throwableAction.IsItemInUse())
                         return true;
-                    if (!throwableAction.WasThrown)
+                    if (Time.time - throwableAction.LastUseTime < .05f)
                         return true;
 
                     return false;
@@ -224,11 +224,13 @@ namespace MBS.Lightfall
         private MBSExplosion explosion;
 
         private bool delegatesAppliedFlag;
+        private bool secondaryDelegatesAppliedFlag;
         private List<ImpactAction> impactActionsFromUpgrades;
 
         private void Awake()
         {
             delegatesAppliedFlag = false;
+            secondaryDelegatesAppliedFlag = false;
         }
         public void Initalize(AbilityWrapperBase abilityWrapper)
         {
@@ -280,11 +282,15 @@ namespace MBS.Lightfall
             extraDamageFields.StaggerForce = sourceAbilityWrapper.GetStatChange(StatName.AbilityForce, extraDamageFields.StaggerForce, true);
             extraDamageFields.ShieldEffectiveness = sourceAbilityWrapper.GetStatChange(StatName.AbilityShieldEffectiveness, extraDamageFields.ShieldEffectiveness, false);
             extraDamageFields.ArmorEffectiveness = sourceAbilityWrapper.GetStatChange(StatName.AbilityArmorEffectiveness, extraDamageFields.ArmorEffectiveness, false);
-            //add actions from upgrades
-            List<ImpactAction> newImpactActions = new List<ImpactAction>();
-            newImpactActions.AddRange(explosion.ImpactActionGroup.ImpactActions);
-            newImpactActions.AddRange(impactActionsFromUpgrades);
-            explosion.ImpactActionGroup.ImpactActions = newImpactActions.ToArray();
+            //add actions from upgrades 
+            if (!secondaryDelegatesAppliedFlag)
+            {
+                List<ImpactAction> newImpactActions = new List<ImpactAction>();
+                newImpactActions.AddRange(explosion.ImpactActionGroup.ImpactActions);
+                newImpactActions.AddRange(impactActionsFromUpgrades);
+                explosion.ImpactActionGroup.ImpactActions = newImpactActions.ToArray();
+                secondaryDelegatesAppliedFlag = true;
+            }
 
             return true;
         }
@@ -297,6 +303,6 @@ namespace MBS.Lightfall
             impactActionsFromUpgrades.AddRange(actions);
         }
 
-        
+
     }
 }

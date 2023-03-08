@@ -94,14 +94,14 @@ namespace MBS.AbilitySystem
             subclassName = this.GetType().ToString();
         }
 
-        protected void OnEffectFinishedInvoke()
+        protected virtual void OnEffectFinishedInvoke()
         {
             OnEffectFinished.Invoke();
         }
 
-        public void CancelEffect()
+        public virtual void CancelEffect()
         {
-            OnEffectFinished.Invoke();
+            //OnEffectFinished.Invoke();
         }
 
         public virtual List<AbilityUIStat> GetStats()

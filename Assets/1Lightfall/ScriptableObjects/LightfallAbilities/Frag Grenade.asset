@@ -70,7 +70,7 @@ MonoBehaviour:
       Effects:
       - rid: 3613693957256511495
       - rid: 3613694009248317442
-  abilityType: 0
+  abilityType: 1
   timeToUse: 0
   onActivateFX: []
   abilityConditions:
@@ -238,6 +238,7 @@ MonoBehaviour:
             ImpactForceFrames: 0
             ImpactRadius: 0
             UserData:
+              _baseDamage: 10
               _weakpointMultiplier: 2
               _sheildEffectiveness: 1
               _armorEffectiveness: 1

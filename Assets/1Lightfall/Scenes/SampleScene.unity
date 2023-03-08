@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.18028352, g: 0.22571376, b: 0.30692244, a: 1}
+  m_IndirectSpecularColor: {r: 0.18028378, g: 0.22571412, b: 0.30692285, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -1316,7 +1316,7 @@ MonoBehaviour:
       Data: 
     - Name: 
       Entry: 12
-      Data: 2
+      Data: 3
     - Name: 
       Entry: 7
       Data: 
@@ -1374,6 +1374,54 @@ MonoBehaviour:
     - Name: $v
       Entry: 7
       Data: 3|MBS.AbilitySystem.AbilityUpgradeProgressData, Assembly-CSharp
+    - Name: initalUpgrade
+      Entry: 1
+      Data: ' Unlocked [] [] [] [] [] '
+    - Name: AbilityUnlocked
+      Entry: 5
+      Data: true
+    - Name: Upgrade1
+      Entry: 5
+      Data: false
+    - Name: Upgrade2
+      Entry: 5
+      Data: false
+    - Name: Upgrade3a
+      Entry: 5
+      Data: false
+    - Name: Upgrade3b
+      Entry: 5
+      Data: false
+    - Name: Upgrade4a
+      Entry: 5
+      Data: false
+    - Name: Upgrade4b
+      Entry: 5
+      Data: false
+    - Name: Upgrade5a
+      Entry: 5
+      Data: false
+    - Name: Upgrade5b
+      Entry: 5
+      Data: false
+    - Name: targetUpgrade
+      Entry: 3
+      Data: 0
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 7
+      Data: 
+    - Name: $k
+      Entry: 1
+      Data: Combat Stim ExampleTristanYorboro(Clone)10
+    - Name: $v
+      Entry: 7
+      Data: 4|MBS.AbilitySystem.AbilityUpgradeProgressData, Assembly-CSharp
     - Name: initalUpgrade
       Entry: 1
       Data: ' Unlocked [] [] [] [] [] '
@@ -2246,6 +2294,7 @@ Animator:
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!114 &954429860
 MonoBehaviour:
   m_ObjectHideFlags: 0

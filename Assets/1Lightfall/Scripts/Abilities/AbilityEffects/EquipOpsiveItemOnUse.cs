@@ -73,7 +73,7 @@ namespace MBS.AbilitySystem
             waitingForEquipToComplete = false;
             unequipping = false;
             throwableAction = null;
-
+            abilityWrapper.IsEquippable = true;
 
 
             abilityWrapper.OnCanceled += UnEquipAbility;
@@ -81,7 +81,7 @@ namespace MBS.AbilitySystem
 
             inventory.OnEquipItemEvent.AddListener((item, integer) => { OnEquipComplete(abilityWrapper); });
             inventory.OnUnequipItemEvent.AddListener((item, integer) => { CheckIfSwappedAwayFromAbility(item, abilityWrapper); });
-            removeItemsAction += () => { if (equippedItem != null) equippedItem.Drop(10000, true, true); equippedItem = null; unequipping = false; };
+            removeItemsAction += () => { if (equippedItem != null) { equippedItem.Drop(10000, true, true); } equippedItem = null; unequipping = false; OnEffectFinishedInvoke();};
 
         }
 
@@ -92,6 +92,9 @@ namespace MBS.AbilitySystem
 
             if (unequipping && equippedItem != null)
                 return;
+            if (abilityWrapper.AbilityState == AbilityState.Deactivating)
+                return;
+
 
 
             if (!previouslyEquippedItemIndex[abilityWrapper.gameObject].abilityInUse)
@@ -147,7 +150,7 @@ namespace MBS.AbilitySystem
                         abilityWrapper.ChangeChargesRemaining(-1);
                     }
                     UnEquipAbility(abilityWrapper);
-                    OnEffectFinishedInvoke();
+
                 }
             };
             if (UseChargeEveryUse)
@@ -256,18 +259,24 @@ namespace MBS.AbilitySystem
             unequipping = true;
             waitingForEquipToComplete = false;
 
+            float duration = .5f;
             if (equippedItem != null)
             {
                 characterAbilityEquipUnequip.StartEquipUnequip(previouslyEquippedItemIndex[abilityWrapperBase.gameObject].index, true);
+                duration += equippedItem.UnequipEvent.Duration;
                 previouslyEquippedItemIndex[abilityWrapperBase.gameObject].abilityInUse = false;
-                Scheduler.Schedule(equippedItem.UnequipEvent.Duration + .5f, removeItemsAction);
-
+                Scheduler.Schedule(duration + .5f, removeItemsAction);
             }
+            Scheduler.Schedule(duration + .25f, OnEffectFinishedInvoke);
 
             abilityItemHandler = null;
             previouslyEquippedItemIndex[abilityWrapperBase.gameObject].index = 0;
 
+        }
 
+        protected override void OnEffectFinishedInvoke()
+        {
+            base.OnEffectFinishedInvoke();
         }
 
         private class LastEquippedData

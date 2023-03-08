@@ -57,6 +57,9 @@ namespace MBS.AbilitySystem
         public int BaseMaxCharges { get; set; }
         public int ChargesRemaining { get; protected set; }
 
+        public bool IsChargeBased { get { return BaseMaxCharges > 0; } }
+        public bool IsEquippable; //is false by default. Set to true automatically by the EquipOnUseAbilityEffect
+
         public bool CanBeCanceled
         {
             get
@@ -99,7 +102,12 @@ namespace MBS.AbilitySystem
 
             newEffect.Init(this);
             OnUpdate += newEffect.OnUpdate;
-            newEffect.OnEffectFinished += () => { effectsWaitingToFinish--; };
+            newEffect.OnEffectFinished += DecrimentEffectsWaitingToFinish;
+        }
+
+        private void DecrimentEffectsWaitingToFinish()
+        {
+            effectsWaitingToFinish--;
         }
 
         public bool CancelableOnOtherAbilityCast { get; set; } //Set by EquipOnUseAbilityEffect and read by AbilityLoadout.
@@ -131,6 +139,7 @@ namespace MBS.AbilitySystem
             effects = new List<AbilityEffectBase>();
             fX = new List<AbilityFXBase>();
             CancelableOnOtherAbilityCast = false;
+            IsEquippable = false;
 
             //Get shallow copy of upgrades from SO
             foreach (var item in abilityBase.GetActiveUpgrades(upgradeData))
@@ -221,6 +230,9 @@ namespace MBS.AbilitySystem
 
         private void Use()
         {
+            if (AbilityState == AbilityState.Deactivating)
+                return;
+
             effectsWaitingToFinish = effects.Count;
 
 
@@ -292,8 +304,9 @@ namespace MBS.AbilitySystem
 
             OnUpdate.Invoke(this);
 
-            if ((AbilityState == AbilityState.InUse || AbilityState == AbilityState.Deactivating) && effectsWaitingToFinish == 0)
+            if ((AbilityState == AbilityState.InUse || AbilityState == AbilityState.Deactivating) && effectsWaitingToFinish <= 0)
                 FinishAbility();
+
         }
 
         public void DealDamage(IDamageable damageableHit, Vector3 hitPoint, Collider colliderHit = null)
@@ -429,7 +442,10 @@ namespace MBS.AbilitySystem
                 effect.CancelEffect();
             }
 
-            AbilityState = AbilityState.Inactive;
+            if (AbilityBase.AbilityType == AbilityType.OnOffActivatable)
+                AbilityState = AbilityState.Deactivating;
+            else
+                AbilityState = AbilityState.Inactive;
 
             foreach (var fx in fX)
             {
