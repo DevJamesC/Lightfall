@@ -899,17 +899,6 @@
                 },
                 {
                     "name": "",
-                    "id": "79f5173a-0664-4f29-a170-e12f2780a58a",
-                    "path": "<Keyboard>/leftCtrl",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "Keyboard",
-                    "action": "Fire1",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
                     "id": "5e627bca-3f7b-4a32-a486-ad2c5df04ef2",
                     "path": "<Gamepad>/rightTrigger",
                     "interactions": "",
