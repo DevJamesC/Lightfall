@@ -905,8 +905,8 @@ MonoBehaviour:
   - rid: 9075339486136107010
   - rid: 9075339486136107011
   - rid: 9075339486136107012
-  - rid: 9075339486136107013
   - rid: 9075339486136107025
+  - rid: 9075339486136107013
   - rid: 9075339486136107014
   - rid: 9075339486136107015
   m_ItemAbilities: []
@@ -1464,7 +1464,7 @@ MonoBehaviour:
   gravity: {x: NaN, y: NaN, z: NaN}
   groundMask:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 1
   centerOffsetCompatibility: NaN
   repathRateCompatibility: NaN
   canSearchCompability: 0
