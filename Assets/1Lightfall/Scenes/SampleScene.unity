@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.18028352, g: 0.22571376, b: 0.30692244, a: 1}
+  m_IndirectSpecularColor: {r: 0.18028378, g: 0.22571412, b: 0.30692285, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -2422,6 +2422,7 @@ Animator:
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!114 &954429860
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3724,7 +3725,8 @@ PrefabInstance:
         type: 3}
       propertyPath: m_ItemSetGroups.Array.data[0].m_StartingItemSetRules.Array.data[0]
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 11400000, guid: 8aaef3c8dd8ebdb4ebb209a302c5d027,
+        type: 2}
     - target: {fileID: 3209694912144283789, guid: 0001f989a2cffd747b92bf100d8c444d,
         type: 3}
       propertyPath: m_RootOrder
