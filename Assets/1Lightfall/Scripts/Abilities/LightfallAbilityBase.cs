@@ -4,6 +4,7 @@ using MBS.StatsAndTags;
 using Opsive.Shared.Game;
 using Opsive.Shared.Input;
 using Opsive.UltimateCharacterController.Character.Abilities;
+using Sirenix.OdinInspector;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -20,8 +21,8 @@ namespace MBS.Lightfall
         public AbilityUpgradeProgressData UpgradeData { get; protected set; }
         [SerializeField] protected SharedResourceType sharedResource;
         public UIDisplayLocationType UIDisplayLocation;
-        [HideInInspector] public float sharedRechargeRemaining;
-        [HideInInspector] public float sharedRechargeLastMax;
+        [ReadOnly] public float sharedRechargeRemaining;
+        [ReadOnly] public float sharedRechargeLastMax;
         [HideInInspector] public int sharedChargeRemaining;
         [HideInInspector] public int sharedChargeMax;
         [HideInInspector] public int castWhileUsingCount;

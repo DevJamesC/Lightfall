@@ -18,7 +18,7 @@ ModelImporter:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: PolygonTown_Texture_01_A
-    second: {fileID: 2800000, guid: a9ade0f78aa3ba24db3d5814c0cac545, type: 3}
+    second: {fileID: 2800000, guid: 4ad7c0c34ee490c4a833cf42d96c2611, type: 3}
   materials:
     materialImportMode: 2
     materialName: 0

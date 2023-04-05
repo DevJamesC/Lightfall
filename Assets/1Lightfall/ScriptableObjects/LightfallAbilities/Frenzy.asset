@@ -18,9 +18,10 @@ MonoBehaviour:
   possibleUpgrades:
     Upgrade1:
       Icon: {fileID: 0}
-      Title: 
-      Description: 
-      Effects: []
+      Title: Movement Speed
+      Description: +50% move speed
+      Effects:
+      - rid: 4460207505750097928
     Upgrade2:
       Icon: {fileID: 0}
       Title: 
@@ -59,26 +60,26 @@ MonoBehaviour:
   abilityType: 0
   timeToUse: 0
   onActivateFX:
-  - rid: 3953558253373227011
+  - rid: 4460207505750097927
   abilityConditions:
-  - rid: 3953558253373227008
+  - rid: 4460207505750097924
   abilityEffects:
-  - rid: 3953558253373227009
-  - rid: 3953558253373227010
+  - rid: 4460207505750097925
+  - rid: 4460207505750097926
   references:
     version: 2
     RefIds:
-    - rid: 3953558253373227008
+    - rid: 4460207505750097924
       type: {class: RechargeCondition, ns: MBS.AbilitySystem, asm: Assembly-CSharp}
       data:
         subclassName: MBS.AbilitySystem.RechargeCondition
-    - rid: 3953558253373227009
+    - rid: 4460207505750097925
       type: {class: HasRechargeAbilityEffect, ns: MBS.AbilitySystem, asm: Assembly-CSharp}
       data:
         subclassName: MBS.AbilitySystem.HasRechargeAbilityEffect
         crowdControlType: 0
         recharge: 4
-    - rid: 3953558253373227010
+    - rid: 4460207505750097926
       type: {class: ChangeStatsAbilityEffect, ns: MBS.AbilitySystem, asm: Assembly-CSharp}
       data:
         subclassName: MBS.AbilitySystem.ChangeStatsAbilityEffect
@@ -86,19 +87,15 @@ MonoBehaviour:
         onOffAbilityEffect: 0
         duration: 3
         statsToChange:
-        - StatName: 12
+        - StatName: 19
           value: 50
           flatValueChange: 0
           divideFlatValueBy100: 0
-        - StatName: 19
-          value: 20
-          flatValueChange: 0
-          divideFlatValueBy100: 0
-    - rid: 3953558253373227011
+    - rid: 4460207505750097927
       type: {class: SetScreenOverlayFX, ns: MBS.AbilitySystem, asm: Assembly-CSharp}
       data:
         overlay:
-          name: Frenzy
+          name: FrenzyOverlay
           m_CanActivate: 1
           m_FadeIn:
             serializedVersion: 2
@@ -158,5 +155,13 @@ MonoBehaviour:
             m_PreInfinity: 2
             m_PostInfinity: 2
             m_RotationOrder: 4
-          m_Color: {r: 0.9811321, g: 0.2945119, b: 0, a: 1}
+          m_Color: {r: 0.8301887, g: 0.4164961, b: 0, a: 0.7058824}
           m_Sprite: {fileID: 21300000, guid: c26da264a9dab85409268be202cf40ca, type: 3}
+    - rid: 4460207505750097928
+      type: {class: StatAbilityUpgrade, ns: MBS.AbilitySystem, asm: Assembly-CSharp}
+      data:
+        statsToChange:
+        - StatName: 19
+          value: 50
+          flatValueChange: 0
+          divideFlatValueBy100: 0
