@@ -813,7 +813,7 @@ MonoBehaviour:
         m_FieldOfViewDamping: 0.2
         m_LookDirectionDistance: 100
         m_ForwardAxis: {x: 0, y: 0, z: 1}
-        m_LookOffset: {x: 0.5, y: 0, z: -2.5}
+        m_LookOffset: {x: 0.75, y: 0, z: -1.25}
         m_LookOffsetSmoothing: 0.05
         m_CollisionRadius: 0.05
         m_CollisionAnchorOffset: {x: 0, y: 0, z: 0}

@@ -13,6 +13,38 @@ MonoBehaviour:
   m_Name: Lumen
   m_EditorClassIdentifier: 
   m_ID: 1783392992
+--- !u!114 &-4302985002410760602
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e74c32144565264eb86dc7514aca7f7, type: 3}
+  m_Name: RyoshiCrossbow
+  m_EditorClassIdentifier: 
+  m_ID: 4
+  m_CategoryIDs: 1419f014
+  m_Capacity: 2147483647
+  m_Prefabs: []
+--- !u!114 &-3201653460577364150
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e74c32144565264eb86dc7514aca7f7, type: 3}
+  m_Name: FangHandgun
+  m_EditorClassIdentifier: 
+  m_ID: 5
+  m_CategoryIDs: 1419f014
+  m_Capacity: 2147483647
+  m_Prefabs: []
 --- !u!114 &-1282431027128274836
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -48,6 +80,8 @@ MonoBehaviour:
   - {fileID: 7723788363759386325}
   - {fileID: 6089150081732252308}
   - {fileID: 5953727020362568442}
+  - {fileID: -4302985002410760602}
+  - {fileID: -3201653460577364150}
 --- !u!114 &1980276922498775102
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -84,13 +118,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4e74c32144565264eb86dc7514aca7f7, type: 3}
-  m_Name: DefenderRifle
+  m_Name: M12DefenderRifle
   m_EditorClassIdentifier: 
   m_ID: 0
   m_CategoryIDs: 1419f014
   m_Capacity: 1
   m_Prefabs:
-  - {fileID: 857006436034540796, guid: 0d099cf61852530489439d9d3cf096d8, type: 3}
+  - {fileID: 9213801913471332184, guid: 2053434787d8b384e969ae385b8039dd, type: 3}
 --- !u!114 &5953727020362568442
 MonoBehaviour:
   m_ObjectHideFlags: 0
