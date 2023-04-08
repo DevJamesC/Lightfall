@@ -28,7 +28,8 @@ MonoBehaviour:
   m_ID: 4
   m_CategoryIDs: 1419f014
   m_Capacity: 2147483647
-  m_Prefabs: []
+  m_Prefabs:
+  - {fileID: 6133442200536476298, guid: 7fec8bc703a4ac248b8f298c78130c4e, type: 3}
 --- !u!114 &-3201653460577364150
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -44,7 +45,8 @@ MonoBehaviour:
   m_ID: 5
   m_CategoryIDs: 1419f014
   m_Capacity: 2147483647
-  m_Prefabs: []
+  m_Prefabs:
+  - {fileID: 3654515865846778433, guid: 03a7e15979b668e47813af9b3a76710c, type: 3}
 --- !u!114 &-1282431027128274836
 MonoBehaviour:
   m_ObjectHideFlags: 0
