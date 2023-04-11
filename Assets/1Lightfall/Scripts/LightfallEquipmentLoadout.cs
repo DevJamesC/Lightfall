@@ -10,9 +10,12 @@ namespace MBS.Lightfall
 {
     public class LightfallEquipmentLoadout : MonoBehaviour
     {
-        private ItemType primaryEquipment;
-        private ItemType secondaryEquipment;
-        private ItemType armor;
+        [SerializeField] private ItemDetailsScriptableObject startingPrimaryItem;
+        [SerializeField] private ItemDetailsScriptableObject startingSecondaryItem;
+
+        private ItemDetailsScriptableObject primaryEquipment;
+        private ItemDetailsScriptableObject secondaryEquipment;
+        private ItemDetailsScriptableObject armor;
 
         private Inventory inventory;
         private ItemSetManager itemSetManager;
@@ -21,15 +24,15 @@ namespace MBS.Lightfall
         private CharacterItem secondaryEquipmentItem;
         private CharacterItem armorItem;
 
-        public ItemType PrimaryEquipment
+        public ItemDetailsScriptableObject PrimaryEquipment
         {
             get { return primaryEquipment; }
         }
-        public ItemType SecondaryEquipment
+        public ItemDetailsScriptableObject SecondaryEquipment
         {
             get { return secondaryEquipment; }
         }
-        public ItemType Armor { get { return armor; } }
+        public ItemDetailsScriptableObject Armor { get { return armor; } }
 
 
 
@@ -40,10 +43,41 @@ namespace MBS.Lightfall
             itemSetManager = GetComponent<ItemSetManager>();
         }
 
-        public void ChangeLoadoutEquipment(ItemType newItemType, LoadoutEquipmentType loadoutEquipmentType)
+        private void Start()
         {
+            if (startingPrimaryItem != null)
+                ChangeLoadoutEquipment(startingPrimaryItem, LoadoutEquipmentType.Primary);
+            if (startingSecondaryItem != null)
+                ChangeLoadoutEquipment(startingSecondaryItem, LoadoutEquipmentType.Secondary);
+
+        }
+
+        public void ChangeLoadoutEquipment(ItemDetailsScriptableObject newItemType, LoadoutEquipmentType loadoutEquipmentType)
+        {
+            //if the item is empty, clear the slot and return
             if (loadoutEquipmentType == LoadoutEquipmentType.Primary || loadoutEquipmentType == LoadoutEquipmentType.Secondary)
             {
+                if (newItemType.ItemType == null)
+                {
+
+                    if (loadoutEquipmentType == LoadoutEquipmentType.Primary)
+                    {
+                        if (primaryEquipmentItem != null)
+                            inventory.RemoveCharacterItem(primaryEquipmentItem, true);
+                        primaryEquipment = null;
+                    }
+
+                    if (loadoutEquipmentType == LoadoutEquipmentType.Secondary)
+                    {
+                        if (secondaryEquipmentItem != null)
+                            inventory.RemoveCharacterItem(secondaryEquipmentItem, true);
+                        secondaryEquipment = null;
+                    }
+
+                    return;
+                }
+
+
                 //check that this equipment is not in our secondary or primary slot
                 if (newItemType == secondaryEquipment)
                     return;
@@ -60,8 +94,17 @@ namespace MBS.Lightfall
                 //add new equipment to inventory
                 if (newItemType != null)
                 {
-                    inventory.AddItemIdentifierAmount(newItemType, 1);
+                    inventory.AddItemIdentifierAmount(newItemType.ItemType, 1);
+
+                    if (loadoutEquipmentType == LoadoutEquipmentType.Primary)
+                        primaryEquipmentItem = inventory.GetCharacterItem(newItemType.ItemType);
+                    if (loadoutEquipmentType == LoadoutEquipmentType.Secondary)
+                        secondaryEquipmentItem = inventory.GetCharacterItem(newItemType.ItemType);
                 }
+                if (loadoutEquipmentType == LoadoutEquipmentType.Primary)
+                    primaryEquipment = newItemType;
+                if (loadoutEquipmentType == LoadoutEquipmentType.Secondary)
+                    secondaryEquipment = newItemType;
             }
             else if (loadoutEquipmentType != LoadoutEquipmentType.Armor)
             {

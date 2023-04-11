@@ -8,18 +8,18 @@ namespace MBS.Lightfall
 {
     public class OwnedItemsManager : SingletonMonobehavior<OwnedItemsManager>
     {
-
-        [SerializeField] private List<ItemType> startingItems;
-        private List<ItemType> ownedItems;
+        [SerializeField,Tooltip("Empty Item should not an item type")] private ItemDetailsScriptableObject EmptyItem;
+        [SerializeField] private List<ItemDetailsScriptableObject> startingItems;
+        private List<ItemDetailsScriptableObject> ownedItems;
 
         protected override void Awake()
         {
             base.Awake();
 
             if (startingItems == null)
-                startingItems = new List<ItemType>();
+                startingItems = new List<ItemDetailsScriptableObject>();
 
-            ownedItems = new List<ItemType>();
+            ownedItems = new List<ItemDetailsScriptableObject>();
         }
 
         // Start is called before the first frame update
@@ -32,12 +32,16 @@ namespace MBS.Lightfall
             }
         }
 
-        public List<ItemType> GetItemsByCategory(IItemCategoryIdentifier categoryID)
+        public List<ItemDetailsScriptableObject> GetItemsByCategory(IItemCategoryIdentifier categoryID, bool includeEmpty)
         {
-            List<ItemType> returnVal = new List<ItemType>();
+            List<ItemDetailsScriptableObject> returnVal = new List<ItemDetailsScriptableObject>();
+
+            if (includeEmpty)
+                returnVal.Add(EmptyItem);
+
             foreach (var item in ownedItems)
             {
-                if (item.GetItemCategory().Equals(categoryID))
+                if (item.ItemType.GetItemCategory().Equals(categoryID))
                     returnVal.Add(item);
             }
 
