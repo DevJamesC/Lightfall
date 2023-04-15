@@ -19,6 +19,6 @@ public class StartWave : MonoBehaviour, IInteractableTarget, IInteractableMessag
 
     public void Interact(GameObject character)
     {
-        EventHandler.ExecuteEvent(WaveManager.Instance.gameObject, "OnWaveStart");
+        EventHandler.ExecuteEvent("OnWavePreStart");
     }
 }

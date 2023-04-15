@@ -2,6 +2,7 @@ using Opsive.Shared.Events;
 using Opsive.UltimateCharacterController;
 using Opsive.UltimateCharacterController.Game;
 using Sirenix.OdinInspector;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -10,40 +11,58 @@ namespace MBS.Lightfall
 {
     public class WaveManager : SingletonMonobehavior<WaveManager>
     {
-
-        [SerializeField] private GameObject enemyToSpawn;
-        [SerializeField] private GameObject enemyToSpawn2;
+        [SerializeField] private List<EnemyWave> enemyWaves;
         [SerializeField] private SpawnPoint enemySpawnpoint;
         [SerializeField, ReadOnly] private int currentWave;
-        [SerializeField, ReadOnly] private bool isWaveActive;
+        [SerializeField, ReadOnly] private bool waveIsActive;
         private int enemiesRemaining;
 
+        public bool WaveIsActive { get { return waveIsActive; } }
 
 
         protected override void Awake()
         {
             base.Awake();
 
-            isWaveActive = false;
+            waveIsActive = false;
             enemiesRemaining = 0;
             currentWave = 0;
         }
 
         private void OnWaveStart()
         {
-            if (isWaveActive)
+            if (waveIsActive)
                 return;
+            if (currentWave >= enemyWaves.Count)
+            {
+                Debug.Log($"tried to start wave {currentWave + 1}, but there are only {enemyWaves.Count} enemy waves.");
+                return;
+            }
+
+
+            //spawn enemy
+            waveIsActive = true;
+            foreach (var enemy in enemyWaves[currentWave].EnemyPrefabs)
+            {
+                SpawnEnemy(enemy, enemySpawnpoint);
+            }
 
             currentWave++;
-            //spawn enemy
-            isWaveActive = true;
-            SpawnEnemy(enemyToSpawn, enemySpawnpoint);
-            SpawnEnemy(enemyToSpawn2, enemySpawnpoint);
         }
 
         private void OnWaveEnd(int currentWave)
         {
-            isWaveActive = false;
+            waveIsActive = false;
+
+            if (currentWave >= enemyWaves.Count)
+            {
+                Opsive.Shared.Events.EventHandler.ExecuteEvent("OnAllEnemyWavesComplete");
+            }
+        }
+
+        private void OnAllWavesFinished()
+        {
+            Debug.Log("all waves finished. remove this once a proper endscreen is listening to event OnAllEnemyWavesComplete");
         }
 
         private void OnDeath(Vector3 position, Vector3 force, GameObject attacker)
@@ -54,7 +73,7 @@ namespace MBS.Lightfall
                 return;
             }
 
-            if (!isWaveActive)
+            if (!waveIsActive)
                 return;
 
             if (enemiesRemaining > 0)
@@ -64,7 +83,7 @@ namespace MBS.Lightfall
 
             //if all enemies are dead, trigger OnWaveEnd
             if (enemiesRemaining <= 0)
-                EventHandler.ExecuteEvent(gameObject, "OnWaveEnd", currentWave);
+                Opsive.Shared.Events.EventHandler.ExecuteEvent<int>("OnWaveEnd", currentWave);
         }
 
         private void SpawnEnemy(GameObject enemyPrefab, SpawnPoint spawnpoint)
@@ -87,7 +106,7 @@ namespace MBS.Lightfall
             {
                 GameObject spawnedObject = Instantiate(enemyPrefab, position, rotation);
                 //register to the enemy onDeath event
-                EventHandler.RegisterEvent<Vector3, Vector3, GameObject>(spawnedObject, "OnDeath", OnDeath);
+                Opsive.Shared.Events.EventHandler.RegisterEvent<Vector3, Vector3, GameObject>(spawnedObject, "OnDeath", OnDeath);
                 enemiesRemaining++;
             }
             else
@@ -100,14 +119,23 @@ namespace MBS.Lightfall
 
         private void OnEnable()
         {
-            EventHandler.RegisterEvent(gameObject, "OnWaveStart", OnWaveStart);
-            EventHandler.RegisterEvent<int>(gameObject, "OnWaveEnd", OnWaveEnd);
+            Opsive.Shared.Events.EventHandler.RegisterEvent("OnWaveStart", OnWaveStart);
+            Opsive.Shared.Events.EventHandler.RegisterEvent<int>("OnWaveEnd", OnWaveEnd);
+            Opsive.Shared.Events.EventHandler.RegisterEvent("OnAllEnemyWavesComplete", OnAllWavesFinished);
         }
 
         private void OnDisable()
         {
-            EventHandler.UnregisterEvent(gameObject, "OnWaveStart", OnWaveStart);
-            EventHandler.UnregisterEvent<int>(gameObject, "OnWaveEnd", OnWaveEnd);
+            Opsive.Shared.Events.EventHandler.UnregisterEvent("OnWaveStart", OnWaveStart);
+            Opsive.Shared.Events.EventHandler.UnregisterEvent<int>("OnWaveEnd", OnWaveEnd);
+            Opsive.Shared.Events.EventHandler.UnregisterEvent("OnAllEnemyWavesComplete", OnAllWavesFinished);
+
         }
+    }
+
+    [Serializable]
+    public class EnemyWave
+    {
+        public List<GameObject> EnemyPrefabs;
     }
 }

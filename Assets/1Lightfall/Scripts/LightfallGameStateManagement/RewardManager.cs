@@ -21,12 +21,12 @@ namespace MBS.Lightfall
 
         private void OnEnable()
         {
-            Opsive.Shared.Events.EventHandler.RegisterEvent<int>(WaveManager.Instance.gameObject, "OnWaveEnd", OnWaveEnd);
+            Opsive.Shared.Events.EventHandler.RegisterEvent<int>("OnWaveEnd", OnWaveEnd);
         }
 
         private void OnDisable()
         {
-            Opsive.Shared.Events.EventHandler.UnregisterEvent<int>(WaveManager.Instance.gameObject, "OnWaveEnd", OnWaveEnd);
+            Opsive.Shared.Events.EventHandler.UnregisterEvent<int>("OnWaveEnd", OnWaveEnd);
         }
 
         private void AwardAbilityPoints(int value)
