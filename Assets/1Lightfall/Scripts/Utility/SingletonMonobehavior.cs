@@ -48,7 +48,22 @@ namespace MBS.Lightfall
                 return;
             }
 
+            if (HasInstance)
+                Destroy(_instance.gameObject);
+
             _instance = this as T;
+
+            if (gameObject.name.Contains("_AutoCreated"))
+                OnAutoCreate();
+
+        }
+
+        /// <summary>
+        /// Use this method to initalize some default values if an object is lazily instanciated
+        /// </summary>
+        protected virtual void OnAutoCreate()
+        {
+
         }
     }
 
