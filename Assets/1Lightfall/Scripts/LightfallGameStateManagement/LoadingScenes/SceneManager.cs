@@ -37,16 +37,27 @@ namespace MBS.Lightfall
         public void LoadScene(string sceneName)
         {
             //load the loading scene
-            StartCoroutine(LoadLoadingScene(loadingSceneName, sceneName));
+            StartCoroutine(LoadLoadingScene(loadingSceneName, sceneName, true));
 
         }
 
-        IEnumerator LoadLoadingScene(string loadingSceneName, string queriedSceneName)
+        public void LoadSceneNoContinueButton(string sceneName)
+        {
+            StartCoroutine(LoadLoadingScene(loadingSceneName, sceneName, false));
+
+        }
+
+        public void LoadSceneNoLoadingScene(string sceneName)
+        {
+            StartCoroutine(LoadSceneNoLoading(sceneName));
+        }
+
+        IEnumerator LoadLoadingScene(string loadingSceneName, string queriedSceneName, bool holdWhenFinished)
         {
 
 
             AsyncOperation operation = UnityEngine.SceneManagement.SceneManager.LoadSceneAsync(loadingSceneName);
-            operation.completed += (AsyncOp) => { StartCoroutine(loadSceneAsync(queriedSceneName, LoadingScene.Instance.progressBar, 2f)); };
+            operation.completed += (AsyncOp) => { StartCoroutine(loadSceneAsync(queriedSceneName, LoadingScene.Instance.progressBar, 1f, holdWhenFinished)); };
             operation.allowSceneActivation = false;
             StartCoroutine(SceneTransition(operation));
 
@@ -58,12 +69,14 @@ namespace MBS.Lightfall
 
         }
 
-        IEnumerator loadSceneAsync(string sceneName, Michsky.MUIP.ProgressBar progressBar, float waitSeconds)
+        IEnumerator loadSceneAsync(string sceneName, Michsky.MUIP.ProgressBar progressBar, float waitSeconds, bool holdWhenLoadingFinished)
         {
             yield return new WaitForSeconds(waitSeconds);
             AsyncOperation operation = UnityEngine.SceneManagement.SceneManager.LoadSceneAsync(sceneName);
             ButtonManager continueButton = LoadingScene.Instance.continueButton;
-            continueButton.onClick.AddListener(() => { StartCoroutine(SceneTransition(operation)); });
+            if (holdWhenLoadingFinished)
+                continueButton.onClick.AddListener(() => { StartCoroutine(SceneTransition(operation)); });
+
 
             operation.allowSceneActivation = false;
             float interpolatedValue = 0;
@@ -78,12 +91,20 @@ namespace MBS.Lightfall
 
                 if (interpolatedValue >= 100)
                 {
-                    continueButton.gameObject.SetActive(true);
-                    continueButton.UpdateUI();
+                    if (!holdWhenLoadingFinished)
+                        StartCoroutine(SceneTransition(operation));
+                    else
+                    {
+                        continueButton.gameObject.SetActive(true);
+                        continueButton.UpdateUI();
+                    }
                 }
 
                 yield return null;
             }
+
+
+
 
         }
 
@@ -96,11 +117,25 @@ namespace MBS.Lightfall
             }
             SceneTransitionFader.CrossFadeAlpha(1, .5f, true);
             yield return new WaitForSeconds(.5f);
+
+            while (loadedSceneOperation.progress < .9f)
+            {
+                yield return null;
+            }
+
             loadedSceneOperation.allowSceneActivation = true;
             yield return new WaitForSeconds(.25f);
             SceneTransitionFader.CrossFadeAlpha(0, .5f, true);
 
 
+        }
+
+        IEnumerator LoadSceneNoLoading(string sceneName)
+        {
+            AsyncOperation operation = UnityEngine.SceneManagement.SceneManager.LoadSceneAsync(sceneName);
+            operation.allowSceneActivation = false;
+            StartCoroutine(SceneTransition(operation));
+            yield return null;
         }
     }
 }

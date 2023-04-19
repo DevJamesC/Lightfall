@@ -123,6 +123,10 @@ MonoBehaviour:
           value: 0
           flatValueChange: 0
           divideFlatValueBy100: 0
+        - StatName: 14
+          value: 50
+          flatValueChange: 0
+          divideFlatValueBy100: 0
     - rid: 4699784470509125632
       type: {class: SetScreenOverlayFX, ns: MBS.AbilitySystem, asm: Assembly-CSharp}
       data:

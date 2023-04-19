@@ -29,12 +29,6 @@ namespace MBS.Lightfall
 
         public string AbilityMessage()
         {
-            InputControl inputControl = null;
-            if (playerInput.currentControlScheme == "Keyboard")
-                inputControl = Keyboard.current;
-            if (playerInput.currentControlScheme == "Gamepad")
-                inputControl = Gamepad.current;
-
             InputAction action = playerInput.actions.FindAction("Action");
             string interactKey = action.GetBindingDisplayString(InputBinding.MaskByGroup(playerInput.currentControlScheme));
 

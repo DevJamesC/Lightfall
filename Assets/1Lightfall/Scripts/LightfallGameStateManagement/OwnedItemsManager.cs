@@ -8,7 +8,7 @@ namespace MBS.Lightfall
 {
     public class OwnedItemsManager : SingletonMonobehavior<OwnedItemsManager>
     {
-        [SerializeField,Tooltip("Empty Item should not an item type")] private ItemDetailsScriptableObject EmptyItem;
+        [SerializeField,Tooltip("Empty Item should not have an item type")] private ItemDetailsScriptableObject EmptyItem;
         [SerializeField] private List<ItemDetailsScriptableObject> startingItems;
         private List<ItemDetailsScriptableObject> ownedItems;
 

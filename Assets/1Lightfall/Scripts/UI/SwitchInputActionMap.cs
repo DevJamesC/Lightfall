@@ -27,14 +27,16 @@ namespace MBS.Lightfall
 
         public void SwitchActionMapDisableCursor(string newMap)
         {
-            playerInput.SwitchCurrentActionMap(newMap);
-            opsiveUnityInput.DisableCursor = true;          
+            if (playerInput.enabled)
+                playerInput.SwitchCurrentActionMap(newMap);
+            opsiveUnityInput.DisableCursor = true;
 
         }
 
         public void SwitchActionMapEnableCursor(string newMap)
         {
-            playerInput.SwitchCurrentActionMap(newMap);
+            if (playerInput.enabled)
+                playerInput.SwitchCurrentActionMap(newMap);
             opsiveUnityInput.DisableCursor = false;
         }
     }

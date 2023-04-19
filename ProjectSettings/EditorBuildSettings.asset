@@ -12,9 +12,9 @@ EditorBuildSettings:
     path: Assets/1Lightfall/Scenes/LoadingScene.unity
     guid: 42a6eac3d00ae664fbe8b66c44d5aeec
   - enabled: 1
-    path: Assets/1Lightfall/Scenes/SampleScene.unity
+    path: Assets/1Lightfall/Scenes/LightfallGameplay.unity
     guid: 99c9720ab356a0642a771bea13969a05
   - enabled: 1
-    path: Assets/1Lightfall/Scenes/CreditsAndGameComplete.unity
+    path: Assets/1Lightfall/Scenes/GameComplete.unity
     guid: 09575952962507d4f857883fcf24de27
   m_configObjects: {}

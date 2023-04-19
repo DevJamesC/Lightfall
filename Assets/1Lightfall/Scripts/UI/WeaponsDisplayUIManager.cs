@@ -15,8 +15,8 @@ namespace MBS.Lightfall
 {
     public class WeaponsDisplayUIManager : CharacterMonitor
     {
-        protected UnityEngine.InputSystem.PlayerInput playerInput;
-        protected UnityInputSystem opsiveUnityInput;
+        //protected UnityEngine.InputSystem.PlayerInput playerInput;
+        //protected UnityInputSystem opsiveUnityInput;
         protected ItemSetManager itemSetManager;
         protected LightfallEquipmentLoadout loadoutScript;
 
@@ -36,8 +36,8 @@ namespace MBS.Lightfall
             if (character != null)
             {
                 PlayerInputProxy inputProxy = character.GetComponentInChildren<PlayerInputProxy>();
-                playerInput = inputProxy.PlayerInput.gameObject.GetComponent<UnityEngine.InputSystem.PlayerInput>();
-                opsiveUnityInput = inputProxy.PlayerInput.gameObject.GetComponent<UnityInputSystem>();
+                //playerInput = inputProxy.PlayerInput.gameObject.GetComponent<UnityEngine.InputSystem.PlayerInput>();
+                //opsiveUnityInput = inputProxy.PlayerInput.gameObject.GetComponent<UnityInputSystem>();
                 itemSetManager = character.GetComponent<ItemSetManager>();
                 loadoutScript = character.GetComponent<LightfallEquipmentLoadout>();
 
@@ -203,12 +203,6 @@ namespace MBS.Lightfall
             Primary,
             Secondary
         }
-
-
-
-        //Get weapons list
-        //Display weapons
-        //Select weapon and equip it to character via the loadout script
 
         //get animations for the display (open, close, show next, show previous)
         //Get loadout UI to be seperate scene?

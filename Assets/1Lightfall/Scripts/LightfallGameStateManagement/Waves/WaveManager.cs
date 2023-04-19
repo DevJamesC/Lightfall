@@ -60,11 +60,6 @@ namespace MBS.Lightfall
             }
         }
 
-        private void OnAllWavesFinished()
-        {
-            Debug.Log("all waves finished. remove this once a proper endscreen is listening to event OnAllEnemyWavesComplete");
-        }
-
         private void OnDeath(Vector3 position, Vector3 force, GameObject attacker)
         {
             if (gameObject == null)
@@ -121,14 +116,12 @@ namespace MBS.Lightfall
         {
             Opsive.Shared.Events.EventHandler.RegisterEvent("OnWaveStart", OnWaveStart);
             Opsive.Shared.Events.EventHandler.RegisterEvent<int>("OnWaveEnd", OnWaveEnd);
-            Opsive.Shared.Events.EventHandler.RegisterEvent("OnAllEnemyWavesComplete", OnAllWavesFinished);
         }
 
         private void OnDisable()
         {
             Opsive.Shared.Events.EventHandler.UnregisterEvent("OnWaveStart", OnWaveStart);
             Opsive.Shared.Events.EventHandler.UnregisterEvent<int>("OnWaveEnd", OnWaveEnd);
-            Opsive.Shared.Events.EventHandler.UnregisterEvent("OnAllEnemyWavesComplete", OnAllWavesFinished);
 
         }
     }
