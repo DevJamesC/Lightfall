@@ -20,6 +20,7 @@ namespace MBS.Lightfall
         [Tooltip("This will be used if upgradeData cannot be found from a progression manager")]
         public AbilityUpgradeProgressData UpgradeData { get; protected set; }
         [SerializeField] protected SharedResourceType sharedResource;
+        [SerializeField, ShowIf("@sharedResource==SharedResourceType.Charges")] protected bool AddChargeAsStartingCharge;
         public UIDisplayLocationType UIDisplayLocation;
         [ReadOnly] public float sharedRechargeRemaining;
         [ReadOnly] public float sharedRechargeLastMax;
@@ -68,6 +69,8 @@ namespace MBS.Lightfall
             }
             initalAbilityIndexParameter = Index;
             saveDataID = $"{abilitySO.name}{gameObject.name}{Index}";
+            if (m_StopType == AbilityStopType.Automatic)
+                m_StopType = AbilityStopType.Manual;
         }
 
         public override void Start()
@@ -87,7 +90,10 @@ namespace MBS.Lightfall
                         if (ability.sharedResource == SharedResourceType.Charges && ability.UpgradeData.AbilityUnlocked)
                         {
                             ability.sharedChargeMax += abilityWrapper.MaxCharges;
-                            ability.sharedChargeRemaining += abilityWrapper.MaxCharges;
+                            if (AddChargeAsStartingCharge)
+                                ability.sharedChargeRemaining += abilityWrapper.MaxCharges;
+
+                            ability.AbilityWrapper.SetChargesRemaining(ability.sharedChargeRemaining);
                         }
                     }
 
@@ -142,7 +148,10 @@ namespace MBS.Lightfall
                     if (ability.sharedResource == SharedResourceType.Charges && ability.UpgradeData.AbilityUnlocked)
                     {
                         ability.sharedChargeMax += abilityWrapper.MaxCharges;
-                        ability.sharedChargeRemaining += abilityWrapper.MaxCharges;
+                        if (AddChargeAsStartingCharge)
+                            ability.sharedChargeRemaining += abilityWrapper.MaxCharges;
+
+                        ability.AbilityWrapper.SetChargesRemaining(ability.sharedChargeRemaining);
                     }
                 }
             }
@@ -358,6 +367,41 @@ namespace MBS.Lightfall
                         ability.sharedChargeRemaining = sharedChargeRemaining;
                 }
             }
+
+        }
+
+        public int AddCharges(int chargesToAdd)
+        {
+            int chargesAbleToBeTaken = 0;
+            int highestChargesTaken = 0;
+
+            foreach (var ability in lightFallAbilitesEquipped)
+            {
+                if (ability.sharedResource == SharedResourceType.Charges)
+                {
+                    int chargesMissingFromMax = ability.sharedChargeMax - ability.sharedChargeRemaining;
+                    chargesAbleToBeTaken = chargesToAdd > chargesMissingFromMax ? chargesMissingFromMax : chargesToAdd;
+                }
+                else
+                {
+                    int chargesMissingFromMax = ability.abilityWrapper.MaxCharges - ability.abilityWrapper.ChargesRemaining;
+                    chargesAbleToBeTaken = chargesToAdd > chargesMissingFromMax ? chargesMissingFromMax : chargesToAdd;
+                }
+
+
+                if (ability.sharedResource == SharedResourceType.Charges)
+                {
+                    ability.sharedChargeRemaining += chargesAbleToBeTaken;
+                    ability.AbilityWrapper.SetChargesRemaining(ability.sharedChargeRemaining);
+                }
+                else if (abilityWrapper.BaseMaxCharges > 0)
+                    abilityWrapper.SetChargesRemaining(abilityWrapper.ChargesRemaining + chargesAbleToBeTaken);
+
+                if (chargesAbleToBeTaken > highestChargesTaken)
+                    highestChargesTaken = chargesAbleToBeTaken;
+            }
+
+            return highestChargesTaken;
 
         }
 

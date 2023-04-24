@@ -28,7 +28,18 @@ namespace MBS.Lightfall
         }
 
         public override int ClipSize { get { return m_ClipSize; } set { m_ClipSize = value; } }
-        public override int ClipRemainingCount => m_ClipRemaining.Count;
+        public override int ClipRemainingCount
+        {
+            get
+            {
+                if (m_ClipRemaining == null)
+                    return ClipSize;
+
+                return m_ClipRemaining.Count;
+
+            }
+        }
+
 
         protected int m_TotalReloadAmount;
         protected int m_TotalClipAmount;

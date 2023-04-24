@@ -5,6 +5,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using MBS.StatsAndTags;
+using System.Linq;
+using Opsive.UltimateCharacterController.Items.Actions.Modules;
 
 namespace MBS.Lightfall
 {
@@ -24,7 +26,21 @@ namespace MBS.Lightfall
 
             weaponCapacityModifier = Character.gameObject.GetComponent<ModifierHandler>().GetStatModifier(StatName.WeaponCapacity);
             weaponCapacityModifier.OnValueChanged += RecalculateCurrentAndMaxAmmo;
-            lightfallClip = itemAction.GetFirstActiveModule<LightfallClip>();
+            lightfallClip = null;
+            List<ActionModuleGroupBase> modules = new List<ActionModuleGroupBase>();
+            itemAction.GetAllModuleGroups(modules);
+
+            foreach (var mod in modules)
+            {
+                List<LightfallClip> castTest = new List<LightfallClip>();
+                mod.GetModulesWithType(castTest);
+                if (castTest.Count > 0)
+                {
+                    lightfallClip = castTest[0];
+                    break;
+                }
+            }
+
 
             m_MaxAmmo = Mathf.FloorToInt(MaxAmmo * weaponCapacityModifier.Value);
             AdjustAmmoAmountByPercent(StartingAmmoPercent);
@@ -55,7 +71,8 @@ namespace MBS.Lightfall
 
         public override void AdjustAmmoAmount(int amount)
         {
-            m_AmmoCount = Mathf.Clamp(m_AmmoCount + amount, 0, m_MaxAmmo);
+
+            m_AmmoCount = Mathf.Clamp(m_AmmoCount + amount, 0, m_MaxAmmo + (lightfallClip.ClipSize - lightfallClip.ClipRemainingCount));
             NotifyAmmoChange();
         }
 
@@ -63,7 +80,7 @@ namespace MBS.Lightfall
         /// Give or take a percent of the weapons max ammo. On a 0 to 1 scale
         /// </summary>
         /// <param name="percent"></param>
-        /// <returns>return percent overflow</returns>
+        /// <returns>return percent used</returns>
         public float AdjustAmmoAmountByPercent(float percent)
         {
             int ammoToGive = Mathf.RoundToInt(m_MaxAmmo * percent);
@@ -77,19 +94,37 @@ namespace MBS.Lightfall
         /// Give or take a percent of the weapons max ammo. On a 0 to 1 scale
         /// </summary>
         /// <param name="percent"></param>
-        /// <returns>return percent overflow</returns>
-        public float AdjustAmmoAmountByPercentOfClips(float percent)
+        /// <returns>return percent used</returns>
+        public float AdjustAmmoAmountByClipIncriment(float percent)
         {
-            int numOfClipsInReserve = Mathf.RoundToInt(MaxAmmo / lightfallClip.ClipSize);
-            int clipsToGive = Mathf.RoundToInt(numOfClipsInReserve * percent);
-            int ammoToGive = clipsToGive * lightfallClip.ClipSize;
+            //give ammo, floored by clip amount.
+            if (lightfallClip == null)
+                lightfallClip = CharacterItemAction.GetFirstActiveModule<LightfallClip>();
 
-            float percentAmmoOverflow = 1 - ((GetAmmoRemainingCount() + ammoToGive) / MaxAmmo);
-            float percentClipOverflow = numOfClipsInReserve / (percentAmmoOverflow / (lightfallClip.ClipSize / MaxAmmo));
+            int ammoToGive = Mathf.RoundToInt(m_MaxAmmo * percent);
+            int numberOfClips = Mathf.FloorToInt((float)ammoToGive / lightfallClip.ClipSize);
+            ammoToGive = numberOfClips * lightfallClip.ClipSize;
+
+            //return percent of percent actually consumed
+            int ammoOverflow = (GetAmmoRemainingCount() + ammoToGive) - MaxAmmo;
+            float returnVal = ammoToGive > 0 ? 1 : 0;
+
+            if (ammoOverflow > 0)
+            {
+                //first, if we have overflow, but our clip is not full, give extra ammo for the missing percent of clip.
+                int extraAmmoNeeded = (lightfallClip.ClipSize - lightfallClip.ClipRemainingCount);
+                int extraAmmoToGive = ammoOverflow > extraAmmoNeeded ? extraAmmoNeeded : ammoOverflow;
+                ammoOverflow -= extraAmmoToGive;
+                ammoToGive += extraAmmoToGive;
+
+                //then, determin what percent of the ammoToGive we actually used
+                float clipOverflow = (float)ammoOverflow / lightfallClip.ClipSize;
+                returnVal = 1 - (clipOverflow / numberOfClips);
+            }
 
             AdjustAmmoAmount(ammoToGive);
 
-            return percentClipOverflow;
+            return returnVal;
         }
 
         public override bool DoesAmmoSharedMatch(ShootableAmmoModule otherAmmoModule)
