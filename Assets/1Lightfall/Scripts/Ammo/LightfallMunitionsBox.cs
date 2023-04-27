@@ -22,10 +22,10 @@ public class LightfallMunitionsBox : MonoBehaviour
     public GameObject ClipGraphic;
     public GameObject ClipPlaceholderGraphic;
     public Vector3 ClipPlacementOffset;
-    public float ClipPlacementSpacing;
+    public Vector2 ClipPlacementSpacing;
     public GameObject GrenadeGraphic;
     public Vector3 GrenadePlacementOffset;
-    public float GrenadePlacementSpacing;
+    public Vector2 GrenadePlacementSpacing;
 
     public int MaxGrenadesToGive;
     public int StartingGrenades;
@@ -53,8 +53,6 @@ public class LightfallMunitionsBox : MonoBehaviour
         ammoPickupAudioSource = GetComponent<AudioSource>();
         clipGraphicObjects = new GameObject[10];
         grenadeGraphicObjects = new GameObject[MaxGrenadesToGive];
-
-        Debug.Log("currently working in this script...");
     }
 
     private void Start()
@@ -63,7 +61,8 @@ public class LightfallMunitionsBox : MonoBehaviour
         for (int i = 0; i < clipGraphicObjects.Length; i++)
         {
             Vector3 pos = ClipPlacementOffset;
-            pos.z += (ClipPlacementSpacing * i);
+            pos.z += (ClipPlacementSpacing.x * i);
+            pos.x += (ClipPlacementSpacing.y * i);
             float percentClipsToShow = Mathf.Ceil(MaxPercentClipsToGive / 10) * 10;
             GameObject prefabToInstanciate = percentClipsToShow > i * 10 ? ClipGraphic : ClipPlaceholderGraphic;
             clipGraphicObjects[i] = Instantiate(prefabToInstanciate, transform);
@@ -74,7 +73,8 @@ public class LightfallMunitionsBox : MonoBehaviour
         for (int i = 0; i < grenadeGraphicObjects.Length; i++)
         {
             Vector3 pos = GrenadePlacementOffset;
-            pos.z += (GrenadePlacementSpacing * i);
+            pos.z += (GrenadePlacementSpacing.x * i);
+            pos.x += (GrenadePlacementSpacing.y * i);
             grenadeGraphicObjects[i] = Instantiate(GrenadeGraphic, transform);
             grenadeGraphicObjects[i].transform.localPosition = pos;
         }
